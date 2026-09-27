@@ -1,0 +1,67 @@
+---
+/** "Comment ça fonctionne ?" — 3 étapes. */
+const { steps = [] } = Astro.props;
+---
+
+{
+  steps.length > 0 && (
+    <section class="hiw" aria-labelledby="hiw-title">
+      <h2 id="hiw-title">Comment ça fonctionne&nbsp;?</h2>
+      <ol class="hiw-steps" role="list">
+        {steps.map((step, i) => (
+          <li class="hiw-step">
+            <span class="hiw-num" aria-hidden="true">{i + 1}</span>
+            <p>{step}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )
+}
+
+<style>
+  .hiw h2 {
+    font-size: clamp(1.4rem, 2.6vw, 1.9rem);
+    margin-bottom: 24px;
+  }
+
+  .hiw-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    counter-reset: step;
+  }
+
+  .hiw-step {
+    position: relative;
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-l);
+    background: var(--panel);
+  }
+
+  .hiw-num {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    background: var(--accent-grad);
+    color: #241203;
+    margin-bottom: 14px;
+  }
+
+  .hiw-step p {
+    color: var(--muted);
+    font-size: 0.94rem;
+  }
+
+  @media (max-width: 760px) {
+    .hiw-steps {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

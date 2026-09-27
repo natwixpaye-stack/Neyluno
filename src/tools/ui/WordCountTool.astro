@@ -1,0 +1,144 @@
+---
+import Icon from '../../components/Icon.astro';
+---
+
+<div class="wc-tool" id="tool-wordcount">
+  <div class="wc-toolbar">
+    <span class="wc-toolbar-label">Votre texte reste dans le navigateur — rien n'est enregistré.</span>
+    <span class="wc-toolbar-btns">
+      <button type="button" class="btn btn-ghost btn-sm" data-sample>Exemple</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-clear>Effacer</button>
+    </span>
+  </div>
+
+  <textarea
+    class="textarea wc-textarea"
+    data-input
+    rows="10"
+    placeholder="Collez ou écrivez votre texte ici…"
+    aria-label="Texte à analyser"
+    spellcheck="false"></textarea>
+
+  <div class="stat-grid wc-stats" aria-live="polite">
+    <div class="stat">
+      <div class="stat-value accent" data-stat-words>0</div>
+      <div class="stat-label">Mots</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" data-stat-chars>0</div>
+      <div class="stat-label">Caractères</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" data-stat-charsns>0</div>
+      <div class="stat-label">Caract. sans espaces</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" data-stat-sentences>0</div>
+      <div class="stat-label">Phrases</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" data-stat-paragraphs>0</div>
+      <div class="stat-label">Paragraphes</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" data-stat-lines>0</div>
+      <div class="stat-label">Lignes</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" data-stat-reading>—</div>
+      <div class="stat-label">Lecture</div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .wc-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .wc-toolbar-label {
+    font-size: 0.8rem;
+    color: var(--faint);
+  }
+
+  .wc-toolbar-btns {
+    display: flex;
+    gap: 8px;
+  }
+
+  .wc-textarea {
+    min-height: 260px;
+    font-size: 1rem;
+    line-height: 1.7;
+    transition: border-color 0.18s, box-shadow 0.18s;
+  }
+
+  .wc-stats {
+    margin-top: 18px;
+  }
+
+  .stat .stat-value {
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+
+<script>
+  import { countText } from '../../lib/text.js';
+
+  const root = document.getElementById('tool-wordcount');
+  if (root) {
+    const input = root.querySelector('[data-input]');
+    const el = {
+      words: root.querySelector('[data-stat-words]'),
+      chars: root.querySelector('[data-stat-chars]'),
+      charsns: root.querySelector('[data-stat-charsns]'),
+      sentences: root.querySelector('[data-stat-sentences]'),
+      paragraphs: root.querySelector('[data-stat-paragraphs]'),
+      lines: root.querySelector('[data-stat-lines]'),
+      reading: root.querySelector('[data-stat-reading]'),
+    };
+
+    let queued = false;
+    function update() {
+      queued = false;
+      const stats = countText(input.value);
+      el.words.textContent = stats.words.toLocaleString('fr-FR');
+      el.chars.textContent = stats.chars.toLocaleString('fr-FR');
+      el.charsns.textContent = stats.charsNoSpaces.toLocaleString('fr-FR');
+      el.sentences.textContent = stats.sentences.toLocaleString('fr-FR');
+      el.paragraphs.textContent = stats.paragraphs.toLocaleString('fr-FR');
+      el.lines.textContent = stats.lines.toLocaleString('fr-FR');
+      el.reading.textContent = stats.words === 0 ? '—' : stats.readingTimeMin <= 1 ? '≈ 1 min' : `≈ ${stats.readingTimeMin} min`;
+    }
+
+    input.addEventListener('input', () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(update);
+    });
+
+    root.querySelector('[data-clear]').addEventListener('click', () => {
+      input.value = '';
+      update();
+      input.focus();
+    });
+
+    root.querySelector('[data-sample]').addEventListener('click', () => {
+      input.value = `Le renard et le corbeau
+
+Maître Corbeau, sur un arbre perché, tenait en son bec un fromage. Maître Renard, par l'odeur alléché, lui tint à peu près ce langage : « Hé ! bonjour, Monsieur du Corbeau. Que vous êtes joli ! que vous me semblez beau ! »
+
+À ces mots, le Corbeau ne se sent pas de joie ; et pour montrer sa belle voix, il ouvre un large bec, laisse tomber sa proie. Le Renard s'en saisit, et dit : « Apprenez que tout flatteur vit aux dépens de celui qui l'écoute. »
+
+Le Corbeau, honteux et confus, jura, mais un peu tard, qu'on ne l'y prendrait plus.`;
+      update();
+    });
+
+    update();
+  }
+</script>

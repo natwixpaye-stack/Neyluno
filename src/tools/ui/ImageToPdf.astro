@@ -1,0 +1,190 @@
+---
+import Icon from '../../components/Icon.astro';
+---
+
+<div class="ftool" id="tool-img-pdf">
+  <div class="ip-options">
+    <div class="field">
+      <label for="ip-format">Format de page</label>
+      <select class="select" id="ip-format" data-page-format>
+        <option value="a4" selected>A4 (210 × 297 mm)</option>
+        <option value="letter">Letter (216 × 279 mm)</option>
+        <option value="fit">Adapté à chaque image</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="ip-orient">Orientation</label>
+      <select class="select" id="ip-orient" data-orientation>
+        <option value="auto" selected>Automatique</option>
+        <option value="portrait">Portrait</option>
+        <option value="landscape">Paysage</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="ip-margin">Marges</label>
+      <select class="select" id="ip-margin" data-margin>
+        <option value="0">Aucune</option>
+        <option value="24" selected>Fines</option>
+        <option value="48">Larges</option>
+      </select>
+    </div>
+  </div>
+
+  <div data-notice hidden></div>
+
+  <div class="dropzone" data-dropzone>
+    <input type="file" data-file-input multiple hidden />
+    <span class="dz-icon" aria-hidden="true"><Icon name="upload" size={24} /></span>
+    <h3>Glissez-déposez vos images ici</h3>
+    <p>ou cliquez pour parcourir · JPG, PNG, WebP · jusqu'à 50 Mo par fichier</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choisir des images</span>
+  </div>
+
+  <p class="ip-hint">Réordonnez avec les flèches ↑↓ : le PDF suit l'ordre de la liste.</p>
+
+  <div class="ftool-actions">
+    <span class="ftool-count" data-count aria-live="polite"></span>
+    <span class="ftool-actions-btns">
+      <button type="button" class="btn btn-ghost btn-sm" data-clear-all hidden>Réinitialiser</button>
+      <button type="button" class="btn btn-accent btn-sm" data-generate hidden>Créer le PDF</button>
+    </span>
+  </div>
+
+  <ul class="file-list" data-file-list role="list" aria-label="Images à insérer dans le PDF"></ul>
+</div>
+
+<style>
+  .ip-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  .ip-hint {
+    font-size: 0.78rem;
+    color: var(--faint);
+    margin-top: 14px;
+  }
+  .ftool-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+  .ftool-count {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .ftool-actions-btns {
+    display: flex;
+    gap: 10px;
+  }
+</style>
+
+<script>
+  import { mountFileTool } from '../../lib/fileui.js';
+  import { decodeImage, renderToBlob } from '../../lib/image.js';
+  import { toast, downloadBlob } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-img-pdf');
+  if (root) {
+    const pageFormatSel = root.querySelector('[data-page-format]');
+    const orientationSel = root.querySelector('[data-orientation]');
+    const marginSel = root.querySelector('[data-margin]');
+    const generateBtn = root.querySelector('[data-generate]');
+
+    const api = mountFileTool(root, {
+      acceptTypes: ['image/jpeg', 'image/png', 'image/webp'],
+      acceptExts: ['.jpg', '.jpeg', '.png', '.webp'],
+      autoProcess: false,
+      reorderable: true,
+      onListChange: (items) => {
+        generateBtn.hidden = items.length === 0;
+      },
+    });
+
+    const PAGE_SIZES = { a4: [595.28, 841.89], letter: [612, 792] };
+
+    async function imageEntry(file) {
+      // Retourne { bytes, width, height, kind: 'jpg'|'png' }
+      const type = file.type || (/\.(jpe?g)$/i.test(file.name) ? 'image/jpeg' : /\.(png)$/i.test(file.name) ? 'image/png' : '');
+      if (type === 'image/jpeg' || type === 'image/png') {
+        const img = await decodeImage(file);
+        const dims = { width: img.width, height: img.height };
+        img.close();
+        return { bytes: await file.arrayBuffer(), ...dims, kind: type === 'image/jpeg' ? 'jpg' : 'png' };
+      }
+      // Autre format lisible (webp…) : conversion en PNG via canvas
+      const img = await decodeImage(file);
+      try {
+        const blob = await renderToBlob(img.source, { width: img.width, height: img.height, format: 'image/png' });
+        return { bytes: await blob.arrayBuffer(), width: img.width, height: img.height, kind: 'png' };
+      } finally {
+        img.close();
+      }
+    }
+
+    generateBtn.addEventListener('click', async () => {
+      const items = api.items;
+      if (!items.length) return;
+      generateBtn.disabled = true;
+      const label = generateBtn.textContent;
+      generateBtn.textContent = 'Génération…';
+      try {
+        const { PDFDocument } = await import('pdf-lib');
+        const doc = await PDFDocument.create();
+        const orientation = orientationSel.value;
+        const pageFormat = pageFormatSel.value;
+        const margin = Number(marginSel.value);
+
+        for (const item of items) {
+          let entry;
+          try {
+            entry = await imageEntry(item.file);
+          } catch {
+            throw new Error(`Impossible d'insérer « ${item.file.name} » : fichier image invalide ou corrompu.`);
+          }
+          const embedded = entry.kind === 'jpg' ? await doc.embedJpg(entry.bytes) : await doc.embedPng(entry.bytes);
+
+          let pageW, pageH;
+          if (pageFormat === 'fit') {
+            pageW = entry.width + margin * 2;
+            pageH = entry.height + margin * 2;
+          } else {
+            let [w, h] = PAGE_SIZES[pageFormat];
+            const landscapeByFormat = orientation === 'landscape' || (orientation === 'auto' && entry.width > entry.height);
+            if (landscapeByFormat) [w, h] = [h, w];
+            pageW = w;
+            pageH = h;
+          }
+
+          const page = doc.addPage([pageW, pageH]);
+          const boxW = pageW - margin * 2;
+          const boxH = pageH - margin * 2;
+          const scale = Math.min(boxW / entry.width, boxH / entry.height);
+          const drawW = entry.width * scale;
+          const drawH = entry.height * scale;
+          page.drawImage(embedded, {
+            x: margin + (boxW - drawW) / 2,
+            y: margin + (boxH - drawH) / 2,
+            width: drawW,
+            height: drawH,
+          });
+        }
+
+        const pdfBytes = await doc.save();
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        downloadBlob(blob, 'quicktools-images.pdf');
+        toast(`PDF créé avec ${items.length} page${items.length > 1 ? 's' : ''}.`, 'success');
+      } catch (err) {
+        toast(err?.message || 'La création du PDF a échoué. Vérifiez vos fichiers.', 'error', 6000);
+      } finally {
+        generateBtn.disabled = false;
+        generateBtn.textContent = label;
+      }
+    });
+  }
+</script>

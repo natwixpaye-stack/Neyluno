@@ -1,0 +1,87 @@
+---
+import Icon from './Icon.astro';
+import { getCategory } from '../data/site.js';
+
+const { tool, compact = false } = Astro.props;
+const cat = getCategory(tool.category);
+---
+
+<a href={`/outils/${tool.slug}/`} class="card tool-card" data-spotlight>
+  <div class="tc-top">
+    <span class="tc-icon" style={`--hue:${cat.hue}`} aria-hidden="true">
+      <Icon name={tool.icon} size={compact ? 20 : 23} />
+    </span>
+    <span class="tc-cat">{cat.name}</span>
+  </div>
+  <h3 class="tc-name">{tool.name}</h3>
+  <p class="tc-desc">{tool.shortDesc}</p>
+  <span class="tc-cta" aria-hidden="true">
+    Ouvrir l’outil <Icon name="arrow-right" size={15} />
+  </span>
+</a>
+
+<style>
+  .tool-card {
+    gap: 10px;
+    padding: compact ? 20px : 26px;
+    min-height: 100%;
+  }
+
+  .tc-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .tc-icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    color: var(--hue);
+    background: color-mix(in srgb, var(--hue) 13%, transparent);
+    border: 1px solid color-mix(in srgb, var(--hue) 22%, transparent);
+    transition: transform 0.25s var(--ease);
+  }
+
+  .tool-card:hover .tc-icon {
+    transform: translateY(-2px) rotate(-3deg);
+  }
+
+  .tc-cat {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--faint);
+  }
+
+  .tc-name {
+    font-size: compact ? 1.02rem : 1.16rem;
+  }
+
+  .tc-desc {
+    color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+
+  .tc-cta {
+    margin-top: auto;
+    padding-top: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--faint);
+    transition: color 0.2s, gap 0.2s var(--ease);
+  }
+
+  .tool-card:hover .tc-cta {
+    color: var(--accent);
+    gap: 10px;
+  }
+</style>

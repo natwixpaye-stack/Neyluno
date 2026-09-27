@@ -1,0 +1,168 @@
+---
+import Icon from './Icon.astro';
+import { site, categories } from '../data/site.js';
+import { tools } from '../data/tools.js';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="/" class="brand">
+          <span class="brand-mark" aria-hidden="true"><Icon name="logo" size={24} /></span>
+          <span class="brand-name">{site.name}</span>
+        </a>
+        <p>{site.tagline}</p>
+        <div class="footer-badges">
+          <span class="badge"><span class="dot"></span>100 % navigateur</span>
+          <span class="badge"><Icon name="lock" size={13} />Sans compte</span>
+        </div>
+      </div>
+
+      <nav aria-label="Outils">
+        <h3>Outils</h3>
+        <ul role="list">
+          {tools.slice(0, 6).map((t) => (
+            <li><a href={`/outils/${t.slug}/`}>{t.name}</a></li>
+          ))}
+        </ul>
+      </nav>
+
+      <nav aria-label="Autres outils">
+        <h3>&nbsp;</h3>
+        <ul role="list">
+          {tools.slice(6).map((t) => (
+            <li><a href={`/outils/${t.slug}/`}>{t.name}</a></li>
+          ))}
+          <li><a href="/outils/">Tous les outils →</a></li>
+        </ul>
+      </nav>
+
+      <nav aria-label="Catégories et informations">
+        <h3>Catégories</h3>
+        <ul role="list">
+          {categories.map((c) => (
+            <li><a href={`/categories/${c.slug}/`}>{c.name}</a></li>
+          ))}
+        </ul>
+        <h3 style="margin-top:22px">Informations</h3>
+        <ul role="list">
+          <li><a href="/a-propos/">À propos</a></li>
+          <li><a href="/confidentialite/">Confidentialité</a></li>
+          <li><a href="/mentions-legales/">Mentions légales</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© {year} {site.name} — Vos fichiers ne quittent jamais votre appareil.</p>
+      <a href="/a-propos/" class="footer-about-link">Fait pour être utile, pas pour vous pister.</a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--border);
+    padding: clamp(48px, 7vw, 80px) 0 36px;
+    margin-top: 40px;
+    background:
+      radial-gradient(600px 300px at 85% 0%, var(--glow), transparent 70%),
+      var(--bg);
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: 40px;
+  }
+
+  .footer-brand .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+
+  .brand-mark {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: var(--accent-grad);
+    color: #241203;
+  }
+
+  .footer-brand p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 14px 0 18px;
+    max-width: 300px;
+  }
+
+  .footer-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .site-footer h3 {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--faint);
+    font-family: var(--font-body);
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+
+  .site-footer ul {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .site-footer ul a {
+    color: var(--muted);
+    font-size: 0.9rem;
+    transition: color 0.15s;
+  }
+
+  .site-footer ul a:hover {
+    color: var(--text);
+  }
+
+  .footer-bottom {
+    margin-top: clamp(36px, 6vw, 64px);
+    padding-top: 22px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    color: var(--faint);
+    font-size: 0.83rem;
+  }
+
+  .footer-about-link:hover {
+    color: var(--muted);
+  }
+
+  @media (max-width: 900px) {
+    .footer-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .footer-grid {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+  }
+</style>

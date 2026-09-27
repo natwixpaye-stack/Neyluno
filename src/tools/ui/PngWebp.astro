@@ -1,0 +1,114 @@
+---
+import Icon from '../../components/Icon.astro';
+---
+
+<div class="ftool" id="tool-png-webp">
+  <div class="ftool-options">
+    <div class="opt">
+      <label for="pw-quality">Qualité de conversion <output id="pw-out" data-quality-out>85 %</output></label>
+      <input type="range" id="pw-quality" min="10" max="100" value="85" step="1" data-quality aria-describedby="pw-hint" />
+      <p class="opt-hint" id="pw-hint">La transparence (canal alpha) est conservée automatiquement.</p>
+    </div>
+  </div>
+
+  <div data-notice hidden></div>
+
+  <div class="dropzone" data-dropzone>
+    <input type="file" data-file-input multiple hidden />
+    <span class="dz-icon" aria-hidden="true"><Icon name="upload" size={24} /></span>
+    <h3>Glissez-déposez vos images PNG ici</h3>
+    <p>ou cliquez pour parcourir · PNG · jusqu'à 50 Mo par fichier</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choisir des images</span>
+  </div>
+
+  <div class="ftool-actions">
+    <span class="ftool-count" data-count aria-live="polite"></span>
+    <span class="ftool-actions-btns">
+      <button type="button" class="btn btn-ghost btn-sm" data-clear-all hidden>Réinitialiser</button>
+      <button type="button" class="btn btn-accent btn-sm" data-download-all hidden>Tout télécharger (ZIP)</button>
+    </span>
+  </div>
+
+  <ul class="file-list" data-file-list role="list" aria-label="Fichiers en cours de conversion"></ul>
+</div>
+
+<style>
+  .ftool-options {
+    margin-bottom: 22px;
+  }
+  .opt label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .opt output {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .opt-hint {
+    font-size: 0.78rem;
+    color: var(--faint);
+    margin-top: 8px;
+  }
+  .ftool-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+  .ftool-count {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .ftool-actions-btns {
+    display: flex;
+    gap: 10px;
+  }
+</style>
+
+<script>
+  import { mountFileTool } from '../../lib/fileui.js';
+  import { decodeImage, renderToBlob, renameWithExt } from '../../lib/image.js';
+  import { bindRangeFill, toast } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-png-webp');
+  if (root) {
+    const quality = root.querySelector('[data-quality]');
+    const out = root.querySelector('[data-quality-out]');
+    bindRangeFill(quality);
+    const syncOut = () => (out.textContent = `${quality.value} %`);
+    quality.addEventListener('input', syncOut);
+    syncOut();
+
+    const api = mountFileTool(root, {
+      acceptTypes: ['image/png'],
+      acceptExts: ['.png'],
+      process: async (item) => {
+        const img = await decodeImage(item.file);
+        try {
+          const blob = await renderToBlob(img.source, {
+            width: img.width,
+            height: img.height,
+            format: 'image/webp',
+            quality: Number(quality.value) / 100,
+          });
+          return { blob, name: renameWithExt(item.file.name, 'webp') };
+        } finally {
+          img.close();
+        }
+      },
+    });
+
+    quality.addEventListener('change', async () => {
+      if (!api.items.length) return;
+      for (const item of api.items) await api.processItem(item);
+      toast(`Conversion relancée avec une qualité de ${quality.value} %.`, 'success');
+    });
+  }
+</script>

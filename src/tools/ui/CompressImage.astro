@@ -1,0 +1,298 @@
+---
+import Icon from '../../components/Icon.astro';
+---
+
+<div class="ftool" id="tool-compress">
+  <div class="ftool-options">
+    <div class="opt">
+      <label for="ci-quality">Niveau de compression <output id="ci-out" data-quality-out>80 %</output></label>
+      <input type="range" id="ci-quality" min="10" max="100" value="80" step="1" data-quality aria-describedby="ci-hint" />
+      <p class="opt-hint" id="ci-hint">Plus la qualité est basse, plus le fichier est léger. Autour de 80 %, la différence reste imperceptible.</p>
+    </div>
+  </div>
+
+  <div data-notice hidden></div>
+
+  <div class="dropzone" data-dropzone>
+    <input type="file" data-file-input multiple hidden />
+    <span class="dz-icon" aria-hidden="true"><Icon name="upload" size={24} /></span>
+    <h3>Glissez-déposez vos images ici</h3>
+    <p>ou cliquez pour parcourir · JPG, PNG, WebP · jusqu'à 50 Mo par fichier</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choisir des images</span>
+  </div>
+
+  <div class="ftool-actions">
+    <span class="ftool-count" data-count aria-live="polite"></span>
+    <span class="ftool-actions-btns">
+      <button type="button" class="btn btn-ghost btn-sm" data-clear-all hidden>Réinitialiser</button>
+      <button type="button" class="btn btn-accent btn-sm" data-download-all hidden>Tout télécharger (ZIP)</button>
+    </span>
+  </div>
+
+  <ul class="file-list" data-file-list role="list" aria-label="Images en cours de compression"></ul>
+
+  <!-- Récapitulatif avant/après -->
+  <div class="compress-summary" data-summary hidden>
+    <div class="stat">
+      <div class="stat-value" data-sum-before>—</div>
+      <div class="stat-label">Avant</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" data-sum-after>—</div>
+      <div class="stat-label">Après</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value accent" data-sum-saved>—</div>
+      <div class="stat-label">Économie</div>
+    </div>
+  </div>
+
+  <!-- Comparateur avant/après (un seul fichier terminé) -->
+  <div class="compare" data-compare hidden>
+    <div class="compare-head">
+      <h3>Comparaison avant / après</h3>
+      <label class="compare-label">
+        Afficher l'après
+        <input type="range" min="0" max="100" value="50" data-compare-range aria-label="Révéler l'image compressée" />
+      </label>
+    </div>
+    <div class="compare-stage" data-compare-stage>
+      <img data-compare-before alt="Image originale avant compression" />
+      <div class="compare-after" data-compare-after>
+        <img data-compare-afterimg alt="Image compressée après traitement" />
+      </div>
+      <span class="compare-tag tag-before">Avant</span>
+      <span class="compare-tag tag-after">Après</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .ftool-options {
+    margin-bottom: 22px;
+  }
+  .opt label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .opt output {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .opt-hint {
+    font-size: 0.78rem;
+    color: var(--faint);
+    margin-top: 8px;
+  }
+  .ftool-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+  .ftool-count {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .ftool-actions-btns {
+    display: flex;
+    gap: 10px;
+  }
+
+  .compress-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 22px;
+    animation: item-in 0.35s var(--ease) both;
+  }
+
+  @media (max-width: 560px) {
+    .compress-summary {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .compare {
+    margin-top: 22px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel);
+    animation: item-in 0.35s var(--ease) both;
+  }
+
+  .compare-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .compare-head h3 {
+    font-size: 0.95rem;
+  }
+
+  .compare-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .compare-label input {
+    width: 160px;
+  }
+
+  .compare-stage {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--panel-strong);
+    line-height: 0;
+  }
+
+  .compare-stage img {
+    width: 100%;
+    max-height: 420px;
+    object-fit: contain;
+  }
+
+  .compare-after {
+    position: absolute;
+    inset: 0;
+    clip-path: inset(0 0 0 50%);
+  }
+
+  .compare-tag {
+    position: absolute;
+    top: 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(10, 10, 14, 0.72);
+    color: #fff;
+    line-height: 1.4;
+  }
+
+  .tag-before {
+    left: 10px;
+  }
+  .tag-after {
+    right: 10px;
+    background: var(--accent-grad);
+    color: #241203;
+  }
+</style>
+
+<script>
+  import { mountFileTool } from '../../lib/fileui.js';
+  import { decodeImage, renderToBlob, renameWithExt } from '../../lib/image.js';
+  import { bindRangeFill, toast } from '../../lib/ui.js';
+  import { formatBytes } from '../../lib/format.js';
+
+  const root = document.getElementById('tool-compress');
+  if (root) {
+    const quality = root.querySelector('[data-quality]');
+    const out = root.querySelector('[data-quality-out]');
+    const summary = root.querySelector('[data-summary]');
+    const compare = root.querySelector('[data-compare]');
+    const range = root.querySelector('[data-compare-range]');
+    const afterWrap = root.querySelector('[data-compare-after]');
+    bindRangeFill(quality);
+    const syncOut = () => (out.textContent = `${quality.value} %`);
+    quality.addEventListener('input', syncOut);
+    syncOut();
+
+    const extFor = (type) => (type === 'image/png' ? 'png' : type === 'image/webp' ? 'webp' : 'jpg');
+
+    const api = mountFileTool(root, {
+      acceptTypes: ['image/jpeg', 'image/png', 'image/webp'],
+      acceptExts: ['.jpg', '.jpeg', '.png', '.webp'],
+      process: async (item) => {
+        const img = await decodeImage(item.file);
+        try {
+          const format = item.file.type === 'image/png' ? 'image/png' : item.file.type === 'image/webp' ? 'image/webp' : 'image/jpeg';
+          const blob = await renderToBlob(img.source, {
+            width: img.width,
+            height: img.height,
+            format,
+            quality: Number(quality.value) / 100,
+          });
+          const name = renameWithExt(item.file.name, extFor(format));
+          if (format === 'image/png' && blob.size >= item.file.size) {
+            item._pngWarn = true;
+          }
+          return { blob, name };
+        } finally {
+          img.close();
+        }
+      },
+      onListChange: refreshSummary,
+    });
+
+    function refreshSummary(items) {
+      const done = items.filter((i) => i.status === 'done' && i.result?.blob);
+      if (!done.length) {
+        summary.hidden = true;
+        compare.hidden = true;
+        return;
+      }
+      const before = done.reduce((s, i) => s + i.file.size, 0);
+      const after = done.reduce((s, i) => s + i.result.blob.size, 0);
+      summary.hidden = false;
+      root.querySelector('[data-sum-before]').textContent = formatBytes(before);
+      root.querySelector('[data-sum-after]').textContent = formatBytes(after);
+      const saved = before > 0 ? Math.round((1 - after / before) * 100) : 0;
+      root.querySelector('[data-sum-saved]').textContent = `${saved >= 0 ? '−' : '+'}${Math.abs(saved)} %`;
+
+      // Comparateur interactif : uniquement quand un seul fichier est prêt
+      if (done.length === 1) {
+        const item = done[0];
+        compare.hidden = false;
+        const beforeImg = root.querySelector('[data-compare-before]');
+        const afterImg = root.querySelector('[data-compare-afterimg]');
+        setSrc(beforeImg, item.file);
+        setSrc(afterImg, item.result.blob);
+        if (item._pngWarn) {
+          toast('Le PNG est sans perte : pour un gain important, convertissez plutôt en WebP.', 'info', 6000);
+          item._pngWarn = false;
+        }
+      } else {
+        compare.hidden = true;
+      }
+    }
+
+    function setSrc(img, blobOrFile) {
+      if (img._url) URL.revokeObjectURL(img._url);
+      img._url = URL.createObjectURL(blobOrFile);
+      img.src = img._url;
+    }
+
+    const syncCompare = () => {
+      afterWrap.style.clipPath = `inset(0 0 0 ${range.value}%)`;
+    };
+    range.addEventListener('input', syncCompare);
+    bindRangeFill(range);
+    syncCompare();
+
+    quality.addEventListener('change', async () => {
+      if (!api.items.length) return;
+      for (const item of api.items) await api.processItem(item);
+      toast(`Compression relancée à ${quality.value} %.`, 'success');
+    });
+  }
+</script>

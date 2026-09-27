@@ -1,0 +1,140 @@
+---
+/** Structure commune de toutes les pages outils. */
+import BaseLayout from './BaseLayout.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
+import HowItWorks from '../components/HowItWorks.astro';
+import FAQ from '../components/FAQ.astro';
+import RelatedTools from '../components/RelatedTools.astro';
+import AdPlaceholder from '../components/AdPlaceholder.astro';
+import Icon from '../components/Icon.astro';
+import { site, getCategory } from '../data/site.js';
+import { getRelatedTools } from '../data/tools.js';
+
+const { tool } = Astro.props;
+const cat = getCategory(tool.category);
+const related = getRelatedTools(tool, 4);
+const path = `/outils/${tool.slug}/`;
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: tool.name,
+    description: tool.shortDesc,
+    applicationCategory: 'UtilityApplication',
+    operatingSystem: 'Web',
+    url: new URL(path, Astro.site).href,
+    inLanguage: 'fr',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+    featureList: tool.steps.join(' · '),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: tool.faq.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  },
+];
+---
+
+<BaseLayout title={`${tool.name} — gratuit et sans inscription`} description={tool.shortDesc} path={path} jsonLd={jsonLd}>
+  <div class="container tool-page">
+    <Breadcrumb
+      items={[
+        { label: 'Accueil', href: '/' },
+        { label: cat.name, href: `/categories/${cat.slug}/` },
+        { label: tool.name },
+      ]}
+    />
+
+    <header class="tool-head">
+      <div class="tool-head-icon" style={`--hue:${cat.hue}`} aria-hidden="true">
+        <Icon name={tool.icon} size={26} />
+      </div>
+      <h1>{tool.name}</h1>
+      <p class="tool-desc">{tool.description}</p>
+      <div class="tool-badges">
+        <span class="badge"><span class="dot"></span>100 % dans votre navigateur</span>
+        <span class="badge">Gratuit</span>
+        <span class="badge">Sans compte</span>
+      </div>
+    </header>
+
+    <section class="tool-panel panel" aria-label={`Zone principale de l’outil ${tool.name}`}>
+      <slot />
+    </section>
+
+    <AdPlaceholder slot="tool-after-result" />
+
+    <HowItWorks steps={tool.steps} />
+
+    <FAQ items={tool.faq} />
+
+    <RelatedTools tools={related} />
+
+    <section class="tool-seo" aria-label="En savoir plus">
+      <h2>Bon à savoir</h2>
+      <div class="prose" set:html={tool.seo} />
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .tool-page {
+    padding-top: 26px;
+    padding-bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(36px, 6vw, 60px);
+  }
+
+  .tool-head {
+    max-width: 760px;
+  }
+
+  .tool-head-icon {
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    border-radius: 18px;
+    margin-bottom: 18px;
+    color: var(--hue);
+    background: color-mix(in srgb, var(--hue) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--hue) 25%, transparent);
+  }
+
+  .tool-head h1 {
+    font-size: clamp(1.9rem, 4.4vw, 3rem);
+    margin-bottom: 14px;
+  }
+
+  .tool-desc {
+    color: var(--muted);
+    font-size: 1.04rem;
+    max-width: 640px;
+  }
+
+  .tool-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .tool-panel {
+    padding: clamp(20px, 4vw, 40px);
+  }
+
+  .tool-seo {
+    max-width: 780px;
+  }
+
+  .tool-seo h2 {
+    font-size: clamp(1.4rem, 2.6vw, 1.9rem);
+    margin-bottom: 18px;
+  }
+</style>

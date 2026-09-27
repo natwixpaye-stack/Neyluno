@@ -1,0 +1,85 @@
+---
+/** FAQ accessible basée sur <details>/<summary>, sans JavaScript. */
+const { items = [], title = 'Questions fréquentes' } = Astro.props;
+---
+
+{
+  items.length > 0 && (
+    <section class="faq-section" aria-labelledby="faq-title">
+      <h2 id="faq-title">{title}</h2>
+      <div class="faq-list">
+        {items.map((item) => (
+          <details class="faq-item">
+            <summary>
+              <span>{item.q}</span>
+              <svg class="faq-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </summary>
+            <p>{item.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .faq-section h2 {
+    font-size: clamp(1.4rem, 2.6vw, 1.9rem);
+    margin-bottom: 24px;
+  }
+
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 780px;
+  }
+
+  .faq-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel);
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .faq-item[open] {
+    border-color: var(--border-strong);
+  }
+
+  .faq-item summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 22px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.97rem;
+    list-style: none;
+    user-select: none;
+  }
+
+  .faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-chev {
+    flex: none;
+    color: var(--faint);
+    transition: transform 0.25s var(--ease);
+  }
+
+  .faq-item[open] .faq-chev {
+    transform: rotate(180deg);
+  }
+
+  .faq-item p {
+    padding: 0 22px 20px;
+    color: var(--muted);
+    font-size: 0.93rem;
+    max-width: 660px;
+  }
+</style>

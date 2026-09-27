@@ -1,0 +1,11 @@
+# Blueprint Render — site statique gratuit
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: quicktools
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: NODE_VERSION
+        value: 20.20.2

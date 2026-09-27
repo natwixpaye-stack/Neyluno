@@ -1,0 +1,61 @@
+---
+/** Fil d'Ariane — items: [{label, href?}] */
+const { items = [] } = Astro.props;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: items.map((item, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: item.label,
+    ...(item.href ? { item: new URL(item.href, Astro.site).href } : {}),
+  })),
+};
+---
+
+<nav class="breadcrumb" aria-label="Fil d'Ariane">
+  <ol role="list">
+    {items.map((item, i) => (
+      <li>
+        {i > 0 && <span class="sep" aria-hidden="true">/</span>}
+        {item.href ? (
+          <a href={item.href}>{item.label}</a>
+        ) : (
+          <span aria-current="page">{item.label}</span>
+        )}
+      </li>
+    ))}
+  </ol>
+</nav>
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+<style>
+  .breadcrumb ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.83rem;
+    color: var(--faint);
+  }
+  .breadcrumb li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .breadcrumb a {
+    color: var(--muted);
+    transition: color 0.15s;
+  }
+  .breadcrumb a:hover {
+    color: var(--text);
+  }
+  .breadcrumb [aria-current] {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .sep {
+    color: var(--faint);
+    opacity: 0.6;
+  }
+</style>

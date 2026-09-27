@@ -1,0 +1,236 @@
+---
+const MODES = [
+  { id: 'percentOf', label: 'X % de Y', a: 'Le pourcentage', b: 'La valeur de départ' },
+  { id: 'proportion', label: 'Proportion', a: 'La valeur X', b: 'Le total Y' },
+  { id: 'evolution', label: 'Évolution', a: 'Valeur initiale', b: 'Valeur finale' },
+  { id: 'discount', label: 'Réduction', a: 'Le prix', b: 'La réduction (%)' },
+  { id: 'add', label: 'Augmentation', a: 'Le montant', b: 'L’ajout (%)' },
+];
+---
+
+<div class="pct-tool" id="tool-percent">
+  <div class="pct-tabs" role="tablist" aria-label="Mode de calcul">
+    {MODES.map((m, i) => (
+      <button
+        type="button"
+        role="tab"
+        class:list={['pct-tab', { 'is-active': i === 0 }]}
+        aria-selected={i === 0 ? 'true' : 'false'}
+        data-mode={m.id}
+      >
+        {m.label}
+      </button>
+    ))}
+  </div>
+
+  <div class="pct-body">
+    <div class="pct-inputs">
+      <div class="field">
+        <label for="pct-a" data-label-a>Le pourcentage</label>
+        <input class="input pct-input" id="pct-a" type="text" inputmode="decimal" data-a placeholder="Ex. 20" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="pct-b" data-label-b>La valeur de départ</label>
+        <input class="input pct-input" id="pct-b" type="text" inputmode="decimal" data-b placeholder="Ex. 150" autocomplete="off" />
+      </div>
+    </div>
+
+    <div class="pct-result" aria-live="polite">
+      <div class="pct-result-value" data-result>—</div>
+      <div class="pct-result-sentence" data-sentence>Saisissez deux nombres pour lancer le calcul.</div>
+      <div class="pct-formula" data-formula></div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .pct-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .pct-tab {
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 0.87rem;
+    font-weight: 600;
+    transition: all 0.18s var(--ease);
+  }
+
+  .pct-tab:hover {
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+
+  .pct-tab.is-active {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-fg);
+    border-color: transparent;
+  }
+
+  .pct-body {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: clamp(20px, 4vw, 40px);
+    align-items: start;
+  }
+
+  .pct-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .pct-input {
+    font-size: 1.15rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pct-result {
+    padding: clamp(22px, 3vw, 34px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-l);
+    background:
+      radial-gradient(320px 160px at 80% 0%, var(--glow), transparent 70%),
+      var(--panel);
+  }
+
+  .pct-result-value {
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    background: var(--accent-grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+
+  .pct-result-sentence {
+    margin-top: 10px;
+    color: var(--text);
+    font-size: 0.98rem;
+  }
+
+  .pct-formula {
+    margin-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--faint);
+  }
+
+  @media (max-width: 760px) {
+    .pct-body {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  import { percentOf, proportion, evolution, discount, addPercent } from '../../lib/percentage.js';
+  import { formatNumber, formatPercent } from '../../lib/format.js';
+
+  const root = document.getElementById('tool-percent');
+  if (root) {
+    const tabs = [...root.querySelectorAll('[data-mode]')];
+    const inputA = root.querySelector('[data-a]');
+    const inputB = root.querySelector('[data-b]');
+    const labelA = root.querySelector('[data-label-a]');
+    const labelB = root.querySelector('[data-label-b]');
+    const resultEl = root.querySelector('[data-result]');
+    const sentenceEl = root.querySelector('[data-sentence]');
+    const formulaEl = root.querySelector('[data-formula]');
+
+    const LABELS = {
+      percentOf: ['Le pourcentage', 'La valeur de départ'],
+      proportion: ['La valeur X', 'Le total Y'],
+      evolution: ['Valeur initiale', 'Valeur finale'],
+      discount: ['Le prix', 'La réduction (%)'],
+      add: ['Le montant', 'L’ajout (%)'],
+    };
+
+    let mode = 'percentOf';
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        mode = tab.dataset.mode;
+        tabs.forEach((t) => {
+          t.classList.toggle('is-active', t === tab);
+          t.setAttribute('aria-selected', String(t === tab));
+        });
+        labelA.textContent = LABELS[mode][0];
+        labelB.textContent = LABELS[mode][1];
+        compute();
+      });
+    });
+
+    const parseNum = (v) => {
+      const n = parseFloat(String(v).trim().replace(/\s/g, '').replace(',', '.'));
+      return Number.isFinite(n) ? n : NaN;
+    };
+
+    function compute() {
+      const a = parseNum(inputA.value);
+      const b = parseNum(inputB.value);
+
+      if (inputA.value.trim() === '' || inputB.value.trim() === '') {
+        resultEl.textContent = '—';
+        sentenceEl.textContent = 'Saisissez deux nombres pour lancer le calcul.';
+        formulaEl.textContent = '';
+        return;
+      }
+      if (!Number.isFinite(a) || !Number.isFinite(b)) {
+        resultEl.textContent = '—';
+        sentenceEl.textContent = 'Ces valeurs ne ressemblent pas à des nombres. Utilisez des chiffres (ex. 12,5).';
+        formulaEl.textContent = '';
+        return;
+      }
+
+      let out = null;
+      if (mode === 'percentOf') out = percentOf(a, b);
+      else if (mode === 'proportion') out = proportion(a, b);
+      else if (mode === 'evolution') out = evolution(a, b);
+      else if (mode === 'discount') out = discount(a, b);
+      else out = addPercent(a, b);
+
+      if (!out) {
+        resultEl.textContent = '—';
+        sentenceEl.textContent = 'Calcul impossible : vérifiez vos valeurs (le diviseur ne peut pas être 0).';
+        formulaEl.textContent = '';
+        return;
+      }
+
+      const fa = formatNumber(a);
+      const fb = formatNumber(b);
+
+      if (mode === 'percentOf') {
+        resultEl.textContent = formatNumber(out.result);
+        sentenceEl.textContent = `${formatPercent(a)} de ${fb} = ${formatNumber(out.result)}`;
+      } else if (mode === 'proportion') {
+        resultEl.textContent = formatPercent(out.result);
+        sentenceEl.textContent = `${fa} représente ${formatPercent(out.result)} de ${fb}.`;
+      } else if (mode === 'evolution') {
+        const up = out.result >= 0;
+        resultEl.textContent = `${up ? '+' : ''}${formatPercent(out.result)}`;
+        sentenceEl.textContent = `De ${fa} à ${fb} : ${up ? 'une hausse' : 'une baisse'} de ${formatPercent(Math.abs(out.result))}.`;
+      } else if (mode === 'discount') {
+        resultEl.textContent = formatNumber(out.result);
+        sentenceEl.textContent = `${fb} moins ${fa} % = ${formatNumber(out.result)} (économie : ${formatNumber(out.saved)}).`;
+      } else {
+        resultEl.textContent = formatNumber(out.result);
+        sentenceEl.textContent = `${fb} plus ${fa} % = ${formatNumber(out.result)} (ajout : ${formatNumber(out.added)}).`;
+      }
+      formulaEl.textContent = out.formula || '';
+    }
+
+    inputA.addEventListener('input', compute);
+    inputB.addEventListener('input', compute);
+  }
+</script>

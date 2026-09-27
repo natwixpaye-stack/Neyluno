@@ -1,0 +1,45 @@
+---
+/**
+ * Emplacement publicitaire propre.
+ * - Désactivé par défaut (site.ads.enabled = false) → aucun impact visuel, aucun layout shift.
+ * - Le jour où une régie est branchée : rendre le slot visible + injecter le script.
+ * Règles : jamais sur les boutons, jamais confondu avec un outil, toujours étiqueté.
+ */
+import { site } from '../data/site.js';
+const { slot = 'generic' } = Astro.props;
+const enabled = site.ads.enabled;
+---
+
+{
+  enabled && (
+    <aside class="ad-slot" data-ad-slot={slot} aria-label="Espace publicitaire">
+      <span class="ad-label">Publicité</span>
+      <div class="ad-box">
+        {/* Point d'injection du code régie */}
+      </div>
+    </aside>
+  )
+}
+
+<style>
+  .ad-slot {
+    margin-block: 28px;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    padding: 12px;
+    background: transparent;
+  }
+  .ad-label {
+    display: block;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--faint);
+    margin-bottom: 8px;
+  }
+  .ad-box {
+    min-height: 100px;
+    border-radius: calc(var(--radius) - 8px);
+    background: var(--panel);
+  }
+</style>

@@ -1,0 +1,375 @@
+---
+import Icon from '../../components/Icon.astro';
+---
+
+<div class="ftool" id="tool-resize">
+  <div class="rz-options">
+    <div class="rz-row">
+      <div class="field" style="flex:1">
+        <span class="field-label">Mode</span>
+        <div class="seg" role="radiogroup" aria-label="Mode de redimensionnement">
+          <button type="button" class="seg-btn is-active" data-mode-btn="dims" aria-pressed="true">Dimensions</button>
+          <button type="button" class="seg-btn" data-mode-btn="percent" aria-pressed="false">Pourcentage</button>
+        </div>
+      </div>
+
+      <div class="field" style="flex:1">
+        <span class="field-label">Format de sortie</span>
+        <select class="select" data-format aria-label="Format de sortie">
+          <option value="keep">Identique à l'original</option>
+          <option value="image/jpeg">JPG</option>
+          <option value="image/png">PNG</option>
+          <option value="image/webp" selected>WebP</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="rz-dims" data-mode-dims>
+      <div class="field">
+        <label for="rz-w">Largeur (px)</label>
+        <input class="input" type="number" id="rz-w" min="1" max="8192" inputmode="numeric" data-width placeholder="—" />
+      </div>
+      <label class="pill-check rz-lock">
+        <input type="checkbox" checked data-lock />
+        <span class="dot" aria-hidden="true"></span>
+        Ratio verrouillé
+      </label>
+      <div class="field">
+        <label for="rz-h">Hauteur (px)</label>
+        <input class="input" type="number" id="rz-h" min="1" max="8192" inputmode="numeric" data-height placeholder="—" />
+      </div>
+    </div>
+
+    <div class="rz-percent" data-mode-percent hidden>
+      <div class="pct-presets" role="group" aria-label="Pourcentages rapides">
+        <button type="button" class="pct-btn" data-pct="25">25 %</button>
+        <button type="button" class="pct-btn" data-pct="50">50 %</button>
+        <button type="button" class="pct-btn" data-pct="75">75 %</button>
+        <button type="button" class="pct-btn is-active" data-pct="100">100 %</button>
+      </div>
+      <div class="field" style="max-width:160px">
+        <label for="rz-pct">Personnalisé (%)</label>
+        <input class="input" type="number" id="rz-pct" min="1" max="500" value="100" inputmode="numeric" data-pct-input />
+      </div>
+    </div>
+
+    <div class="rz-quality" data-quality-row hidden>
+      <label for="rz-q">Qualité <output data-q-out>85 %</output></label>
+      <input type="range" id="rz-q" min="10" max="100" value="85" data-quality />
+    </div>
+
+    <p class="rz-info" data-info aria-live="polite">Ajoutez une image pour commencer.</p>
+  </div>
+
+  <div data-notice hidden></div>
+
+  <div class="dropzone" data-dropzone>
+    <input type="file" data-file-input hidden />
+    <span class="dz-icon" aria-hidden="true"><Icon name="upload" size={24} /></span>
+    <h3>Glissez-déposez votre image ici</h3>
+    <p>ou cliquez pour parcourir · JPG, PNG, WebP · jusqu'à 50 Mo</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choisir une image</span>
+  </div>
+
+  <div class="ftool-actions">
+    <span class="ftool-count" data-count aria-live="polite"></span>
+    <span class="ftool-actions-btns">
+      <button type="button" class="btn btn-ghost btn-sm" data-clear-all hidden>Réinitialiser</button>
+      <button type="button" class="btn btn-accent btn-sm" data-go hidden>Redimensionner</button>
+    </span>
+  </div>
+
+  <ul class="file-list" data-file-list role="list" aria-label="Image à redimensionner"></ul>
+</div>
+
+<style>
+  .rz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 22px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  .rz-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .seg {
+    display: inline-flex;
+    padding: 4px;
+    gap: 4px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel);
+  }
+  .seg-btn {
+    padding: 8px 16px;
+    border-radius: 9px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    transition: all 0.18s var(--ease);
+  }
+  .seg-btn.is-active {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-fg);
+  }
+  .rz-dims {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .rz-dims .field {
+    max-width: 160px;
+  }
+  .rz-lock {
+    margin-bottom: 4px;
+  }
+  .rz-percent {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .pct-presets {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .pct-btn {
+    padding: 9px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    transition: all 0.18s var(--ease);
+  }
+  .pct-btn:hover {
+    border-color: var(--border-strong);
+  }
+  .pct-btn.is-active {
+    border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--text);
+  }
+  .rz-quality label {
+    display: flex;
+    justify-content: space-between;
+    max-width: 340px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .rz-quality output {
+    color: var(--accent);
+  }
+  .rz-quality input {
+    max-width: 340px;
+  }
+  .rz-info {
+    font-size: 0.86rem;
+    color: var(--muted);
+  }
+  .ftool-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+  .ftool-count {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .ftool-actions-btns {
+    display: flex;
+    gap: 10px;
+  }
+</style>
+
+<script>
+  import { mountFileTool } from '../../lib/fileui.js';
+  import { decodeImage, renderToBlob, renameWithExt, scaleDimensions } from '../../lib/image.js';
+  import { bindRangeFill, toast } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-resize');
+  if (root) {
+    const widthInput = root.querySelector('[data-width]');
+    const heightInput = root.querySelector('[data-height]');
+    const lockInput = root.querySelector('[data-lock]');
+    const pctInput = root.querySelector('[data-pct-input]');
+    const formatSel = root.querySelector('[data-format]');
+    const qualityRow = root.querySelector('[data-quality-row]');
+    const quality = root.querySelector('[data-quality]');
+    const qOut = root.querySelector('[data-q-out]');
+    const info = root.querySelector('[data-info]');
+    const goBtn = root.querySelector('[data-go]');
+    const modeDims = root.querySelector('[data-mode-dims]');
+    const modePercent = root.querySelector('[data-mode-percent]');
+    let mode = 'dims';
+    bindRangeFill(quality);
+    quality.addEventListener('input', () => (qOut.textContent = `${quality.value} %`));
+
+    root.querySelectorAll('[data-mode-btn]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        mode = btn.dataset.modeBtn;
+        root.querySelectorAll('[data-mode-btn]').forEach((b) => {
+          b.classList.toggle('is-active', b === btn);
+          b.setAttribute('aria-pressed', String(b === btn));
+        });
+        modeDims.hidden = mode !== 'dims';
+        modePercent.hidden = mode !== 'percent';
+        updateInfo();
+      });
+    });
+
+    root.querySelectorAll('[data-pct]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        root.querySelectorAll('[data-pct]').forEach((b) => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        pctInput.value = btn.dataset.pct;
+        updateInfo();
+      });
+    });
+
+    pctInput.addEventListener('input', () => {
+      root.querySelectorAll('[data-pct]').forEach((b) => b.classList.toggle('is-active', b.dataset.pct === pctInput.value));
+      updateInfo();
+    });
+
+    // ⚠️ `api` n'existe pas encore pendant le premier onListChange (TDZ) :
+    // on suit donc la liste via une variable locale.
+    let currentItems = [];
+
+    const api = mountFileTool(root, {
+      acceptTypes: ['image/jpeg', 'image/png', 'image/webp'],
+      acceptExts: ['.jpg', '.jpeg', '.png', '.webp'],
+      multiple: false,
+      autoProcess: false,
+      process: async (item) => {
+        if (!item._dims) throw new Error('Dimensions de l’image introuvables. Réessayez avec un autre fichier.');
+        const { width: ow, height: oh } = item._dims;
+        let target;
+        if (mode === 'percent') {
+          target = scaleDimensions(ow, oh, Number(pctInput.value) || 100);
+        } else {
+          const tw = parseInt(widthInput.value, 10);
+          const th = parseInt(heightInput.value, 10);
+          if (!tw && !th) throw new Error('Indiquez une largeur ou une hauteur cible.');
+          if (lockInput.checked) {
+            if (tw) target = { width: tw, height: Math.max(1, Math.round((tw * oh) / ow)) };
+            else target = { width: Math.max(1, Math.round((th * ow) / oh)), height: th };
+          } else {
+            target = { width: tw || ow, height: th || oh };
+          }
+        }
+        if (target.width > 8192 || target.height > 8192) {
+          throw new Error('Dimensions cibles trop grandes (maximum 8192 px par côté).');
+        }
+        let format = formatSel.value;
+        if (format === 'keep') {
+          format = item.file.type === 'image/png' ? 'image/png' : item.file.type === 'image/webp' ? 'image/webp' : 'image/jpeg';
+        }
+        const img = await decodeImage(item.file);
+        try {
+          const blob = await renderToBlob(img.source, {
+            width: target.width,
+            height: target.height,
+            format,
+            quality: Number(quality.value) / 100,
+          });
+          const ext = format === 'image/png' ? 'png' : format === 'image/webp' ? 'webp' : 'jpg';
+          return { blob, name: renameWithExt(item.file.name, ext), meta: `${target.width} × ${target.height}` };
+        } finally {
+          img.close();
+        }
+      },
+      onListChange: (items) => {
+        currentItems = items;
+        goBtn.hidden = items.length === 0;
+        const item = items[0];
+        if (item && !item._dims && !item._dimsLoading) {
+          item._dimsLoading = true;
+          decodeImage(item.file)
+            .then((img) => {
+              item._dims = { width: img.width, height: img.height };
+              img.close();
+              if (lockInput.checked) {
+                widthInput.value = img.width;
+                heightInput.value = img.height;
+              }
+              updateInfo();
+            })
+            .catch(() => {
+              /* l'erreur sera levée au moment de la conversion, avec un message clair */
+            });
+        }
+        updateInfo();
+      },
+    });
+
+    widthInput.addEventListener('input', () => {
+      const item = currentItems[0];
+      if (lockInput.checked && item?._dims) {
+        const w = parseInt(widthInput.value, 10);
+        if (w) heightInput.value = Math.max(1, Math.round((w * item._dims.height) / item._dims.width));
+      }
+      updateInfo();
+    });
+    heightInput.addEventListener('input', () => {
+      const item = currentItems[0];
+      if (lockInput.checked && item?._dims) {
+        const h = parseInt(heightInput.value, 10);
+        if (h) widthInput.value = Math.max(1, Math.round((h * item._dims.width) / item._dims.height));
+      }
+      updateInfo();
+    });
+    lockInput.addEventListener('change', updateInfo);
+    formatSel.addEventListener('change', () => {
+      const f = formatSel.value;
+      qualityRow.hidden = f === 'image/png';
+      updateInfo();
+    });
+    qualityRow.hidden = formatSel.value === 'image/png';
+
+    function updateInfo() {
+      const item = currentItems[0];
+      if (!item?._dims) {
+        info.textContent = item ? 'Lecture des dimensions…' : 'Ajoutez une image pour commencer.';
+        return;
+      }
+      const { width: ow, height: oh } = item._dims;
+      let txt = `Original : ${ow} × ${oh} px`;
+      if (mode === 'percent') {
+        const t = scaleDimensions(ow, oh, Number(pctInput.value) || 100);
+        txt += ` → Sortie : ${t.width} × ${t.height} px`;
+      } else {
+        const w = widthInput.value || '?';
+        const h = heightInput.value || '?';
+        txt += ` → Sortie : ${w} × ${h} px`;
+      }
+      info.textContent = txt;
+    }
+
+    goBtn.addEventListener('click', async () => {
+      goBtn.disabled = true;
+      goBtn.textContent = 'Traitement…';
+      try {
+        await api.processAll();
+        const item = api.items[0];
+        if (item?.status === 'done') toast('Image redimensionnée. Vous pouvez la télécharger.', 'success');
+      } finally {
+        goBtn.disabled = false;
+        goBtn.textContent = 'Redimensionner';
+      }
+    });
+  }
+</script>

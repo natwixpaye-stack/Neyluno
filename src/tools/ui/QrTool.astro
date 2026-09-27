@@ -1,0 +1,388 @@
+---
+import Icon from '../../components/Icon.astro';
+---
+
+<div class="qr-tool" id="tool-qr">
+  <div class="qr-grid">
+    <div class="qr-form">
+      <div class="field">
+        <label for="qr-type">Type de contenu</label>
+        <select class="select" id="qr-type" data-type>
+          <option value="url" selected>Adresse web (URL)</option>
+          <option value="text">Texte libre</option>
+          <option value="email">E-mail</option>
+          <option value="phone">Téléphone</option>
+          <option value="sms">SMS</option>
+          <option value="wifi">Accès Wi-Fi</option>
+        </select>
+      </div>
+
+      <div data-fields-url>
+        <div class="field">
+          <label for="qr-url">Adresse</label>
+          <input class="input" id="qr-url" type="text" data-f-url placeholder="https://exemple.fr" autocomplete="off" spellcheck="false" />
+        </div>
+      </div>
+
+      <div data-fields-text hidden>
+        <div class="field">
+          <label for="qr-text">Texte</label>
+          <textarea class="textarea" id="qr-text" data-f-text rows="4" placeholder="Le texte à encoder…"></textarea>
+        </div>
+      </div>
+
+      <div data-fields-email hidden>
+        <div class="field">
+          <label for="qr-email-to">Destinataire</label>
+          <input class="input" id="qr-email-to" type="email" data-f-email-to placeholder="contact@exemple.fr" />
+        </div>
+        <div class="field" style="margin-top:12px">
+          <label for="qr-email-subject">Sujet (optionnel)</label>
+          <input class="input" id="qr-email-subject" type="text" data-f-email-subject />
+        </div>
+      </div>
+
+      <div data-fields-phone hidden>
+        <div class="field">
+          <label for="qr-phone">Numéro</label>
+          <input class="input" id="qr-phone" type="tel" data-f-phone placeholder="+33 6 12 34 56 78" />
+        </div>
+      </div>
+
+      <div data-fields-sms hidden>
+        <div class="field">
+          <label for="qr-sms-phone">Numéro</label>
+          <input class="input" id="qr-sms-phone" type="tel" data-f-sms-phone placeholder="+33 6 12 34 56 78" />
+        </div>
+        <div class="field" style="margin-top:12px">
+          <label for="qr-sms-msg">Message (optionnel)</label>
+          <input class="input" id="qr-sms-msg" type="text" data-f-sms-msg />
+        </div>
+      </div>
+
+      <div data-fields-wifi hidden>
+        <div class="field">
+          <label for="qr-wifi-ssid">Nom du réseau (SSID)</label>
+          <input class="input" id="qr-wifi-ssid" type="text" data-f-wifi-ssid />
+        </div>
+        <div class="qr-wifi-row">
+          <div class="field" style="flex:1">
+            <label for="qr-wifi-sec">Sécurité</label>
+            <select class="select" id="qr-wifi-sec" data-f-wifi-sec>
+              <option value="WPA" selected>WPA / WPA2 / WPA3</option>
+              <option value="WEP">WEP</option>
+              <option value="nopass">Réseau ouvert</option>
+            </select>
+          </div>
+          <div class="field" style="flex:1.4" data-wifi-pass>
+            <label for="qr-wifi-pass">Mot de passe</label>
+            <input class="input" id="qr-wifi-pass" type="text" data-f-wifi-pass />
+          </div>
+        </div>
+      </div>
+
+      <div class="qr-error" data-error role="alert" hidden></div>
+
+      <hr class="divider" style="margin:22px 0" />
+
+      <div class="qr-style-grid">
+        <div class="field">
+          <label for="qr-fg">Couleur du code</label>
+          <input class="color-input" id="qr-fg" type="color" value="#14161e" data-fg />
+        </div>
+        <div class="field">
+          <label for="qr-bg">Arrière-plan</label>
+          <input class="color-input" id="qr-bg" type="color" value="#ffffff" data-bg />
+        </div>
+        <div class="field">
+          <label for="qr-size">Taille (px)</label>
+          <select class="select" id="qr-size" data-size>
+            <option value="256">256</option>
+            <option value="512" selected>512</option>
+            <option value="768">768</option>
+            <option value="1024">1024</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="qr-ecc">Correction d'erreur</label>
+          <select class="select" id="qr-ecc" data-ecc>
+            <option value="L">L — 7 %</option>
+            <option value="M" selected>M — 15 %</option>
+            <option value="Q">Q — 25 %</option>
+            <option value="H">H — 30 %</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:14px">
+        <label for="qr-margin">Marge <output data-margin-out>4</output></label>
+        <input type="range" id="qr-margin" min="0" max="10" value="4" data-margin />
+      </div>
+    </div>
+
+    <div class="qr-preview">
+      <div class="qr-canvas-wrap">
+        <canvas data-canvas width="256" height="256" role="img" aria-label="Aperçu du QR code"></canvas>
+        <div class="qr-empty" data-empty>
+          <Icon name="qr" size={30} />
+          <p>Saisissez un contenu<br />pour générer votre QR code</p>
+        </div>
+      </div>
+      <div class="qr-download">
+        <button type="button" class="btn btn-primary btn-sm" data-dl-png disabled>
+          <Icon name="download" size={15} /> PNG
+        </button>
+        <button type="button" class="btn btn-ghost btn-sm" data-dl-svg disabled>
+          <Icon name="download" size={15} /> SVG
+        </button>
+      </div>
+      <p class="qr-note">Le QR code est généré localement : son contenu n'est envoyé nulle part.</p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .qr-grid {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    gap: clamp(24px, 4vw, 48px);
+    align-items: start;
+  }
+
+  .qr-style-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .qr-wifi-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .color-input {
+    width: 100%;
+    height: 44px;
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-s);
+    background: var(--panel);
+    cursor: pointer;
+  }
+
+  .qr-error {
+    margin-top: 14px;
+  }
+
+  .qr-preview {
+    position: sticky;
+    top: calc(var(--header-h) + 16px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: clamp(20px, 3vw, 32px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-l);
+    background: var(--panel);
+  }
+
+  .qr-canvas-wrap {
+    position: relative;
+    width: min(260px, 100%);
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+  }
+
+  .qr-canvas-wrap canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    box-shadow: 0 14px 40px -18px rgba(0, 0, 0, 0.5);
+  }
+
+  .qr-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+    color: var(--faint);
+    font-size: 0.85rem;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: 12px;
+  }
+
+  .qr-download {
+    display: flex;
+    gap: 10px;
+  }
+
+  .qr-note {
+    font-size: 0.75rem;
+    color: var(--faint);
+    text-align: center;
+  }
+
+  @media (max-width: 820px) {
+    .qr-grid {
+      grid-template-columns: 1fr;
+    }
+    .qr-preview {
+      position: static;
+      order: -1;
+    }
+    .qr-style-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>
+
+<script>
+  import { buildQrPayload } from '../../lib/qrdata.js';
+  import { bindRangeFill, debounce, toast, downloadBlob } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-qr');
+  if (root) {
+    const typeSel = root.querySelector('[data-type]');
+    const canvas = root.querySelector('[data-canvas]');
+    const empty = root.querySelector('[data-empty]');
+    const errorEl = root.querySelector('[data-error]');
+    const dlPng = root.querySelector('[data-dl-png]');
+    const dlSvg = root.querySelector('[data-dl-svg]');
+    const marginRange = root.querySelector('[data-margin]');
+    const marginOut = root.querySelector('[data-margin-out]');
+    bindRangeFill(marginRange);
+    marginRange.addEventListener('input', () => (marginOut.textContent = marginRange.value));
+
+    const fieldGroups = {
+      url: root.querySelector('[data-fields-url]'),
+      text: root.querySelector('[data-fields-text]'),
+      email: root.querySelector('[data-fields-email]'),
+      phone: root.querySelector('[data-fields-phone]'),
+      sms: root.querySelector('[data-fields-sms]'),
+      wifi: root.querySelector('[data-fields-wifi]'),
+    };
+
+    typeSel.addEventListener('change', () => {
+      Object.entries(fieldGroups).forEach(([k, el]) => (el.hidden = k !== typeSel.value));
+      render();
+    });
+
+    root.querySelector('[data-f-wifi-sec]').addEventListener('change', (e) => {
+      root.querySelector('[data-wifi-pass]').hidden = e.target.value === 'nopass';
+      render();
+    });
+
+    function collectFields() {
+      const t = typeSel.value;
+      if (t === 'url') return { url: root.querySelector('[data-f-url]').value };
+      if (t === 'text') return { text: root.querySelector('[data-f-text]').value };
+      if (t === 'email')
+        return { to: root.querySelector('[data-f-email-to]').value, subject: root.querySelector('[data-f-email-subject]').value };
+      if (t === 'phone') return { phone: root.querySelector('[data-f-phone]').value };
+      if (t === 'sms') return { phone: root.querySelector('[data-f-sms-phone]').value, message: root.querySelector('[data-f-sms-msg]').value };
+      return {
+        ssid: root.querySelector('[data-f-wifi-ssid]').value,
+        security: root.querySelector('[data-f-wifi-sec]').value,
+        password: root.querySelector('[data-f-wifi-pass]').value,
+      };
+    }
+
+    let lastValue = '';
+    let qrLibPromise = null;
+    const loadQr = () => (qrLibPromise ??= import('qrcode'));
+
+    async function render() {
+      const payload = buildQrPayload(typeSel.value, collectFields());
+
+      if (payload.error) {
+        errorEl.hidden = false;
+        errorEl.innerHTML = '';
+        const div = document.createElement('div');
+        div.className = 'notice notice-error';
+        div.textContent = payload.error;
+        errorEl.appendChild(div);
+      } else {
+        errorEl.hidden = true;
+        errorEl.innerHTML = '';
+      }
+
+      const hasContent = !payload.error;
+      empty.hidden = hasContent;
+      dlPng.disabled = !hasContent;
+      dlSvg.disabled = !hasContent;
+      if (!hasContent) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        lastValue = '';
+        return;
+      }
+
+      try {
+        const QRCode = await loadQr();
+        const opts = {
+          errorCorrectionLevel: root.querySelector('[data-ecc]').value,
+          width: Number(root.querySelector('[data-size]').value),
+          margin: Number(marginRange.value),
+          color: {
+            dark: root.querySelector('[data-fg]').value,
+            light: root.querySelector('[data-bg]').value,
+          },
+        };
+        await QRCode.toCanvas(canvas, payload.value, opts);
+        lastValue = payload.value;
+      } catch (err) {
+        errorEl.hidden = false;
+        errorEl.innerHTML = '';
+        const div = document.createElement('div');
+        div.className = 'notice notice-error';
+        div.textContent = 'Contenu trop long pour un QR code. Raccourcissez-le (un lien court fonctionne mieux).';
+        errorEl.appendChild(div);
+      }
+    }
+
+    const renderDebounced = debounce(render, 250);
+    root.querySelectorAll('input, textarea, select').forEach((el) => {
+      el.addEventListener('input', renderDebounced);
+      el.addEventListener('change', render);
+    });
+
+    dlPng.addEventListener('click', () => {
+      if (!lastValue) return;
+      canvas.toBlob((blob) => {
+        if (!blob) return toast('L’export PNG a échoué.', 'error');
+        downloadBlob(blob, 'qrcode.png');
+        toast('QR code téléchargé en PNG.', 'success');
+      }, 'image/png');
+    });
+
+    dlSvg.addEventListener('click', async () => {
+      if (!lastValue) return;
+      try {
+        const QRCode = await loadQr();
+        const svg = await QRCode.toString(lastValue, {
+          type: 'svg',
+          errorCorrectionLevel: root.querySelector('[data-ecc]').value,
+          margin: Number(marginRange.value),
+          color: {
+            dark: root.querySelector('[data-fg]').value,
+            light: root.querySelector('[data-bg]').value,
+          },
+        });
+        downloadBlob(new Blob([svg], { type: 'image/svg+xml' }), 'qrcode.svg');
+        toast('QR code téléchargé en SVG.', 'success');
+      } catch {
+        toast('L’export SVG a échoué.', 'error');
+      }
+    });
+
+    render();
+  }
+</script>

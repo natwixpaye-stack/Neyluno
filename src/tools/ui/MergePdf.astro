@@ -1,0 +1,147 @@
+---
+import Icon from '../../components/Icon.astro';
+---
+
+<div class="ftool" id="tool-merge-pdf">
+  <div data-notice hidden></div>
+
+  <div class="dropzone" data-dropzone>
+    <input type="file" data-file-input multiple hidden />
+    <span class="dz-icon" aria-hidden="true"><Icon name="upload" size={24} /></span>
+    <h3>Glissez-déposez vos PDF ici</h3>
+    <p>ou cliquez pour parcourir · PDF uniquement · jusqu'à 50 Mo par fichier</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choisir des PDF</span>
+  </div>
+
+  <p class="mp-hint">Réordonnez avec les flèches ↑↓ : le document final suit l'ordre de la liste.</p>
+
+  <div class="ftool-actions">
+    <span class="ftool-count" data-count aria-live="polite"></span>
+    <span class="ftool-actions-btns">
+      <button type="button" class="btn btn-ghost btn-sm" data-clear-all hidden>Réinitialiser</button>
+      <button type="button" class="btn btn-accent btn-sm" data-merge hidden>Fusionner les PDF</button>
+    </span>
+  </div>
+
+  <ul class="file-list" data-file-list role="list" aria-label="PDF à fusionner"></ul>
+</div>
+
+<style>
+  .mp-hint {
+    font-size: 0.78rem;
+    color: var(--faint);
+    margin-top: 14px;
+  }
+  .ftool-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+  .ftool-count {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .ftool-actions-btns {
+    display: flex;
+    gap: 10px;
+  }
+</style>
+
+<script>
+  import { mountFileTool } from '../../lib/fileui.js';
+  import { toast, downloadBlob } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-merge-pdf');
+  if (root) {
+    const mergeBtn = root.querySelector('[data-merge]');
+    const pageCounts = new Map(); // id → { pages } | { error }
+
+    const api = mountFileTool(root, {
+      acceptTypes: ['application/pdf'],
+      acceptExts: ['.pdf'],
+      autoProcess: false,
+      reorderable: true,
+      withThumb: false,
+      itemMeta: (item) => {
+        const info = pageCounts.get(item.id);
+        if (!info) return '· analyse…';
+        if (info.error) return '· ⚠ protégé ou illisible';
+        return `· ${info.pages} page${info.pages > 1 ? 's' : ''}`;
+      },
+      onListChange: (items) => {
+        mergeBtn.hidden = items.length === 0;
+        for (const item of items) {
+          if (!pageCounts.has(item.id)) countPages(item);
+        }
+      },
+    });
+
+    async function countPages(item) {
+      try {
+        const { PDFDocument } = await import('pdf-lib');
+        const doc = await PDFDocument.load(await item.file.arrayBuffer(), {
+          ignoreEncryption: true,
+          updateMetadata: false,
+        });
+        if (doc.isEncrypted) {
+          pageCounts.set(item.id, { error: 'encrypted' });
+        } else {
+          pageCounts.set(item.id, { pages: doc.getPageCount() });
+        }
+      } catch {
+        pageCounts.set(item.id, { error: 'invalid' });
+      }
+      api.refreshMeta(item);
+    }
+
+    mergeBtn.addEventListener('click', async () => {
+      const items = api.items;
+      if (items.length < 2) {
+        api.showNotice('Ajoutez au moins deux PDF pour lancer une fusion.', 'error');
+        return;
+      }
+      const bad = items.filter((i) => pageCounts.get(i.id)?.error);
+      if (bad.length) {
+        api.showNotice(
+          `Impossible de fusionner : ${bad.map((i) => `« ${i.file.name} »`).join(', ')} est protégé par mot de passe ou illisible. Retirez-le puis réessayez.`,
+          'error'
+        );
+        return;
+      }
+      const stillAnalyzing = items.some((i) => !pageCounts.has(i.id));
+      if (stillAnalyzing) {
+        api.showNotice('Analyse des fichiers en cours… Réessayez dans un instant.', 'info');
+        return;
+      }
+
+      mergeBtn.disabled = true;
+      const label = mergeBtn.textContent;
+      mergeBtn.textContent = 'Fusion en cours…';
+      try {
+        const { PDFDocument } = await import('pdf-lib');
+        const out = await PDFDocument.create();
+        for (const item of items) {
+          const src = await PDFDocument.load(await item.file.arrayBuffer(), {
+            ignoreEncryption: true,
+            updateMetadata: false,
+          });
+          const pages = await out.copyPages(src, src.getPageIndices());
+          pages.forEach((p) => out.addPage(p));
+        }
+        const bytes = await out.save();
+        downloadBlob(new Blob([bytes], { type: 'application/pdf' }), 'quicktools-fusion.pdf');
+        toast(`${items.length} PDF fusionnés en un seul document.`, 'success');
+        api.showNotice('');
+      } catch (err) {
+        api.showNotice(err?.message || 'La fusion a échoué. Vérifiez que vos fichiers sont des PDF valides.', 'error');
+      } finally {
+        mergeBtn.disabled = false;
+        mergeBtn.textContent = label;
+      }
+    });
+  }
+</script>

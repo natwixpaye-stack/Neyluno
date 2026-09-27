@@ -1,0 +1,81 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolCard from '../../components/ToolCard.astro';
+import Icon from '../../components/Icon.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
+import { categories, getCategory } from '../../data/site.js';
+import { tools, getToolsByCategory } from '../../data/tools.js';
+
+export function getStaticPaths() {
+  return categories
+    .filter((c) => tools.some((t) => t.category === c.slug))
+    .map((c) => ({ params: { slug: c.slug } }));
+}
+
+const cat = getCategory(Astro.params.slug);
+const catTools = getToolsByCategory(cat.slug);
+---
+
+<BaseLayout
+  title={`Outils ${cat.name} — gratuits et locaux`}
+  description={cat.description}
+  path={`/categories/${cat.slug}/`}
+>
+  <div class="container page-top">
+    <Breadcrumb items={[{ label: 'Accueil', href: '/' }, { label: 'Catégories', href: '/categories/' }, { label: cat.name }]} />
+
+    <header class="cat-head">
+      <span class="cat-icon" style={`--hue:${cat.hue}`} aria-hidden="true">
+        <Icon name={cat.icon} size={26} />
+      </span>
+      <h1>{cat.name}</h1>
+      <p>{cat.description}</p>
+    </header>
+
+    <div class="tools-grid">
+      {catTools.map((tool) => <ToolCard tool={tool} />)}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .page-top {
+    padding-top: 26px;
+    padding-bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+
+  .cat-head {
+    max-width: 640px;
+  }
+
+  .cat-icon {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 17px;
+    color: var(--hue);
+    background: color-mix(in srgb, var(--hue) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--hue) 25%, transparent);
+    margin-bottom: 18px;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 4.6vw, 3rem);
+    margin-bottom: 10px;
+  }
+
+  .cat-head p {
+    color: var(--muted);
+    font-size: 1.02rem;
+  }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+    gap: 16px;
+  }
+</style>

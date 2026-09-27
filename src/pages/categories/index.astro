@@ -1,0 +1,96 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Icon from '../../components/Icon.astro';
+import { categories } from '../../data/site.js';
+import { tools } from '../../data/tools.js';
+---
+
+<BaseLayout
+  title="Catégories d'outils"
+  description="Explorez les outils QuickTools par catégorie : Images, PDF, Texte, Calcul, Sécurité et Utilitaires."
+  path="/categories/"
+>
+  <div class="container page-top">
+    <span class="eyebrow">Explorer</span>
+    <h1>Catégories</h1>
+    <p class="page-sub">Chaque catégorie regroupe des outils qui traitent vos fichiers localement, sans serveur.</p>
+
+    <div class="cat-grid">
+      {categories.map((c) => {
+        const catTools = tools.filter((t) => t.category === c.slug);
+        return (
+          <a class="cat-card card" href={`/categories/${c.slug}/`} data-spotlight style={`--hue:${c.hue}`}>
+            <span class="cat-icon" aria-hidden="true">
+              <Icon name={c.icon} size={22} />
+            </span>
+            <h2>{c.name}</h2>
+            <p>{c.description}</p>
+            <span class="cat-meta">
+              {catTools.length} outil{catTools.length > 1 ? 's' : ''} →
+            </span>
+          </a>
+        );
+      })}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .page-top {
+    padding-top: clamp(40px, 7vw, 72px);
+    padding-bottom: 40px;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 4.6vw, 3rem);
+    margin-bottom: 12px;
+  }
+
+  .page-sub {
+    color: var(--muted);
+    margin-bottom: 36px;
+    max-width: 560px;
+  }
+
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .cat-card {
+    color: inherit;
+  }
+
+  .cat-icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    color: var(--hue);
+    background: color-mix(in srgb, var(--hue) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--hue) 25%, transparent);
+    margin-bottom: 4px;
+  }
+
+  .cat-card h2 {
+    font-size: 1.15rem;
+  }
+
+  .cat-card p {
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+
+  .cat-meta {
+    margin-top: auto;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--faint);
+  }
+
+  .cat-card:hover .cat-meta {
+    color: var(--hue);
+  }
+</style>

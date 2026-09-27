@@ -1,0 +1,679 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import ToolCard from '../components/ToolCard.astro';
+import AdPlaceholder from '../components/AdPlaceholder.astro';
+import FAQ from '../components/FAQ.astro';
+import { site, categories } from '../data/site.js';
+import { tools } from '../data/tools.js';
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: site.name,
+    url: Astro.site.href,
+    description: site.shortDescription,
+    inLanguage: 'fr',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: tools.map((t, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: t.name,
+      url: new URL(`/outils/${t.slug}/`, Astro.site).href,
+    })),
+  },
+];
+
+const heroSearchExamples = ['Convertir une image…', 'Compresser un PDF…', 'Créer un QR code…', 'Calculer une réduction…'];
+
+const globalFaq = [
+  { q: 'Mes fichiers sont-ils envoyés sur un serveur ?', a: 'Non. Tous les traitements (conversion, compression, fusion…) sont réalisés directement dans votre navigateur avec des technologies web standards. Vos fichiers ne quittent jamais votre appareil.' },
+  { q: 'Faut-il créer un compte ?', a: 'Jamais. Aucun compte, aucune inscription, aucun e-mail. Vous arrivez, vous utilisez un outil, vous repartez.' },
+  { q: 'Le site est-il vraiment gratuit ?', a: 'Oui, tous les outils sont gratuits et sans limite d’utilisation cachée. Le site est conçu pour fonctionner sans coûts de serveur, ce qui nous permet de le rester.' },
+  { q: 'Puis-je utiliser les outils hors ligne ?', a: 'Une fois la page chargée, la plupart des outils fonctionnent sans connexion, car tout le traitement est local. Seule la navigation entre pages nécessite le réseau.' },
+];
+---
+
+<BaseLayout title={site.name} description={site.tagline} path="/" jsonLd={jsonLd}>
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <canvas id="hero-canvas" aria-hidden="true"></canvas>
+    <div class="hero-orb hero-orb-a" aria-hidden="true"></div>
+    <div class="hero-orb hero-orb-b" aria-hidden="true"></div>
+    <div class="hero-grid" aria-hidden="true"></div>
+
+    <div class="container hero-content">
+      <span class="badge hero-badge reveal"><span class="dot"></span>100 % local · gratuit · sans compte</span>
+      <h1 class="reveal">
+        Les bons outils.<br />
+        <span class="gradient-text">Sans les complications.</span>
+      </h1>
+      <p class="hero-sub reveal">
+        Des outils rapides, gratuits et simples pour transformer, convertir, calculer et créer
+        directement dans ton navigateur.
+      </p>
+
+      <div class="hero-search reveal" role="search">
+        <Icon name="search" size={20} />
+        <input
+          type="search"
+          id="hero-search"
+          data-hero-search
+          placeholder="Que veux-tu faire ?"
+          aria-label="Rechercher un outil : que veux-tu faire ?"
+          autocomplete="off"
+        />
+        <kbd aria-hidden="true">Ctrl K</kbd>
+      </div>
+
+      <div class="hero-chips reveal" aria-label="Outils populaires">
+        <span class="hero-chips-label">Populaires :</span>
+        <a href="/outils/generer-qr-code/">QR code</a>
+        <a href="/outils/compresser-image/">Compresser une image</a>
+        <a href="/outils/fusionner-pdf/">Fusionner des PDF</a>
+        <a href="/outils/generateur-mot-de-passe/">Mot de passe</a>
+      </div>
+    </div>
+
+    <div class="hero-scroll" aria-hidden="true"></div>
+  </section>
+
+  <AdPlaceholder slot="home-after-hero" />
+
+  <!-- ================= OUTILS ================= -->
+  <section class="section" id="outils">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Boîte à outils</span>
+        <h2>Tout ce qu'il faut, rien de superflu.</h2>
+        <p>Dix outils essentiels, chacun pensé pour faire une seule chose parfaitement — dans votre navigateur.</p>
+      </div>
+
+      <div class="filter-bar reveal" role="group" aria-label="Filtrer les outils par catégorie">
+        <button type="button" class="filter-chip is-active" data-filter="all">Tous</button>
+        {categories.filter((c) => tools.some((t) => t.category === c.slug)).map((c) => (
+          <button type="button" class="filter-chip" data-filter={c.slug} style={`--hue:${c.hue}`}>
+            {c.name}
+          </button>
+        ))}
+      </div>
+
+      <div class="tools-grid">
+        {tools.map((tool, i) => (
+          <div class="reveal" style={`transition-delay:${Math.min(i * 45, 360)}ms`} data-tool-wrap={tool.category}>
+            <ToolCard tool={tool} />
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= POURQUOI ================= -->
+  <section class="section why-section">
+    <div class="container why-grid">
+      <div class="why-left reveal">
+        <span class="eyebrow">Pourquoi QuickTools</span>
+        <h2>
+          Vos fichiers méritent mieux qu'un upload vers on ne sait où.
+        </h2>
+        <p class="muted">
+          La plupart des sites d'outils envoient vos documents sur leurs serveurs. Ici, le traitement se passe
+          <strong>chez vous</strong>, dans l'onglet de votre navigateur. C'est plus rapide, plus privé, et ça ne coûte rien.
+        </p>
+      </div>
+      <div class="why-stats">
+        <div class="why-stat reveal">
+          <span class="why-num">0</span>
+          <p><strong>upload serveur.</strong><br /><span class="muted">Vos fichiers restent sur votre appareil, du début à la fin.</span></p>
+        </div>
+        <div class="why-stat reveal" style="transition-delay:80ms">
+          <span class="why-num">100<span class="why-pct">%</span></span>
+          <p><strong>traitement local.</strong><br /><span class="muted">Canvas, Web Crypto, pdf-lib : le web sait déjà tout faire.</span></p>
+        </div>
+        <div class="why-stat reveal" style="transition-delay:160ms">
+          <span class="why-num">0</span>
+          <p><strong>compte requis.</strong><br /><span class="muted">Aucune inscription, aucun e-mail, aucune limite cachée.</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= COMMENT ================= -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Mode d'emploi</span>
+        <h2>Opérationnel en trois secondes.</h2>
+      </div>
+      <div class="steps-row">
+        <div class="step-card reveal">
+          <span class="step-num">1</span>
+          <h3>Choisissez un outil</h3>
+          <p>Parcourez la liste ou tapez ce que vous voulez faire dans la recherche.</p>
+        </div>
+        <div class="step-card reveal" style="transition-delay:90ms">
+          <span class="step-num">2</span>
+          <h3>Déposez ou saisissez</h3>
+          <p>Glissez-déposez un fichier ou saisissez votre texte : le traitement démarre immédiatement.</p>
+        </div>
+        <div class="step-card reveal" style="transition-delay:180ms">
+          <span class="step-num">3</span>
+          <h3>Téléchargez</h3>
+          <p>Récupérez le résultat en un clic. Ensuite, fermez l'onglet : rien ne reste derrière vous.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FAQ ================= -->
+  <section class="section">
+    <div class="container">
+      <div class="reveal">
+        <FAQ items={globalFaq} title="Les questions qu'on nous pose" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CTA ================= -->
+  <section class="section cta-section">
+    <div class="container">
+      <div class="cta-band reveal">
+        <div class="cta-orb" aria-hidden="true"></div>
+        <h2>Un outil à faire, là, maintenant&nbsp;?</h2>
+        <p>Ouvrez-en un. Aucune installation, aucune inscription.</p>
+        <a href="/outils/" class="btn btn-primary">
+          Voir les {tools.length} outils <Icon name="arrow-right" size={16} />
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* ---------- HERO ---------- */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(80px, 14vh, 150px) 0 clamp(70px, 11vh, 120px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #hero-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 75% 60% at 50% 38%, black 20%, transparent 72%);
+    opacity: 0.5;
+  }
+
+  .hero-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.5;
+    will-change: transform;
+    animation: orb-float 16s ease-in-out infinite;
+  }
+
+  .hero-orb-a {
+    width: 520px;
+    height: 520px;
+    left: -140px;
+    top: -120px;
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 55%, transparent), transparent 70%);
+    transform: translate3d(calc(var(--px, 0) * 18px), calc(var(--py, 0) * 14px), 0);
+  }
+
+  .hero-orb-b {
+    width: 460px;
+    height: 460px;
+    right: -120px;
+    bottom: -160px;
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent-2) 45%, transparent), transparent 70%);
+    animation-delay: -8s;
+    transform: translate3d(calc(var(--px, 0) * -22px), calc(var(--py, 0) * -16px), 0);
+  }
+
+  .hero-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 22px;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.5rem, 7.2vw, 4.8rem);
+    letter-spacing: -0.035em;
+    line-height: 1.04;
+    max-width: 850px;
+  }
+
+  .hero-sub {
+    color: var(--muted);
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    max-width: 620px;
+  }
+
+  .hero-search {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: min(600px, 100%);
+    margin-top: 10px;
+    padding: 8px 8px 8px 22px;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: color-mix(in srgb, var(--bg-2) 70%, transparent);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.6), 0 0 0 0 var(--glow);
+    transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s var(--ease);
+  }
+
+  .hero-search:focus-within {
+    border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+    box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.6), 0 0 44px -8px var(--glow);
+    transform: translateY(-2px);
+  }
+
+  .hero-search input {
+    flex: 1;
+    min-width: 0;
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 1.05rem;
+    padding: 12px 0;
+    color: var(--text);
+  }
+
+  .hero-search input::placeholder {
+    color: var(--faint);
+  }
+
+  .hero-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+  }
+
+  .hero-chips-label {
+    color: var(--faint);
+    margin-right: 4px;
+  }
+
+  .hero-chips a {
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--muted);
+    transition: all 0.18s var(--ease);
+  }
+
+  .hero-chips a:hover {
+    color: var(--text);
+    border-color: var(--border-strong);
+    transform: translateY(-2px);
+  }
+
+  /* ---------- FILTRES + GRILLE ---------- */
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .filter-chip {
+    padding: 9px 17px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 0.86rem;
+    font-weight: 600;
+    transition: all 0.2s var(--ease);
+  }
+
+  .filter-chip:hover {
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+
+  .filter-chip.is-active {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-fg);
+    border-color: transparent;
+  }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+    gap: 16px;
+  }
+
+  .tools-grid [data-tool-wrap] {
+    display: flex;
+  }
+
+  .tools-grid [data-tool-wrap] > :global(.tool-card) {
+    flex: 1;
+  }
+
+  .tools-grid [data-tool-wrap].filtered-out {
+    display: none;
+  }
+
+  /* ---------- POURQUOI ---------- */
+  .why-section {
+    border-block: 1px solid var(--border);
+    background:
+      radial-gradient(700px 380px at 12% 20%, var(--glow), transparent 70%),
+      var(--bg-2);
+  }
+
+  .why-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: clamp(36px, 6vw, 80px);
+    align-items: center;
+  }
+
+  .why-left h2 {
+    font-size: clamp(1.8rem, 3.6vw, 2.6rem);
+    margin-bottom: 18px;
+  }
+
+  .why-left p {
+    font-size: 1.02rem;
+    max-width: 480px;
+  }
+
+  .why-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .why-stat {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 22px 28px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-l);
+    background: var(--panel);
+    transition: transform 0.25s var(--ease), border-color 0.25s;
+  }
+
+  .why-stat:hover {
+    transform: translateX(6px);
+    border-color: var(--border-strong);
+  }
+
+  .why-num {
+    font-family: var(--font-display);
+    font-size: 2.6rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    background: var(--accent-grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1;
+    min-width: 92px;
+  }
+
+  .why-pct {
+    font-size: 1.4rem;
+  }
+
+  .why-stat p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  /* ---------- ÉTAPES ---------- */
+  .steps-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+
+  .step-card {
+    position: relative;
+    padding: 28px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-l);
+    background: var(--panel);
+    transition: border-color 0.25s, transform 0.25s var(--ease);
+  }
+
+  .step-card:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-3px);
+  }
+
+  .step-num {
+    display: inline-grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    background: var(--accent-grad);
+    color: #241203;
+    margin-bottom: 16px;
+  }
+
+  .step-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+
+  .step-card p {
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  /* ---------- CTA ---------- */
+  .cta-band {
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    padding: clamp(48px, 8vw, 84px) 28px;
+    border-radius: var(--radius-l);
+    border: 1px solid var(--border-strong);
+    background: var(--bg-2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .cta-band h2 {
+    font-size: clamp(1.7rem, 3.6vw, 2.5rem);
+  }
+
+  .cta-band p {
+    color: var(--muted);
+  }
+
+  .cta-orb {
+    position: absolute;
+    width: 620px;
+    height: 340px;
+    left: 50%;
+    bottom: -220px;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse, color-mix(in srgb, var(--accent) 40%, transparent), transparent 70%);
+    filter: blur(40px);
+    pointer-events: none;
+  }
+
+  @media (max-width: 900px) {
+    .why-grid {
+      grid-template-columns: 1fr;
+    }
+    .steps-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .why-stat {
+      gap: 16px;
+      padding: 18px 20px;
+    }
+    .why-num {
+      min-width: 70px;
+      font-size: 2.1rem;
+    }
+  }
+</style>
+
+<script>
+  import { rotatingPlaceholder } from '../lib/ui.js';
+
+  /* Placeholder animé de la barre hero */
+  rotatingPlaceholder(document.getElementById('hero-search'), [
+    'Convertir une image…',
+    'Compresser un PDF…',
+    'Créer un QR code…',
+    'Calculer une réduction…',
+  ]);
+
+  /* Filtres de catégorie */
+  const chips = document.querySelectorAll('[data-filter]');
+  const wraps = document.querySelectorAll('[data-tool-wrap]');
+  chips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      chips.forEach((c) => c.classList.remove('is-active'));
+      chip.classList.add('is-active');
+      const f = chip.dataset.filter;
+      wraps.forEach((w) => {
+        w.classList.toggle('filtered-out', f !== 'all' && w.dataset.toolWrap !== f);
+      });
+    });
+  });
+
+  /* Particules + parallaxe du hero */
+  const canvas = document.getElementById('hero-canvas');
+  const hero = document.querySelector('.hero');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (canvas && !reduced) {
+    const ctx = canvas.getContext('2d');
+    let w, h, dpr, particles, raf;
+    const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      w = hero.offsetWidth;
+      h = hero.offsetHeight;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const count = Math.min(70, Math.floor((w * h) / 22000));
+      particles = Array.from({ length: count }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.22,
+        vy: (Math.random() - 0.5) * 0.22,
+        r: Math.random() * 1.6 + 0.6,
+      }));
+    }
+
+    function tick() {
+      ctx.clearRect(0, 0, w, h);
+      mouse.x += (mouse.tx - mouse.x) * 0.05;
+      mouse.y += (mouse.ty - mouse.y) * 0.05;
+      hero.style.setProperty('--px', (mouse.x - 0.5).toFixed(3));
+      hero.style.setProperty('--py', (mouse.y - 0.5).toFixed(3));
+
+      const linkDist = 110;
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < -20) p.x = w + 20;
+        if (p.x > w + 20) p.x = -20;
+        if (p.y < -20) p.y = h + 20;
+        if (p.y > h + 20) p.y = -20;
+      }
+      for (let i = 0; i < particles.length; i++) {
+        const a = particles[i];
+        for (let j = i + 1; j < particles.length; j++) {
+          const b = particles[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < linkDist * linkDist) {
+            const alpha = (1 - Math.sqrt(d2) / linkDist) * 0.16;
+            ctx.strokeStyle = `rgba(${ACC_RGB}, ${alpha.toFixed(3)})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
+      ctx.fillStyle = `rgba(${ACC_RGB}, 0.5)`;
+      for (const p of particles) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      raf = requestAnimationFrame(tick);
+    }
+
+    /* Convertit la couleur d'accent hex en RGB (canvas n'aime pas color-mix). */
+    function hexToRgb(hex) {
+      const h = hex.replace('#', '');
+      const v = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+      const n = parseInt(v, 16);
+      return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+    }
+    const ACC_RGB = hexToRgb(getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#ffb454');
+
+    function start() {
+      if (!raf) raf = requestAnimationFrame(tick);
+    }
+    function stop() {
+      cancelAnimationFrame(raf);
+      raf = null;
+    }
+
+    resize();
+    start();
+    window.addEventListener('resize', resize);
+    document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+    hero.addEventListener('pointermove', (e) => {
+      const r = hero.getBoundingClientRect();
+      mouse.tx = (e.clientX - r.left) / r.width;
+      mouse.ty = (e.clientY - r.top) / r.height;
+    }, { passive: true });
+  }
+</script>
