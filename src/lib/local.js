@@ -1,12 +1,16 @@
 /** Local-only state: recent tools, favorites, saved workflows. No account, no server. */
 import { site } from '../data/site.js';
 
-function read(key, fallback) {
+/** Read a JSON array from localStorage; corrupt or wrong-shaped data yields []. */
+function readArray(key, keep) {
   try {
     const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(keep);
   } catch {
-    return fallback;
+    return [];
   }
 }
 
@@ -20,7 +24,7 @@ function write(key, value) {
 
 /* ---------- Recent tools ---------- */
 export function getRecents() {
-  return read(site.storageKeys.recents, []);
+  return readArray(site.storageKeys.recents, (e) => e && typeof e === 'object' && typeof e.slug === 'string');
 }
 
 export function pushRecent(slug) {
@@ -31,7 +35,7 @@ export function pushRecent(slug) {
 
 /* ---------- Favorites ---------- */
 export function getFavorites() {
-  return read(site.storageKeys.favorites, []);
+  return readArray(site.storageKeys.favorites, (s) => typeof s === 'string');
 }
 
 export function isFavorite(slug) {
@@ -49,9 +53,12 @@ export function toggleFavorite(slug) {
 
 /* ---------- Saved workflows ---------- */
 export function getSavedWorkflows() {
-  return read(site.storageKeys.workflows, []);
+  return readArray(
+    site.storageKeys.workflows,
+    (w) => w && typeof w === 'object' && typeof w.name === 'string' && Array.isArray(w.steps)
+  );
 }
 
 export function saveWorkflows(list) {
-  write(site.storageKeys.workflows, list.slice(0, 20));
+  write(site.storageKeys.workflows, (Array.isArray(list) ? list : []).slice(0, 20));
 }

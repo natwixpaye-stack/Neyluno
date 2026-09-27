@@ -72,6 +72,12 @@
   margin: 0;
 }
 
+/* The hidden attribute must always win, whatever the display rule
+   (flex/grid containers, buttons, navs…). One structural rule. */
+[hidden] {
+  display: none !important;
+}
+
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
@@ -301,8 +307,8 @@ kbd {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--panel);
@@ -909,16 +915,24 @@ input[type='range']::-moz-range-thumb {
   }
 }
 
-/* Apparition au scroll */
-.reveal {
+/* Scroll reveal — only when JS runs (html.js is set by the boot script),
+   so content stays fully visible without JavaScript. */
+.js .reveal {
   opacity: 0;
   transform: translateY(22px);
   transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
 }
 
-.reveal.in {
+.js .reveal.in {
   opacity: 1;
   transform: none;
+}
+
+@media print {
+  .js .reveal {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Animations d'arrière-plan */
@@ -944,7 +958,7 @@ input[type='range']::-moz-range-thumb {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .reveal {
+  .js .reveal {
     opacity: 1;
     transform: none;
   }
@@ -1216,4 +1230,241 @@ input[type='range']::-moz-range-thumb {
 [data-notice][hidden],
 [data-handoff][hidden] {
   display: none !important;
+}
+
+/* ================= Runtime-generated elements =================
+   Astro scoped styles never reach nodes created by client-side JS,
+   so every class assigned at runtime lives here (global). */
+
+/* Command palette results */
+.sm-group {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--faint);
+  padding: 14px 12px 6px;
+}
+
+.sm-item {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 12px;
+  text-align: left;
+  color: var(--text);
+  border: 1px solid transparent;
+  transition: background 0.12s;
+}
+
+.sm-item.is-active,
+.sm-item:hover {
+  background: var(--panel-strong);
+}
+
+.sm-item.is-active {
+  border-color: var(--border-strong);
+}
+
+.sm-item-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 10px;
+  color: var(--hue);
+  background: color-mix(in srgb, var(--hue) 12%, transparent);
+}
+
+.sm-item-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.sm-item-desc {
+  font-size: 0.79rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sm-empty {
+  padding: 34px 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+/* Workflow builder steps + saved list */
+.wf-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  flex-wrap: wrap;
+}
+
+.wf-step-n {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent-grad);
+  color: #241203;
+  font-size: 0.78rem;
+  font-weight: 800;
+  flex: none;
+}
+
+.wf-step .select,
+.wf-step .input {
+  min-height: 38px;
+  padding: 8px 10px;
+  font-size: 0.86rem;
+}
+
+.wf-step-type {
+  font-weight: 700;
+  font-size: 0.9rem;
+  min-width: 76px;
+}
+
+.wf-step-cfg {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: 1;
+  flex-wrap: wrap;
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+
+.wf-step-move {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+
+.wf-step-move .icon-btn {
+  width: 38px;
+  height: 38px;
+}
+
+.wf-saved-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  font-size: 0.86rem;
+}
+
+.wf-saved-item .wf-saved-name {
+  font-weight: 600;
+}
+
+.wf-saved-item .wf-saved-desc {
+  color: var(--faint);
+  font-size: 0.78rem;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Home favorites / recents chips */
+.p-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: var(--muted);
+  transition: border-color 0.18s, color 0.18s, transform 0.18s;
+}
+
+.p-chip:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+/* Regex tester match list */
+.rx-list li {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  font-size: 0.84rem;
+}
+
+.rx-match-text {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  word-break: break-all;
+  color: var(--text);
+}
+
+.rx-match-meta {
+  display: block;
+  margin-top: 4px;
+  color: var(--faint);
+  font-size: 0.75rem;
+}
+
+/* PDF → image page cards */
+.pi-page {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  align-items: center;
+}
+
+.pi-page img {
+  width: 100%;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.pi-page .pi-page-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+/* Favicon preview slots */
+.fav-icon-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.fav-icon-slot img {
+  border-radius: 8px;
+  background:
+    repeating-conic-gradient(color-mix(in srgb, var(--panel-strong) 60%, transparent) 0% 25%, transparent 0% 50%)
+    0 0 / 12px 12px;
+}
+
+.fav-icon-slot span {
+  font-size: 0.72rem;
+  color: var(--faint);
 }

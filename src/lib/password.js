@@ -34,7 +34,7 @@ export function buildCharset({ lower = true, upper = true, digits = true, symbol
 
 /** Entier aléatoire uniforme dans [0, max), sans biais modulo. */
 export function randomInt(max, fillBytes) {
-  if (max <= 0) throw new Error('randomInt: max doit être > 0');
+  if (max <= 0) throw new Error('randomInt: max must be > 0');
   const limit = 256 - (256 % max);
   const buf = new Uint8Array(1);
   let x;

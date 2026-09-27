@@ -90,6 +90,13 @@ await ok('Enter navigates to the first result', async () => {
   await page.waitForSelector('#tool-compress');
 });
 
+await ok('"/" opens the palette outside inputs', async () => {
+  await page.keyboard.press('/');
+  await page.waitForSelector('[data-search-overlay]:not([hidden])');
+  await page.keyboard.press('Escape');
+  await page.waitForSelector('[data-search-overlay]', { state: 'hidden' });
+});
+
 /* ================= FAVORITES + RECENTS ================= */
 console.log('Personal state');
 await ok('favorite button toggles and persists', async () => {
@@ -273,6 +280,7 @@ await ok('date difference: 2026-01-01 → 2026-03-01 = 59 days', async () => {
 });
 
 await ok('add 90 days to 2026-01-01 → April 1, 2026', async () => {
+  await page.click('[data-tab="arith"]');
   await page.fill('[data-base]', '2026-01-01');
   await page.fill('[data-n-days]', '90');
   await page.waitForSelector('[data-arith-result]:not([hidden])');
@@ -369,6 +377,18 @@ await ok('compressor processes a dropped file and shows summary', async () => {
   if (before === '—') throw new Error('summary empty');
 });
 
+await ok('corrupt file fails with a Retry action and failed stat', async () => {
+  await page.evaluate(() => {
+    const dt = new DataTransfer();
+    dt.items.add(new File([new Uint8Array([1, 2, 3, 4])], 'broken.png', { type: 'image/png' }));
+    document.querySelector('[data-dropzone]').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true }));
+  });
+  await page.waitForSelector('.file-item.is-error');
+  if (!(await page.locator('.file-item.is-error [data-retry]').count())) throw new Error('no retry button');
+  const failed = await page.locator('[data-sum-failed]').innerText();
+  if (failed !== '1') throw new Error(`failed stat=${failed}`);
+});
+
 await ok('handoff chip appears on resizer after compression', async () => {
   await page.goto(BASE + '/tools/image-resizer/');
   await page.waitForSelector('[data-handoff]:not([hidden])', { timeout: 5000 });
@@ -459,7 +479,9 @@ await ok('mobile nav opens and closes', async () => {
   await mobile.click('[data-nav-toggle]');
   await mobile.waitForSelector('#mobile-nav:not([hidden])');
   await mobile.click('[data-nav-toggle]');
-  await mobile.waitForSelector('#mobile-nav[hidden]');
+  await mobile.waitForSelector('#mobile-nav[hidden]', { state: 'attached' });
+  // and it must be truly invisible now (the [hidden] attribute wins over display:flex)
+  if (await mobile.locator('#mobile-nav').isVisible()) throw new Error('mobile nav still visible');
   await mobile.close();
 });
 

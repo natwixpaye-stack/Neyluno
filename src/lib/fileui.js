@@ -200,6 +200,7 @@ export function mountFileTool(root, config = {}) {
     const status = el.querySelector('.fi-status');
     const actions = el.querySelector('.fi-actions');
     actions.querySelector('[data-download]')?.remove();
+    actions.querySelector('[data-retry]')?.remove();
 
     if (item.status === 'working') {
       status.textContent = 'Processing…';
@@ -225,6 +226,13 @@ export function mountFileTool(root, config = {}) {
       el.classList.add('is-error');
       status.textContent = 'Failed';
       status.className = 'fi-status err';
+      const retry = document.createElement('button');
+      retry.type = 'button';
+      retry.className = 'btn btn-sm btn-ghost';
+      retry.dataset.retry = '';
+      retry.textContent = 'Retry';
+      retry.addEventListener('click', () => processItem(item));
+      actions.insertBefore(retry, actions.querySelector('.icon-btn'));
     } else {
       status.textContent = '';
       status.className = 'fi-status';

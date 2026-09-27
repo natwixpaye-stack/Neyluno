@@ -259,12 +259,35 @@ import Icon from './Icon.astro';
     if (e.target === overlay) close();
   });
 
+  // Keep Tab focus inside the dialog while it is open
+  overlay?.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab' || overlay.hidden) return;
+    const focusables = [...overlay.querySelectorAll('input, a[href], button')].filter((el) => !el.disabled);
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && (document.activeElement === first || document.activeElement === overlay)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
+
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
       overlay.hidden ? open() : close();
     } else if (e.key === 'Escape') {
       close();
+    } else if (e.key === '/' && overlay.hidden) {
+      const t = e.target;
+      const typing = t instanceof HTMLElement && (t.matches('input, textarea, select') || t.isContentEditable);
+      if (!typing) {
+        e.preventDefault();
+        open();
+      }
     }
   });
 

@@ -177,6 +177,18 @@ import { site } from '../data/site.js';
     }
   }
 
+  @media (max-width: 400px) {
+    .brand-name {
+      display: none;
+    }
+    .header-inner {
+      gap: 12px;
+    }
+    .header-actions {
+      gap: 6px;
+    }
+  }
+
   @media (max-width: 620px) {
     .search-trigger-text {
       display: none;
@@ -185,8 +197,8 @@ import { site } from '../data/site.js';
       display: none;
     }
     .search-trigger {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       justify-content: center;
       padding: 0;
       border-radius: 12px;
@@ -220,4 +232,18 @@ import { site } from '../data/site.js';
       burger?.setAttribute('aria-expanded', 'false');
     }
   });
+
+  // Escape closes the mobile menu and restores focus to the burger
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && mobileNav && !mobileNav.hidden) {
+      mobileNav.hidden = true;
+      burger?.setAttribute('aria-expanded', 'false');
+      burger?.focus();
+    }
+  });
+
+  // Show the right shortcut hint on Mac keyboards
+  if (/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) {
+    header?.querySelector('.search-trigger kbd')?.replaceChildren('⌘ K');
+  }
 </script>

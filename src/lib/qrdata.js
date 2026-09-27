@@ -17,20 +17,20 @@ export function buildQrPayload(type, fields = {}) {
       if (!url) return { error: 'Enter a web address.' };
       if (!/^[a-z][a-z0-9+.-]*:/i.test(url)) url = `https://${url}`;
       if (!/^https?:\/\/.+\..+/.test(url) && !url.startsWith('https://localhost')) {
-        return { error: 'Cette adresse ne semble pas valide (ex. https://exemple.fr).' };
+        return { error: 'That address doesn’t look valid (e.g. https://example.com).' };
       }
       return { value: url };
     }
     case 'text': {
       const text = String(fields.text || '').trim();
       if (!text) return { error: 'Enter some text.' };
-      if (text.length > 2000) return { error: 'Texte trop long pour un QR code (maximum 2000 caractères).' };
+      if (text.length > 2000) return { error: 'Text is too long for a QR code (2000 characters max).' };
       return { value: text };
     }
     case 'email': {
       const to = String(fields.to || '').trim();
       if (!to) return { error: 'Enter an email address.' };
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(to)) return { error: 'Adresse e-mail invalide.' };
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(to)) return { error: 'That email address is not valid.' };
       const params = new URLSearchParams();
       if (fields.subject) params.set('subject', fields.subject);
       if (fields.body) params.set('body', fields.body);
@@ -41,13 +41,13 @@ export function buildQrPayload(type, fields = {}) {
       const raw = String(fields.phone || '').trim();
       const cleaned = raw.replace(/[\s.-]/g, '');
       if (!cleaned) return { error: 'Enter a phone number.' };
-      if (!/^\+?[0-9]{6,15}$/.test(cleaned)) return { error: 'Numéro de téléphone invalide (6 à 15 chiffres).' };
+      if (!/^\+?[0-9]{6,15}$/.test(cleaned)) return { error: 'That phone number is not valid (6 to 15 digits).' };
       return { value: `tel:${cleaned}` };
     }
     case 'sms': {
       const raw = String(fields.phone || '').trim().replace(/[\s.-]/g, '');
       if (!raw) return { error: 'Enter a phone number.' };
-      if (!/^\+?[0-9]{6,15}$/.test(raw)) return { error: 'Numéro de téléphone invalide (6 à 15 chiffres).' };
+      if (!/^\+?[0-9]{6,15}$/.test(raw)) return { error: 'That phone number is not valid (6 to 15 digits).' };
       const msg = String(fields.message || '').trim();
       return { value: msg ? `smsto:${raw}:${msg}` : `smsto:${raw}` };
     }
@@ -61,6 +61,6 @@ export function buildQrPayload(type, fields = {}) {
       return { value: `WIFI:T:${security};S:${escapeWifiValue(ssid)};P:${escapeWifiValue(pass)};;` };
     }
     default:
-      return { error: 'Type de contenu inconnu.' };
+      return { error: 'Unknown content type.' };
   }
 }

@@ -147,17 +147,9 @@ export function resolveTheme(pref) {
   return 'dark'; // site default when no OS preference
 }
 
-export function applyTheme(pref) {
-  const effective = resolveTheme(pref);
-  const stored = pref === null ? 'system' : pref;
-  document.documentElement.dataset.theme = effective;
-  document.documentElement.dataset.themePref = stored;
-  try {
-    localStorage.setItem(THEME_KEY, stored);
-  } catch {
-    /* storage unavailable: theme stays valid for the session */
-  }
-  // Reflect the preference on every toggle button
+/** Reflect the current preference on every theme toggle (icons + label). */
+function syncThemeButtons() {
+  const stored = document.documentElement.dataset.themePref || 'system';
   document.querySelectorAll('[data-theme-toggle]').forEach((btn) => {
     btn.setAttribute('data-mode', stored);
     btn.setAttribute(
@@ -170,7 +162,21 @@ export function applyTheme(pref) {
   });
 }
 
+export function applyTheme(pref) {
+  const effective = resolveTheme(pref);
+  const stored = pref === null ? 'system' : pref;
+  document.documentElement.dataset.theme = effective;
+  document.documentElement.dataset.themePref = stored;
+  try {
+    localStorage.setItem(THEME_KEY, stored);
+  } catch {
+    /* storage unavailable: theme stays valid for the session */
+  }
+  syncThemeButtons();
+}
+
 export function initThemeToggle() {
+  syncThemeButtons(); // boot script set the effective theme; align icons/labels
   const order = ['dark', 'light', 'system'];
   document.querySelectorAll('[data-theme-toggle]').forEach((btn) => {
     btn.addEventListener('click', () => {

@@ -1,0 +1,21 @@
+import { chromium } from 'playwright-core';
+const BASE = 'http://127.0.0.1:4321';
+const browser = await chromium.launch({ args: ['--no-sandbox', '--disable-dev-shm-usage'] });
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+await page.goto(BASE + '/workflows/');
+await page.click('[data-preset="0"]');
+await page.waitForTimeout(400);
+await page.screenshot({ path: 'audit/v3-workflows-built.png' });
+await page.goto(BASE + '/');
+await page.keyboard.press('Control+k');
+await page.fill('[data-search-input]', 'make my photo smaller');
+await page.waitForTimeout(300);
+await page.screenshot({ path: 'audit/v3-search.png' });
+// favorites chip strip
+await page.keyboard.press('Escape');
+await page.evaluate(() => localStorage.setItem('qt-favorites', JSON.stringify(['image-compressor','merge-pdf'])));
+await page.goto(BASE + '/');
+await page.waitForTimeout(400);
+await page.screenshot({ path: 'audit/v3-favs.png' });
+await browser.close();
+console.log('done');
