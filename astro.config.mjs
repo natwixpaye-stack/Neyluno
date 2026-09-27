@@ -2,8 +2,8 @@ import { defineConfig } from 'astro/config';
 
 // https://astro.build/config
 export default defineConfig({
-  // ⚠️ Avant mise en production : remplacer par le vrai domaine (sert à canonical + sitemap + Open Graph)
-  site: 'https://quicktools.example.com',
+  // Domaine de production (sert à canonical + sitemap + Open Graph)
+  site: 'https://quicktools-4tco.onrender.com',
   trailingSlash: 'ignore',
   server: { host: true, port: 4321, allowedHosts: true },
   preview: { host: true, port: 4321, allowedHosts: true },

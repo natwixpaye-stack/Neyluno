@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://quicktools.example.com/sitemap.xml
+Sitemap: https://quicktools-4tco.onrender.com/sitemap.xml
