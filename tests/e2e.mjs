@@ -427,6 +427,23 @@ await ok('404 page works', async () => {
   if (res.status() !== 404) throw new Error(res.status());
 });
 
+await ok('legacy FR URLs redirect to EN equivalents', async () => {
+  for (const [fr, en] of [
+    ['/outils/compresser-image/', '/tools/image-compressor/'],
+    ['/outils/', '/tools/'],
+    ['/a-propos/', '/about/'],
+    ['/confidentialite/', '/privacy/'],
+  ]) {
+    const res = await fetch(BASE + fr);
+    const body = await res.text();
+    if (res.status !== 200) throw new Error(`${fr} → ${res.status}`);
+    if (!body.includes(`url=${en}`)) throw new Error(`${fr} missing refresh to ${en}`);
+    // canonical is absolute (production origin at build time) — check the path
+    const m = body.match(/rel="canonical" href="([^"]+)"/);
+    if (!m || !new URL(m[1]).pathname.startsWith(en.replace(/\/$/, ''))) throw new Error(`${fr} bad canonical: ${m && m[1]}`);
+  }
+});
+
 await ok('privacy page states local processing', async () => {
   const res = await page.request.get(BASE + '/privacy/');
   const body = await res.text();

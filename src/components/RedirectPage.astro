@@ -1,0 +1,31 @@
+---
+/** Minimal client-side redirect page for legacy URLs (static hosting). */
+const { target, label } = Astro.props;
+const canonical = new URL(target, Astro.url).href;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, follow" />
+    <meta name="description" content={`This page has moved to ${target}.`} />
+    <meta http-equiv="refresh" content={`0; url=${target}`} />
+    <link rel="canonical" href={canonical} />
+    <title>Moved — QuickTools</title>
+    <script>
+      location.replace(document.querySelector('link[rel="canonical"]').href);
+    </script>
+    <style>
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #07080d; color: #e8e6e1; font: 16px/1.6 system-ui, sans-serif; }
+      a { color: #ffb454; }
+      .card { text-align: center; padding: 2rem; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>This page has moved.</h1>
+      <p><a href={target}>{label}</a></p>
+    </div>
+  </body>
+</html>

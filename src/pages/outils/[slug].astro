@@ -1,0 +1,14 @@
+---
+/** Legacy French tool URLs → English destinations (client-side redirect page). */
+import RedirectPage from '../../components/RedirectPage.astro';
+import { FR_TO_EN } from '../../data/legacyRedirects.js';
+
+export function getStaticPaths() {
+  return Object.keys(FR_TO_EN).map((slug) => ({ params: { slug } }));
+}
+const slug = Astro.params.slug || '';
+const en = FR_TO_EN[slug];
+const target = en ? `/tools/${en}/` : '/tools/';
+const label = en ? 'Open the tool' : 'Browse all tools';
+---
+<RedirectPage target={target} label={label} />
