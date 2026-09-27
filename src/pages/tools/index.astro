@@ -1,0 +1,130 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
+import ToolCard from '../../components/ToolCard.astro';
+import { site, categories } from '../../data/site.js';
+import { tools, getToolsByCategory } from '../../data/tools.js';
+
+const path = '/tools/';
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `All tools — ${site.name}`,
+  description: `${tools.length} free online tools: images, PDF, text, developer and everyday utilities. Everything runs in your browser.`,
+  url: new URL(path, Astro.site).href,
+};
+---
+
+<BaseLayout title={`All ${tools.length} tools — free, private, no sign-up`} description={`Browse all ${tools.length} free online tools: image converters and compressors, PDF tools, text utilities and more. 100% in your browser.`} path={path} jsonLd={jsonLd}>
+  <div class="container list-page">
+    <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'All tools' }]} />
+
+    <header class="list-head">
+      <h1>All tools</h1>
+      <p>
+        {tools.length} tools across {categories.length} categories. No uploads, no accounts — every task runs
+        privately in your browser.
+      </p>
+    </header>
+
+    <nav class="cat-chips" aria-label="Jump to category">
+      {categories.map((c) => (
+        <a href={`#${c.slug}`} class="cat-chip" style={`--hue:${c.hue}`}>
+          {c.name}
+          <span class="cat-chip-n">{getToolsByCategory(c.slug).length}</span>
+        </a>
+      ))}
+    </nav>
+
+    {categories.map((c) => {
+      const catTools = getToolsByCategory(c.slug);
+      return (
+        catTools.length > 0 && (
+          <section class="tool-section" id={c.slug} aria-labelledby={`h-${c.slug}`}>
+            <div class="tool-section-head">
+              <h2 id={`h-${c.slug}`}>{c.name}</h2>
+              <p>{c.description}</p>
+            </div>
+            <div class="tools-grid">
+              {catTools.map((t) => <ToolCard tool={t} />)}
+            </div>
+          </section>
+        )
+      );
+    })}
+  </div>
+</BaseLayout>
+
+<style>
+  .list-page {
+    padding-top: 26px;
+    padding-bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .list-head h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    margin-bottom: 10px;
+  }
+
+  .list-head p {
+    color: var(--muted);
+    max-width: 560px;
+  }
+
+  .cat-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .cat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    transition: border-color 0.18s, color 0.18s;
+  }
+
+  .cat-chip:hover {
+    border-color: color-mix(in srgb, var(--hue) 55%, var(--border));
+    color: var(--text);
+  }
+
+  .cat-chip-n {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--hue);
+    background: color-mix(in srgb, var(--hue) 12%, transparent);
+    padding: 2px 7px;
+    border-radius: 999px;
+  }
+
+  .tool-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scroll-margin-top: 90px;
+  }
+
+  .tool-section-head p {
+    color: var(--muted);
+    font-size: 0.92rem;
+    margin-top: 4px;
+    max-width: 620px;
+  }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+    gap: 14px;
+  }
+</style>

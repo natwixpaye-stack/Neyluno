@@ -1,0 +1,207 @@
+---
+---
+
+<div class="stool" id="tool-regex">
+  <div class="rx-pattern">
+    <span class="rx-slash" aria-hidden="true">/</span>
+    <input class="input rx-input" type="text" data-pattern placeholder="pattern…" spellcheck="false" autocomplete="off" aria-label="Regular expression pattern" />
+    <span class="rx-slash" aria-hidden="true">/</span>
+    <div class="rx-flags" role="group" aria-label="Regex flags">
+      <label class="pill-check"><input type="checkbox" checked data-flag="g" /><span class="dot" aria-hidden="true"></span>g</label>
+      <label class="pill-check"><input type="checkbox" data-flag="i" /><span class="dot" aria-hidden="true"></span>i</label>
+      <label class="pill-check"><input type="checkbox" data-flag="m" /><span class="dot" aria-hidden="true"></span>m</label>
+      <label class="pill-check"><input type="checkbox" data-flag="s" /><span class="dot" aria-hidden="true"></span>s</label>
+      <label class="pill-check"><input type="checkbox" data-flag="u" /><span class="dot" aria-hidden="true"></span>u</label>
+    </div>
+  </div>
+  <p class="stool-status" data-rx-error role="alert"></p>
+
+  <div class="field">
+    <label for="rx-text">Test text</label>
+    <textarea class="textarea input" id="rx-text" data-subject rows="7" placeholder="Paste the text to test against…" spellcheck="false"></textarea>
+  </div>
+
+  <div class="field">
+    <span class="field-label">Matches highlighted</span>
+    <pre class="rx-highlight" data-highlight aria-live="polite"><code></code></pre>
+  </div>
+
+  <div class="rx-matches" data-matches hidden>
+    <h3>Matches</h3>
+    <ol class="rx-list" data-match-list role="list"></ol>
+  </div>
+</div>
+
+<style>
+  .rx-pattern {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .rx-slash {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 1.2rem;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .rx-input {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .rx-flags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .rx-highlight {
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel);
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 0.84rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 52px;
+    color: var(--muted);
+  }
+
+  .rx-highlight mark {
+    background: color-mix(in srgb, var(--accent) 28%, transparent);
+    color: var(--text);
+    border-radius: 3px;
+    padding: 1px 0;
+  }
+
+  .rx-matches h3 {
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+  }
+
+  .rx-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding-left: 0;
+    list-style: none;
+  }
+
+  .rx-list li {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--panel);
+    font-size: 0.84rem;
+  }
+
+  .rx-match-text {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    word-break: break-all;
+    color: var(--text);
+  }
+
+  .rx-match-meta {
+    display: block;
+    margin-top: 4px;
+    color: var(--faint);
+    font-size: 0.75rem;
+  }
+</style>
+
+<script>
+  const root = document.getElementById('tool-regex');
+  if (root) {
+    const patternInput = root.querySelector('[data-pattern]');
+    const subject = root.querySelector('[data-subject]');
+    const errorEl = root.querySelector('[data-rx-error]');
+    const highlight = root.querySelector('[data-highlight] code');
+    const matchesBox = root.querySelector('[data-matches]');
+    const matchList = root.querySelector('[data-match-list]');
+
+    const flags = () =>
+      [...root.querySelectorAll('[data-flag]:checked')].map((c) => c.dataset.flag).join('');
+
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function run() {
+      const p = patternInput.value;
+      errorEl.textContent = '';
+      errorEl.className = 'stool-status';
+      highlight.innerHTML = '';
+      matchList.innerHTML = '';
+      matchesBox.hidden = true;
+
+      if (!p) return;
+
+      let rx;
+      try {
+        rx = new RegExp(p, flags());
+      } catch (err) {
+        errorEl.textContent = `Pattern error: ${err.message.replace(/^Invalid regular expression:\s*/i, '')}`;
+        errorEl.className = 'stool-status err';
+        return;
+      }
+
+      const text = subject.value;
+      if (!text) {
+        highlight.textContent = '';
+        return;
+      }
+
+      const matches = [];
+      if (rx.flags.includes('g') || rx.flags.includes('d')) {
+        for (const m of text.matchAll(rx)) {
+          matches.push(m);
+          if (matches.length >= 500) break; // safety cap for huge texts
+        }
+      } else {
+        const m = text.match(rx);
+        if (m) matches.push(m);
+      }
+
+      // Highlight
+      let html = '';
+      let last = 0;
+      for (const m of matches) {
+        html += escapeHtml(text.slice(last, m.index));
+        html += `<mark>${escapeHtml(m[0])}</mark>`;
+        last = m.index + m[0].length;
+      }
+      html += escapeHtml(text.slice(last));
+      highlight.innerHTML = html || escapeHtml(text);
+
+      if (matches.length) {
+        matchesBox.hidden = false;
+        for (const m of matches.slice(0, 200)) {
+          const li = document.createElement('li');
+          const t = document.createElement('span');
+          t.className = 'rx-match-text';
+          t.textContent = m[0].length > 300 ? m[0].slice(0, 300) + '…' : m[0];
+          const meta = document.createElement('span');
+          meta.className = 'rx-match-meta';
+          let metaTxt = `index ${m.index}–${m.index + m[0].length}`;
+          const groups = m.slice(1).filter((g) => g !== undefined);
+          if (groups.length) metaTxt += ` · groups: ${groups.map((g) => `“${g.length > 30 ? g.slice(0, 30) + '…' : g}”`).join(', ')}`;
+          meta.textContent = metaTxt;
+          li.append(t, meta);
+          matchList.appendChild(li);
+        }
+      }
+    }
+
+    patternInput.addEventListener('input', run);
+    subject.addEventListener('input', run);
+    root.querySelectorAll('[data-flag]').forEach((c) => c.addEventListener('change', run));
+  }
+</script>

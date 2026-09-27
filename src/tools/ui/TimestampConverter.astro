@@ -1,0 +1,177 @@
+---
+---
+
+<div class="stool" id="tool-timestamp">
+  <div class="ts-now" aria-live="off">
+    <span class="ts-now-label">Unix time right now</span>
+    <span class="ts-now-value" data-now-s>—</span>
+    <span class="ts-now-unit">seconds</span>
+  </div>
+
+  <div class="stool-grid">
+    <div class="field">
+      <label for="ts-in">Timestamp → date</label>
+      <input class="input" id="ts-in" type="text" inputmode="numeric" data-ts-input placeholder="e.g. 1730000000 (seconds or ms, auto-detected)" autocomplete="off" />
+      <div class="ts-out" data-ts-result hidden>
+        <p><span class="ts-k">Local</span> <strong data-ts-local></strong></p>
+        <p><span class="ts-k">UTC</span> <strong data-ts-utc></strong></p>
+        <p><span class="ts-k">Relative</span> <strong data-ts-rel></strong></p>
+      </div>
+      <p class="stool-status" data-ts-status aria-live="polite"></p>
+    </div>
+
+    <div class="field">
+      <label for="ts-date">Date → timestamp</label>
+      <input class="input" id="ts-date" type="datetime-local" data-date-input />
+      <div class="ts-out" data-date-result hidden>
+        <p><span class="ts-k">Seconds</span> <strong data-sec-out></strong></p>
+        <p><span class="ts-k">Milliseconds</span> <strong data-ms-out></strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .ts-now {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel);
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+
+  .ts-now-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--faint);
+  }
+
+  .ts-now-value {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ts-now-unit {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .ts-out {
+    margin-top: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .ts-out p {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 0.9rem;
+  }
+
+  .ts-k {
+    min-width: 84px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--faint);
+    padding-top: 2px;
+  }
+</style>
+
+<script>
+  const root = document.getElementById('tool-timestamp');
+  if (root) {
+    const nowEl = root.querySelector('[data-now-s]');
+    const tsInput = root.querySelector('[data-ts-input]');
+    const tsResult = root.querySelector('[data-ts-result]');
+    const tsStatus = root.querySelector('[data-ts-status]');
+    const dateInput = root.querySelector('[data-date-input]');
+    const dateResult = root.querySelector('[data-date-result]');
+
+    // Live “now”
+    setInterval(() => {
+      nowEl.textContent = Math.floor(Date.now() / 1000).toLocaleString('en-US');
+    }, 1000);
+    nowEl.textContent = Math.floor(Date.now() / 1000).toLocaleString('en-US');
+
+    function relative(ms) {
+      const diff = Date.now() - ms;
+      const abs = Math.abs(diff);
+      const min = 60000, hour = 3600000, day = 86400000;
+      let txt;
+      if (abs < min) txt = `${Math.round(abs / 1000)} seconds`;
+      else if (abs < hour) txt = `${Math.round(abs / min)} minutes`;
+      else if (abs < day) txt = `${Math.round(abs / hour)} hours`;
+      else if (abs < day * 365) txt = `${Math.round(abs / day)} days`;
+      else txt = `${(abs / (day * 365)).toFixed(1)} years`;
+      if (abs < 2000) return 'right now';
+      return diff > 0 ? `${txt} ago` : `in ${txt}`;
+    }
+
+    tsInput.addEventListener('input', () => {
+      const raw = tsInput.value.trim().replace(/[\s_,]/g, '');
+      if (!raw) {
+        tsResult.hidden = true;
+        tsStatus.textContent = '';
+        return;
+      }
+      if (!/^-?\d+$/.test(raw)) {
+        tsResult.hidden = true;
+        tsStatus.textContent = 'Digits only — paste a Unix timestamp.';
+        tsStatus.className = 'stool-status err';
+        return;
+      }
+      let ms = Number(raw);
+      const unit = Math.abs(ms) >= 1e12 ? 'ms' : 's';
+      if (unit === 's') ms *= 1000;
+      const d = new Date(ms);
+      if (Number.isNaN(d.getTime())) {
+        tsResult.hidden = true;
+        tsStatus.textContent = 'This number is outside the representable date range.';
+        tsStatus.className = 'stool-status err';
+        return;
+      }
+      tsResult.hidden = false;
+      tsStatus.textContent = `Interpreted as ${unit === 'ms' ? 'milliseconds' : 'seconds'} · ${new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).format(d)}`;
+      tsStatus.className = 'stool-status ok';
+      root.querySelector('[data-ts-local]').textContent = d.toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'long' });
+      root.querySelector('[data-ts-utc]').textContent = new Intl.DateTimeFormat('en-US', { dateStyle: 'full', timeStyle: 'long', timeZone: 'UTC' }).format(d);
+      root.querySelector('[data-ts-rel]').textContent = relative(ms);
+    });
+
+    // Default the date input to “now”
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    dateInput.value = now.toISOString().slice(0, 16);
+    updateFromDate();
+
+    dateInput.addEventListener('input', updateFromDate);
+
+    function updateFromDate() {
+      const d = new Date(dateInput.value);
+      if (!dateInput.value || Number.isNaN(d.getTime())) {
+        dateResult.hidden = true;
+        return;
+      }
+      dateResult.hidden = false;
+      root.querySelector('[data-sec-out]').textContent = Math.floor(d.getTime() / 1000).toString();
+      root.querySelector('[data-ms-out]').textContent = d.getTime().toString();
+    }
+  }
+</script>

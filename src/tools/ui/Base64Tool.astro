@@ -1,0 +1,102 @@
+---
+---
+
+<div class="stool" id="tool-base64">
+  <div class="stool-grid">
+    <div class="field">
+      <label for="b64-in">Input</label>
+      <textarea class="textarea input" id="b64-in" data-input spellcheck="false" placeholder="Plain text or Base64…"></textarea>
+    </div>
+    <div class="field">
+      <div class="field-label-row">
+        <label for="b64-out">Output</label>
+        <button type="button" class="btn btn-ghost btn-sm" data-copy>Copy</button>
+      </div>
+      <textarea class="textarea input" id="b64-out" data-output readonly spellcheck="false" placeholder="Result appears here"></textarea>
+    </div>
+  </div>
+
+  <div class="stool-toolbar">
+    <button type="button" class="btn btn-accent btn-sm" data-encode>Encode → Base64</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-decode>Decode ← Base64</button>
+    <label class="pill-check"><input type="checkbox" data-urlsafe /><span class="dot" aria-hidden="true"></span>URL-safe output</label>
+  </div>
+  <p class="stool-status" data-status aria-live="polite"></p>
+</div>
+
+<style>
+  .field-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .field-label-row label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+</style>
+
+<script>
+  import { copyText, toast } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-base64');
+  if (root) {
+    const input = root.querySelector('[data-input]');
+    const output = root.querySelector('[data-output]');
+    const status = root.querySelector('[data-status]');
+    const urlsafe = root.querySelector('[data-urlsafe]');
+
+    function encode(text) {
+      // UTF-8 → binary string → base64
+      const bytes = new TextEncoder().encode(text);
+      let bin = '';
+      const chunk = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunk) {
+        bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+      }
+      let b64 = btoa(bin);
+      if (urlsafe.checked) b64 = b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      return b64;
+    }
+
+    function decode(b64) {
+      let s = String(b64).replace(/[\s\r\n]/g, '').replace(/-/g, '+').replace(/_/g, '/');
+      while (s.length % 4) s += '=';
+      if (!/^[A-Za-z0-9+/]*={0,2}$/.test(s)) {
+        throw new Error('This is not valid Base64 — check for missing or extra characters.');
+      }
+      const bin = atob(s);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    }
+
+    function run(fn, okMsg) {
+      if (!input.value) {
+        status.textContent = 'Paste something to convert first.';
+        status.className = 'stool-status err';
+        return;
+      }
+      try {
+        output.value = fn(input.value);
+        status.textContent = okMsg;
+        status.className = 'stool-status ok';
+      } catch (err) {
+        output.value = '';
+        status.textContent = err.message || 'This input could not be processed.';
+        status.className = 'stool-status err';
+      }
+    }
+
+    root.querySelector('[data-encode]').addEventListener('click', () => run(encode, 'Encoded to Base64.'));
+    root.querySelector('[data-decode]').addEventListener('click', () => run(decode, 'Decoded successfully.'));
+
+    root.querySelector('[data-copy]').addEventListener('click', async () => {
+      if (!output.value) return;
+      const ok = await copyText(output.value);
+      toast(ok ? 'Copied to clipboard.' : 'Could not copy automatically.', ok ? 'success' : 'error');
+    });
+  }
+</script>

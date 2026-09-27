@@ -1,0 +1,87 @@
+---
+---
+
+<div class="stool" id="tool-dedupe">
+  <div class="stool-grid">
+    <div class="field">
+      <label for="dd-in">Your list (one item per line)</label>
+      <textarea class="textarea input" id="dd-in" data-input placeholder="apple&#10;banana&#10;apple…"></textarea>
+    </div>
+    <div class="field">
+      <div class="field-label-row">
+        <label for="dd-out">Unique lines</label>
+        <button type="button" class="btn btn-ghost btn-sm" data-copy>Copy</button>
+      </div>
+      <textarea class="textarea input" id="dd-out" data-output readonly placeholder="Deduplicated lines appear here"></textarea>
+    </div>
+  </div>
+
+  <div class="stool-toolbar">
+    <label class="pill-check"><input type="checkbox" data-ignore-case /><span class="dot" aria-hidden="true"></span>Ignore case</label>
+    <label class="pill-check"><input type="checkbox" checked data-trim /><span class="dot" aria-hidden="true"></span>Trim spaces</label>
+    <label class="pill-check"><input type="checkbox" data-no-blank /><span class="dot" aria-hidden="true"></span>Remove blank lines</label>
+    <button type="button" class="btn btn-accent btn-sm" data-go>Remove duplicates</button>
+  </div>
+  <p class="stool-status" data-status aria-live="polite"></p>
+</div>
+
+<style>
+  .field-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .field-label-row label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+</style>
+
+<script>
+  import { copyText, toast } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-dedupe');
+  if (root) {
+    const input = root.querySelector('[data-input]');
+    const output = root.querySelector('[data-output]');
+    const status = root.querySelector('[data-status]');
+    const ignoreCase = root.querySelector('[data-ignore-case]');
+    const trimBox = root.querySelector('[data-trim]');
+    const noBlank = root.querySelector('[data-no-blank]');
+
+    root.querySelector('[data-go]').addEventListener('click', () => {
+      let lines = input.value.split('\n');
+      const total = lines.length;
+      if (trimBox.checked) lines = lines.map((l) => l.trim());
+      if (noBlank.checked) lines = lines.filter((l) => l !== '');
+
+      const seen = new Set();
+      const kept = [];
+      for (const line of lines) {
+        const key = ignoreCase.checked ? line.toLowerCase() : line;
+        if (!seen.has(key)) {
+          seen.add(key);
+          kept.push(line);
+        }
+      }
+
+      if (!kept.length && !total) {
+        status.textContent = 'Paste some lines first.';
+        status.className = 'stool-status err';
+        return;
+      }
+      output.value = kept.join('\n');
+      const removed = lines.length - kept.length;
+      status.textContent = removed > 0 ? `${removed} duplicate${removed > 1 ? 's' : ''} removed — ${kept.length} unique line${kept.length > 1 ? 's' : ''} kept.` : 'No duplicates found.';
+      status.className = 'stool-status ok';
+    });
+
+    root.querySelector('[data-copy]').addEventListener('click', async () => {
+      if (!output.value) return;
+      const ok = await copyText(output.value);
+      toast(ok ? 'Copied to clipboard.' : 'Could not copy automatically.', ok ? 'success' : 'error');
+    });
+  }
+</script>

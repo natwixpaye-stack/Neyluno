@@ -5,27 +5,27 @@ import Icon from '../../components/Icon.astro';
 <div class="ftool" id="tool-img-pdf">
   <div class="ip-options">
     <div class="field">
-      <label for="ip-format">Format de page</label>
+      <label for="ip-format">Page size</label>
       <select class="select" id="ip-format" data-page-format>
         <option value="a4" selected>A4 (210 × 297 mm)</option>
         <option value="letter">Letter (216 × 279 mm)</option>
-        <option value="fit">Adapté à chaque image</option>
+        <option value="fit">Fit each image</option>
       </select>
     </div>
     <div class="field">
       <label for="ip-orient">Orientation</label>
       <select class="select" id="ip-orient" data-orientation>
-        <option value="auto" selected>Automatique</option>
+        <option value="auto" selected>Automatic</option>
         <option value="portrait">Portrait</option>
-        <option value="landscape">Paysage</option>
+        <option value="landscape">Landscape</option>
       </select>
     </div>
     <div class="field">
-      <label for="ip-margin">Marges</label>
+      <label for="ip-margin">Margins</label>
       <select class="select" id="ip-margin" data-margin>
-        <option value="0">Aucune</option>
-        <option value="24" selected>Fines</option>
-        <option value="48">Larges</option>
+        <option value="0">None</option>
+        <option value="24" selected>Thin</option>
+        <option value="48">Wide</option>
       </select>
     </div>
   </div>
@@ -35,22 +35,22 @@ import Icon from '../../components/Icon.astro';
   <div class="dropzone" data-dropzone>
     <input type="file" data-file-input multiple hidden />
     <span class="dz-icon" aria-hidden="true"><Icon name="upload" size={24} /></span>
-    <h3>Glissez-déposez vos images ici</h3>
-    <p>ou cliquez pour parcourir · JPG, PNG, WebP · jusqu'à 50 Mo par fichier</p>
-    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choisir des images</span>
+    <h3>Drag & drop your images here</h3>
+    <p>or click to browse · JPG, PNG, WebP · up to 50 MB per file</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choose images</span>
   </div>
 
-  <p class="ip-hint">Réordonnez avec les flèches ↑↓ : le PDF suit l'ordre de la liste.</p>
+  <p class="ip-hint">Reorder with the ↑↓ arrows — the PDF follows the list order.</p>
 
   <div class="ftool-actions">
     <span class="ftool-count" data-count aria-live="polite"></span>
     <span class="ftool-actions-btns">
-      <button type="button" class="btn btn-ghost btn-sm" data-clear-all hidden>Réinitialiser</button>
-      <button type="button" class="btn btn-accent btn-sm" data-generate hidden>Créer le PDF</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-clear-all hidden>Start over</button>
+      <button type="button" class="btn btn-accent btn-sm" data-generate hidden>Create PDF</button>
     </span>
   </div>
 
-  <ul class="file-list" data-file-list role="list" aria-label="Images à insérer dans le PDF"></ul>
+  <ul class="file-list" data-file-list role="list" aria-label="Images to insert into the PDF"></ul>
 </div>
 
 <style>
@@ -109,7 +109,7 @@ import Icon from '../../components/Icon.astro';
     const PAGE_SIZES = { a4: [595.28, 841.89], letter: [612, 792] };
 
     async function imageEntry(file) {
-      // Retourne { bytes, width, height, kind: 'jpg'|'png' }
+      // Returns { bytes, width, height, kind: 'jpg'|'png' }
       const type = file.type || (/\.(jpe?g)$/i.test(file.name) ? 'image/jpeg' : /\.(png)$/i.test(file.name) ? 'image/png' : '');
       if (type === 'image/jpeg' || type === 'image/png') {
         const img = await decodeImage(file);
@@ -117,7 +117,7 @@ import Icon from '../../components/Icon.astro';
         img.close();
         return { bytes: await file.arrayBuffer(), ...dims, kind: type === 'image/jpeg' ? 'jpg' : 'png' };
       }
-      // Autre format lisible (webp…) : conversion en PNG via canvas
+      // Other readable formats (webp…): convert to PNG via canvas
       const img = await decodeImage(file);
       try {
         const blob = await renderToBlob(img.source, { width: img.width, height: img.height, format: 'image/png' });
@@ -132,7 +132,7 @@ import Icon from '../../components/Icon.astro';
       if (!items.length) return;
       generateBtn.disabled = true;
       const label = generateBtn.textContent;
-      generateBtn.textContent = 'Génération…';
+      generateBtn.textContent = 'Generating…';
       try {
         const { PDFDocument } = await import('pdf-lib');
         const doc = await PDFDocument.create();
@@ -145,7 +145,7 @@ import Icon from '../../components/Icon.astro';
           try {
             entry = await imageEntry(item.file);
           } catch {
-            throw new Error(`Impossible d'insérer « ${item.file.name} » : fichier image invalide ou corrompu.`);
+            throw new Error(`Could not insert “${item.file.name}”: the image file is invalid or corrupted.`);
           }
           const embedded = entry.kind === 'jpg' ? await doc.embedJpg(entry.bytes) : await doc.embedPng(entry.bytes);
 
@@ -178,9 +178,9 @@ import Icon from '../../components/Icon.astro';
         const pdfBytes = await doc.save();
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
         downloadBlob(blob, 'quicktools-images.pdf');
-        toast(`PDF créé avec ${items.length} page${items.length > 1 ? 's' : ''}.`, 'success');
+        toast(`PDF created with ${items.length} page${items.length > 1 ? 's' : ''}.`, 'success');
       } catch (err) {
-        toast(err?.message || 'La création du PDF a échoué. Vérifiez vos fichiers.', 'error', 6000);
+        toast(err?.message || 'Creating the PDF failed. Check your files.', 'error', 6000);
       } finally {
         generateBtn.disabled = false;
         generateBtn.textContent = label;

@@ -1,0 +1,70 @@
+---
+---
+
+<div class="stool" id="tool-uuid">
+  <div class="stool-toolbar">
+    <div class="field" style="min-width:120px">
+      <label for="uu-count">How many?</label>
+      <input class="input" id="uu-count" type="number" min="1" max="1000" value="1" data-count />
+    </div>
+    <label class="pill-check"><input type="checkbox" data-upper /><span class="dot" aria-hidden="true"></span>Uppercase</label>
+    <label class="pill-check"><input type="checkbox" data-nohyphens /><span class="dot" aria-hidden="true"></span>No hyphens</label>
+    <button type="button" class="btn btn-accent btn-sm" data-go>Generate</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-copy disabled>Copy all</button>
+  </div>
+
+  <div class="field">
+    <label for="uu-out" class="sr-only">Generated UUIDs</label>
+    <textarea class="textarea input" id="uu-out" data-output readonly spellcheck="false" rows="8" placeholder="Click “Generate” — UUIDs appear here, one per line."></textarea>
+  </div>
+  <p class="stool-status" data-status aria-live="polite"></p>
+</div>
+
+<script>
+  import { copyText, toast } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-uuid');
+  if (root) {
+    const countInput = root.querySelector('[data-count]');
+    const upperBox = root.querySelector('[data-upper]');
+    const noHyphensBox = root.querySelector('[data-nohyphens]');
+    const output = root.querySelector('[data-output]');
+    const status = root.querySelector('[data-status]');
+    const copyBtn = root.querySelector('[data-copy]');
+
+    function makeUuid() {
+      if (crypto.randomUUID) return crypto.randomUUID();
+      // Fallback for very old browsers
+      const bytes = crypto.getRandomValues(new Uint8Array(16));
+      bytes[6] = (bytes[6] & 0x0f) | 0x40;
+      bytes[8] = (bytes[8] & 0x3f) | 0x80;
+      const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+      return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+    }
+
+    root.querySelector('[data-go]').addEventListener('click', () => {
+      let n = Math.floor(Number(countInput.value));
+      if (!Number.isFinite(n) || n < 1) n = 1;
+      if (n > 1000) {
+        n = 1000;
+        countInput.value = '1000';
+      }
+      let list = Array.from({ length: n }, makeUuid);
+      if (noHyphensBox.checked) list = list.map((u) => u.replace(/-/g, ''));
+      if (upperBox.checked) list = list.map((u) => u.toUpperCase());
+      output.value = list.join('\n');
+      copyBtn.disabled = false;
+      status.textContent = `${n} UUID${n > 1 ? 's' : ''} generated with the browser's cryptographic RNG.`;
+      status.className = 'stool-status ok';
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      if (!output.value) return;
+      const ok = await copyText(output.value);
+      toast(ok ? 'Copied to clipboard.' : 'Could not copy automatically.', ok ? 'success' : 'error');
+    });
+
+    // Generate one UUID right away
+    root.querySelector('[data-go]').click();
+  }
+</script>

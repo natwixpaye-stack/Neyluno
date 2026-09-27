@@ -1,5 +1,8 @@
-# Blueprint Render — site statique gratuit
+# Render blueprint — free static site
 # https://render.com/docs/blueprint-spec
+# NOTE: the live service was created via the Render API; this file documents the
+# same configuration, including the legacy French URL redirects (also applied
+# via PATCH serviceDetails since the service is API-managed).
 services:
   - type: web
     name: quicktools
@@ -9,3 +12,51 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 20.20.2
+    redirects:
+      # Legacy French tool slugs → English slugs (explicit, first-match wins)
+      - source: /outils/jpg-vers-webp
+        destination: /tools/jpg-to-webp
+        isPermanent: true
+      - source: /outils/png-vers-webp
+        destination: /tools/png-to-webp
+        isPermanent: true
+      - source: /outils/compresser-image
+        destination: /tools/image-compressor
+        isPermanent: true
+      - source: /outils/redimensionner-image
+        destination: /tools/image-resizer
+        isPermanent: true
+      - source: /outils/image-en-pdf
+        destination: /tools/image-to-pdf
+        isPermanent: true
+      - source: /outils/fusionner-pdf
+        destination: /tools/merge-pdf
+        isPermanent: true
+      - source: /outils/generer-qr-code
+        destination: /tools/qr-code-generator
+        isPermanent: true
+      - source: /outils/calculateur-pourcentage
+        destination: /tools/percentage-calculator
+        isPermanent: true
+      - source: /outils/generateur-mot-de-passe
+        destination: /tools/password-generator
+        isPermanent: true
+      - source: /outils/compteur-de-mots
+        destination: /tools/word-counter
+        isPermanent: true
+      # Remaining French routes
+      - source: /outils
+        destination: /tools
+        isPermanent: true
+      - source: /outils/:slug
+        destination: /tools
+        isPermanent: true
+      - source: /a-propos
+        destination: /about
+        isPermanent: true
+      - source: /confidentialite
+        destination: /privacy
+        isPermanent: true
+      - source: /mentions-legales
+        destination: /legal
+        isPermanent: true

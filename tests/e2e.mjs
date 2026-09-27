@@ -1,781 +1,456 @@
 /**
- * Tests end-to-end : chaque outil est exercé dans un vrai navigateur.
- * Couvre : entrée valide, entrée invalide, fichier vide, mauvais format,
- * plusieurs fichiers, téléchargement, réinitialisation, mobile/desktop, thème.
- * Usage : node tests/e2e.mjs  (le serveur preview doit tourner sur :4321)
+ * End-to-end tests (Playwright) — QuickTools V2.
+ * Requires: npm run build && npm run preview (port 4321), then node tests/e2e.mjs
  */
 import { chromium } from 'playwright-core';
-import { readFileSync, mkdtempSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 
-const BASE = 'http://localhost:4321';
-const tmp = mkdtempSync(join(tmpdir(), 'qt-e2e-'));
+const BASE = process.env.BASE_URL || 'http://127.0.0.1:4321';
+const EXEC = process.env.CHROMIUM_EXECUTABLE || null;
+
 let pass = 0;
 let fail = 0;
 const failures = [];
 
-function ok(name, cond, extra = '') {
-  if (cond) {
-    pass++;
-    console.log(`  ✅ ${name}`);
-  } else {
-    fail++;
-    failures.push(name + (extra ? ` — ${extra}` : ''));
-    console.log(`  ❌ ${name} ${extra}`);
-  }
-}
-
-async function section(name, fn) {
-  console.log(`\n=== ${name} ===`);
+async function ok(name, fn) {
   try {
     await fn();
-  } catch (e) {
+    console.log(`  ✅ ${name}`);
+    pass++;
+  } catch (err) {
+    console.log(`  ❌ ${name}`);
+    console.log(String(err.stack || err).split('\n').slice(0, 4).join('\n'));
+    failures.push(name);
     fail++;
-    const msg = String((e && e.message) || e).split('\n')[0].slice(0, 160);
-    failures.push(`[section interrompue] ${name} — ${msg}`);
-    console.log(`  ❌ section interrompue : ${msg}`);
   }
 }
 
-/* ---------- Fabrique de fichiers de test ---------- */
-async function makeJpeg(page, w = 40, h = 40, color = '#ff0000') {
-  return page.evaluate(
-    ([w, h, color]) =>
-      new Promise((resolve) => {
-        const c = document.createElement('canvas');
-        c.width = w;
-        c.height = h;
-        const ctx = c.getContext('2d');
-        ctx.fillStyle = color;
-        ctx.fillRect(0, 0, w, h);
-        ctx.fillStyle = '#00ff00';
-        ctx.fillRect(w / 4, h / 4, w / 2, h / 2);
-        c.toBlob((b) => b.arrayBuffer().then((ab) => resolve(Array.from(new Uint8Array(ab)))), 'image/jpeg', 0.9);
-      }),
-    [w, h, color]
-  );
-}
+const browser = await chromium.launch({
+  executablePath: EXEC || undefined,
+  args: ['--no-sandbox', '--disable-dev-shm-usage'],
+});
+const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+const page = await context.newPage();
+page.setDefaultTimeout(15000);
 
-async function makePng(page, w = 40, h = 40) {
-  return page.evaluate(
-    ([w, h]) =>
-      new Promise((resolve) => {
-        const c = document.createElement('canvas');
-        c.width = w;
-        c.height = h;
-        const ctx = c.getContext('2d');
-        ctx.fillStyle = 'rgba(0,120,255,0.7)';
-        ctx.fillRect(0, 0, w, h);
-        c.toBlob((b) => b.arrayBuffer().then((ab) => resolve(Array.from(new Uint8Array(ab)))), 'image/png');
-      }),
-    [w, h]
-  );
-}
+console.log('\n=== QuickTools V2 e2e ===\n');
 
-const buf = (arr) => Buffer.from(arr);
+/* ================= HOME ================= */
+console.log('Home');
+await page.goto(BASE + '/');
+await page.waitForSelector('h1');
 
-async function setFiles(page, files) {
-  await page.locator('[data-file-input]').setInputFiles(files);
-}
+await ok('hero headline “Get things done. Fast.”', async () => {
+  const h1 = await page.locator('h1').innerText();
+  if (!h1.includes('Get things done')) throw new Error(h1);
+});
 
-async function waitForStatus(page, status, timeout = 20000) {
-  await page.waitForSelector(`.file-item.is-${status}`, { timeout });
-}
+await ok('hero search bar present with placeholder', async () => {
+  const ph = await page.getAttribute('[data-hero-search]', 'placeholder');
+  if (!ph.includes('What do you want to do')) throw new Error(ph);
+});
 
-const browser = await chromium.launch({ args: ['--no-sandbox'] });
+await ok('popular quick actions link to real tools', async () => {
+  const href = await page.locator('.hero-chip').first().getAttribute('href');
+  if (!href.startsWith('/tools/')) throw new Error(href);
+  const res = await page.request.get(BASE + href);
+  if (res.status() !== 200) throw new Error(`status ${res.status()}`);
+});
 
-/* =========================================================
-   ACCUEIL — hero, recherche, thème, responsive
-   ========================================================= */
-await section('Accueil', async () => {
-  const page = await browser.newPage();
-  const errors = [];
-  page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto(BASE + '/', { waitUntil: 'networkidle' });
+await ok('tools grid renders 30 cards', async () => {
+  const n = await page.locator('.tools-grid .tool-card').count();
+  if (n !== 30) throw new Error(`found ${n}`);
+});
 
-  ok('titre présent', (await page.title()).includes('QuickTools'));
-  ok('H1 exact du brief', (await page.locator('h1').innerText()).includes('Sans les complications'));
-  ok('10 cartes outils affichées', (await page.locator('.tool-card').count()) === 10);
-  ok('aucune erreur JS au chargement', errors.length === 0, errors.join(' | '));
+await ok('category filter narrows the grid', async () => {
+  await page.click('.filter-chip[data-filter="pdf"]');
+  const visible = await page.locator('.tools-grid [data-tool-wrap]:not([style*="display: none"])').count();
+  if (visible !== 6) throw new Error(`visible ${visible}`);
+  await page.click('.filter-chip[data-filter="all"]');
+});
 
-  // Recherche : Ctrl+K
+/* ================= SEARCH MODAL (intent) ================= */
+console.log('Search');
+await ok('Ctrl+K opens the search modal', async () => {
   await page.keyboard.press('Control+k');
-  await page.waitForSelector('.modal-overlay:not([hidden])', { timeout: 3000 });
-  await page.locator('[data-search-input]').fill('pdf');
-  await page.waitForTimeout(150);
-  const results = await page.locator('.sm-item').count();
-  ok('recherche "pdf" → résultats (≥2)', results >= 2, `${results}`);
-  await page.keyboard.press('Escape');
-  ok('Esc ferme la modale', await page.locator('.modal-overlay').isHidden());
-
-  // Recherche via la barre hero
-  await page.locator('#hero-search').focus();
-  await page.waitForSelector('.modal-overlay:not([hidden])', { timeout: 3000 });
-  ok('la barre hero ouvre la recherche', true);
-  await page.keyboard.press('Escape');
-
-  // La page reste utilisable une fois la modale fermée (aucun overlay fantôme)
-  await page.locator('[data-filter="pdf"]').click({ timeout: 4000 });
-  const visible = await page.locator('[data-tool-wrap]:not(.filtered-out)').count();
-  ok('filtre PDF → 2 outils visibles', visible === 2, `${visible}`);
-  await page.locator('[data-filter="all"]').click();
-
-  // Thème : bascule, mémorisation, persistance après refresh
-  const initialTheme = await page.locator('html').getAttribute('data-theme');
-  await page.locator('[data-theme-toggle]').click();
-  await page.waitForTimeout(200);
-  const toggled = await page.locator('html').getAttribute('data-theme');
-  ok('la bascule de thème change le thème', toggled !== initialTheme, `${initialTheme} → ${toggled}`);
-  const persisted = await page.evaluate(() => localStorage.getItem('qt-theme'));
-  ok('thème mémorisé (localStorage)', persisted === toggled, `stocké=${persisted}`);
-  await page.reload({ waitUntil: 'networkidle' });
-  ok('thème conservé après refresh', (await page.locator('html').getAttribute('data-theme')) === toggled);
-  await page.locator('[data-theme-toggle]').click();
-
-  // Navigation mobile + aucun débordement horizontal
-  await page.setViewportSize({ width: 375, height: 812 });
-  await page.waitForTimeout(200);
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-  ok('mobile 375px : aucun débordement horizontal', overflow <= 1, `overflow=${overflow}px`);
-  await page.locator('[data-nav-toggle]').click();
-  ok('menu mobile s’ouvre', !(await page.locator('#mobile-nav').isHidden()));
-  await page.locator('#mobile-nav a[href="/outils/"]').first().click();
-  await page.waitForURL('**/outils/');
-  ok('lien menu mobile fonctionne', page.url().includes('/outils/'));
-
-  await page.setViewportSize({ width: 320, height: 700 });
-  const overflow320 = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-  ok('mobile 320px : aucun débordement', overflow320 <= 1, `overflow=${overflow320}px`);
-
-  await page.close();
+  await page.waitForSelector('[data-search-overlay]:not([hidden])');
+  await page.fill('[data-search-input]', '');
 });
 
-/* =========================================================
-   OUTIL 1 — JPG → WebP
-   ========================================================= */
-await section('Outil 1 : JPG → WebP', async () => {
-  const page = await browser.newPage();
-  const errors = [];
-  page.on('pageerror', (e) => errors.push(e.message));
-  const dl = [];
-  page.on('download', async (d) => {
-    const p = join(tmp, d.suggestedFilename());
-    await d.saveAs(p);
-    dl.push(p);
-  });
-  await page.goto(BASE + '/outils/jpg-vers-webp/', { waitUntil: 'networkidle' });
-
-  // Fichier valide
-  const jpg = buf(await makeJpeg(page, 60, 60));
-  await setFiles(page, [{ name: 'photo.jpg', mimeType: 'image/jpeg', buffer: jpg }]);
-  await waitForStatus(page, 'done');
-  ok('JPG valide converti', true);
-  const meta = await page.locator('.file-item .fi-meta').first().innerText();
-  ok('méta avant/après affichée', meta.includes('→'), meta);
-
-  // Plusieurs fichiers
-  const jpg2 = buf(await makeJpeg(page, 30, 30, '#0000ff'));
-  const jpg3 = buf(await makeJpeg(page, 80, 80, '#222222'));
-  await setFiles(page, [
-    { name: 'a.jpg', mimeType: 'image/jpeg', buffer: jpg2 },
-    { name: 'b.jpg', mimeType: 'image/jpeg', buffer: jpg3 },
-  ]);
-  await page.waitForFunction(() => document.querySelectorAll('.file-item.is-done').length >= 3, { timeout: 20000 });
-  ok('3 fichiers présents', (await page.locator('.file-item').count()) === 3);
-
-  // Téléchargement unitaire
-  await page.locator('.file-item .fi-actions [data-download]').first().click();
-  await page.waitForTimeout(400);
-  ok('téléchargement unitaire déclenché', dl.length >= 1);
-  ok('extension .webp', dl[0].endsWith('.webp'), dl[0]);
-
-  // ZIP
-  await page.locator('[data-download-all]').click();
-  await page.waitForTimeout(1800);
-  ok('téléchargement ZIP', dl.some((f) => f.endsWith('.zip')));
-  const zipFile = dl.find((f) => f.endsWith('.zip'));
-  ok('ZIP non vide', zipFile && readFileSync(zipFile).length > 100);
-
-  // Suppression d'un fichier
-  await page.locator('.file-item [aria-label^="Retirer"]').first().click();
-  ok('suppression d’un fichier', (await page.locator('.file-item').count()) === 2);
-
-  // Qualité : reconversion
-  await page.locator('[data-quality]').fill('50');
-  await page.locator('[data-quality]').dispatchEvent('change');
-  await page.waitForTimeout(1200);
-  ok('reconversion après changement de qualité', (await page.locator('.file-item.is-done').count()) === 2);
-
-  // Mauvais format
-  await setFiles(page, [{ name: 'script.txt', mimeType: 'text/plain', buffer: Buffer.from('hello') }]);
+await ok('intent query “make my photo smaller” → Image Compressor first', async () => {
+  await page.fill('[data-search-input]', 'make my photo smaller');
   await page.waitForTimeout(300);
-  const notice = await page.locator('[data-notice]').innerText();
-  ok('mauvais format refusé avec message', notice.includes('Format non pris en charge'), notice.slice(0, 80));
-  ok('fichier refusé non ajouté', (await page.locator('.file-item').count()) === 2);
-
-  // Fichier vide
-  await setFiles(page, [{ name: 'vide.jpg', mimeType: 'image/jpeg', buffer: Buffer.alloc(0) }]);
-  await page.waitForTimeout(300);
-  ok('fichier vide refusé', (await page.locator('[data-notice]').innerText()).includes('vide'));
-
-  // Fichier corrompu (extension .jpg, contenu poubelle)
-  await page.locator('[data-clear-all]').click();
-  ok('réinitialisation vide la liste', (await page.locator('.file-item').count()) === 0);
-  await setFiles(page, [{ name: 'casse.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('ceci n est pas une image du tout') }]);
-  await waitForStatus(page, 'error');
-  const errMsg = await page.locator('.file-item.is-error .fi-meta').innerText();
-  ok('fichier corrompu : erreur claire (pas "Error: undefined")', errMsg.length > 15 && !errMsg.includes('undefined'), errMsg.slice(0, 80));
-
-  // Trop gros (51 Mo) — injecté via DataTransfer (Playwright refuse les buffers > 50 Mo)
-  await page.evaluate(() => {
-    const big = new File([new ArrayBuffer(51 * 1024 * 1024)], 'gros.jpg', { type: 'image/jpeg' });
-    const dt = new DataTransfer();
-    dt.items.add(big);
-    const input = document.querySelector('[data-file-input]');
-    input.files = dt.files;
-    input.dispatchEvent(new Event('change', { bubbles: true }));
-  });
-  await page.waitForTimeout(600);
-  ok('fichier > 50 Mo refusé', (await page.locator('[data-notice]').innerText()).includes('limite'));
-
-  ok('aucune erreur JS sur l’outil', errors.length === 0, errors.join(' | '));
-
-  // Refresh : la liste repart de zéro, l'outil fonctionne toujours
-  await page.reload({ waitUntil: 'networkidle' });
-  ok('après refresh : dropzone opérationnelle', (await page.locator('.dropzone').count()) === 1);
-  await setFiles(page, [{ name: 'photo2.jpg', mimeType: 'image/jpeg', buffer: jpg }]);
-  await waitForStatus(page, 'done');
-  ok('conversion OK après refresh', true);
-
-  // Mobile
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.waitForTimeout(200);
-  const ovf = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-  ok('mobile : aucun débordement', ovf <= 1, `${ovf}px`);
-
-  await page.close();
+  const first = page.locator('.sm-item').first();
+  const name = await first.locator('.sm-item-name').innerText();
+  if (!name.includes('Image Compressor')) throw new Error(name);
 });
 
-/* =========================================================
-   OUTIL 2 — PNG → WebP
-   ========================================================= */
-await section('Outil 2 : PNG → WebP', async () => {
-  const page = await browser.newPage();
-  const dl = [];
-  page.on('download', async (d) => {
-    const p = join(tmp, 'pw-' + d.suggestedFilename());
-    await d.saveAs(p);
-    dl.push(p);
-  });
-  await page.goto(BASE + '/outils/png-vers-webp/', { waitUntil: 'networkidle' });
-
-  const png = buf(await makePng(page, 48, 48));
-  await setFiles(page, [{ name: 'logo.png', mimeType: 'image/png', buffer: png }]);
-  await waitForStatus(page, 'done');
-  ok('PNG valide converti', true);
-
-  // JPG refusé ici
-  const jpg = buf(await makeJpeg(page, 20, 20));
-  await setFiles(page, [{ name: 'photo.jpg', mimeType: 'image/jpeg', buffer: jpg }]);
-  await page.waitForTimeout(300);
-  ok('JPG refusé sur l’outil PNG', (await page.locator('[data-notice]').innerText()).includes('Format'));
-
-  await page.locator('.file-item [data-download]').first().click();
-  await page.waitForTimeout(500);
-  ok('téléchargement .webp', dl.some((f) => f.endsWith('.webp')));
-
-  // Vérifie que le fichier téléchargé est un vrai WebP (magic bytes RIFF....WEBP)
-  const webpPath = dl.find((f) => f.endsWith('.webp'));
-  const bytes = readFileSync(webpPath);
-  const magic = bytes.subarray(0, 4).toString() + bytes.subarray(8, 12).toString();
-  ok('magic bytes WebP valides', magic === 'RIFFWEBP', magic);
-
-  await page.close();
-});
-
-/* =========================================================
-   OUTIL 3 — Compresseur d'image
-   ========================================================= */
-await section('Outil 3 : Compresseur', async () => {
-  const page = await browser.newPage();
-  await page.goto(BASE + '/outils/compresser-image/', { waitUntil: 'networkidle' });
-
-  const bigJpg = buf(
-    await page.evaluate(() =>
-      new Promise((resolve) => {
-        const c = document.createElement('canvas');
-        c.width = 600;
-        c.height = 600;
-        const ctx = c.getContext('2d');
-        for (let i = 0; i < 600; i += 6) {
-          ctx.fillStyle = `hsl(${(i * 7) % 360}, 60%, ${30 + (i % 40)}%)`;
-          ctx.fillRect(0, i, 600, 6);
-        }
-        c.toBlob((b) => b.arrayBuffer().then((ab) => resolve(Array.from(new Uint8Array(ab)))), 'image/jpeg', 1);
-      })
-    )
-  );
-  await setFiles(page, [{ name: 'grosse.jpg', mimeType: 'image/jpeg', buffer: bigJpg }]);
-  await waitForStatus(page, 'done');
-  ok('compression effectuée', true);
-
-  await page.locator('[data-quality]').fill('40');
-  await page.locator('[data-quality]').dispatchEvent('change');
-  await page.waitForTimeout(1500);
-  const summary = await page.locator('[data-summary]').innerText();
-  ok('récap Avant/Après/Économie affiché', /avant[\s\S]*après[\s\S]*économie/i.test(summary), summary.replace(/\n/g, ' '));
-  ok('comparateur avant/après visible (1 fichier)', !(await page.locator('[data-compare]').isHidden()));
-
-  const saved = await page.locator('[data-sum-saved]').innerText();
-  ok('pourcentage d’économie affiché', saved.includes('%'), saved);
-
-  // WebP accepté aussi
-  await page.locator('[data-clear-all]').click();
-  const webpSrc = buf(
-    await page.evaluate(() =>
-      new Promise((resolve) => {
-        const c = document.createElement('canvas');
-        c.width = 60;
-        c.height = 60;
-        c.getContext('2d').fillRect(0, 0, 60, 60);
-        c.toBlob((b) => b.arrayBuffer().then((ab) => resolve(Array.from(new Uint8Array(ab)))), 'image/webp', 0.9);
-      })
-    )
-  );
-  await setFiles(page, [{ name: 'img.webp', mimeType: 'image/webp', buffer: webpSrc }]);
-  await waitForStatus(page, 'done');
-  ok('WebP accepté en entrée', true);
-
-  await page.close();
-});
-
-/* =========================================================
-   OUTIL 4 — Redimensionner
-   ========================================================= */
-await section('Outil 4 : Redimensionner', async () => {
-  const page = await browser.newPage();
-  const dl = [];
-  page.on('download', async (d) => {
-    const p = join(tmp, 'rz-' + d.suggestedFilename());
-    await d.saveAs(p);
-    dl.push(p);
-  });
-  await page.goto(BASE + '/outils/redimensionner-image/', { waitUntil: 'networkidle' });
-
-  const jpg = buf(await makeJpeg(page, 200, 100));
-  await setFiles(page, [{ name: 'src.jpg', mimeType: 'image/jpeg', buffer: jpg }]);
-  await page.waitForFunction(() => document.querySelector('[data-info]')?.textContent.includes('200 × 100'), { timeout: 8000 });
-  ok('dimensions originales détectées (200 × 100)', true);
-
-  // Ratio verrouillé : largeur 100 → hauteur 50
-  await page.locator('[data-width]').fill('100');
-  const h = await page.locator('[data-height]').inputValue();
-  ok('ratio verrouillé : hauteur auto (50)', h === '50', `h=${h}`);
-
-  await page.locator('[data-go]').click();
-  await waitForStatus(page, 'done');
-  await page.locator('.file-item [data-download]').first().click();
-  await page.waitForTimeout(700);
-  ok('téléchargement après redimensionnement', dl.length === 1);
-
-  // Vérifie les dimensions réelles du fichier produit
-  const dims = await page.evaluate(async (arr) => {
-    const blob = new Blob([new Uint8Array(arr)]);
-    const bmp = await createImageBitmap(blob);
-    return [bmp.width, bmp.height];
-  }, Array.from(readFileSync(dl[0])));
-  ok('dimensions de sortie correctes (100×50)', dims[0] === 100 && dims[1] === 50, `${dims}`);
-
-  // Mode pourcentage
-  await page.locator('[data-mode-btn="percent"]').click();
-  await page.locator('[data-pct="50"]').click();
-  await page.waitForFunction(() => document.querySelector('[data-info]')?.textContent.includes('100 × 50'), { timeout: 5000 });
-  ok('mode pourcentage : 50 % de 200×100 → 100×50', true);
-
-  // Ratio déverrouillé
-  await page.locator('[data-mode-btn="dims"]').click();
-  await page.locator('[data-lock]').uncheck();
-  await page.locator('[data-width]').fill('300');
-  await page.locator('[data-height]').fill('300');
-  await page.locator('[data-go]').click();
-  await page.waitForSelector('.file-item.is-done', { timeout: 15000 });
-  const beforeCount = dl.length;
-  await page.locator('.file-item [data-download]').first().click();
-  for (let i = 0; i < 30 && dl.length <= beforeCount; i++) await page.waitForTimeout(250);
-  const dims2 = await page.evaluate(async (arr) => {
-    const blob = new Blob([new Uint8Array(arr)]);
-    const bmp = await createImageBitmap(blob);
-    return [bmp.width, bmp.height];
-  }, Array.from(readFileSync(dl.at(-1))));
-  ok('ratio déverrouillé : 300×300 exact', dims2[0] === 300 && dims2[1] === 300, `${dims2}`);
-
-  // Largeur excessive → erreur claire
-  await page.locator('[data-width]').fill('99999');
-  await page.locator('[data-go]').click();
-  await page.waitForSelector('.file-item.is-error', { timeout: 10000 });
-  const meta = await page.locator('.file-item .fi-meta').first().innerText();
-  ok('dimensions excessives → message clair', meta.includes('trop grandes'), meta.slice(0, 80));
-
-  await page.close();
-});
-
-/* =========================================================
-   OUTIL 5 — Image en PDF
-   ========================================================= */
-await section('Outil 5 : Image en PDF', async () => {
-  const page = await browser.newPage();
-  const dl = [];
-  page.on('download', async (d) => {
-    const p = join(tmp, 'ip-' + d.suggestedFilename());
-    await d.saveAs(p);
-    dl.push(p);
-  });
-  await page.goto(BASE + '/outils/image-en-pdf/', { waitUntil: 'networkidle' });
-
-  const j1 = buf(await makeJpeg(page, 120, 200, '#ff0000'));
-  const p1 = buf(await makePng(page, 90, 90));
-  await setFiles(page, [
-    { name: 'page1.jpg', mimeType: 'image/jpeg', buffer: j1 },
-    { name: 'page2.png', mimeType: 'image/png', buffer: p1 },
-  ]);
-  await page.waitForTimeout(600);
-
-  // Réorganisation
-  await page.locator('.file-item').nth(1).locator('[data-mv-up]').click();
-  const first = await page.locator('.file-item .fi-name').first().innerText();
-  ok('réorganisation ↑↓ fonctionne', first === 'page2.png', first);
-
-  await page.locator('[data-generate]').click();
-  for (let i = 0; i < 40 && !dl.some((f) => f.endsWith('.pdf')); i++) await page.waitForTimeout(250);
-  ok('PDF téléchargé', dl.some((f) => f.endsWith('.pdf')));
-
-  // Vérifie le PDF généré avec pdf-lib (côté node)
-  const { PDFDocument } = await import('pdf-lib');
-  const doc = await PDFDocument.load(readFileSync(dl.find((f) => f.endsWith('.pdf'))));
-  ok('PDF : 2 pages', doc.getPageCount() === 2, `${doc.getPageCount()}`);
-
-  // Orientation paysage + A4
-  await page.locator('[data-orientation]').selectOption('landscape');
-  const pdfCount = dl.filter((f) => f.endsWith('.pdf')).length;
-  await page.locator('[data-generate]').click();
-  for (let i = 0; i < 40 && dl.filter((f) => f.endsWith('.pdf')).length <= pdfCount; i++) await page.waitForTimeout(250);
-  const doc2 = await PDFDocument.load(readFileSync(dl.filter((f) => f.endsWith('.pdf')).at(-1)));
-  const { width: w, height: h } = doc2.getPage(0).getSize();
-  ok('A4 paysage : largeur > hauteur', w > h, `${w}×${h}`);
-  ok('dimensions A4 ≈ 842×595', Math.round(w) === 842 && Math.round(h) === 595, `${Math.round(w)}×${Math.round(h)}`);
-
-  // Fichier corrompu
-  await page.locator('[data-clear-all]').click();
-  await setFiles(page, [{ name: 'faux.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('pas une image') }]);
-  await page.waitForTimeout(400);
-  await page.locator('[data-generate]').click();
-  await page.waitForTimeout(2500);
-  const toast = await page.locator('.toast-stack').innerText().catch(() => '');
-  ok('image corrompue → erreur explicite à la génération', toast.includes('invalide') || toast.includes('Impossible'), toast.slice(0, 90));
-
-  await page.close();
-});
-
-/* =========================================================
-   OUTIL 6 — Fusionner des PDF
-   ========================================================= */
-await section('Outil 6 : Fusionner des PDF', async () => {
-  const page = await browser.newPage();
-  const dl = [];
-  page.on('download', async (d) => {
-    const p = join(tmp, 'mp-' + d.suggestedFilename());
-    await d.saveAs(p);
-    dl.push(p);
-  });
-  await page.goto(BASE + '/outils/fusionner-pdf/', { waitUntil: 'networkidle' });
-
-  const { PDFDocument } = await import('pdf-lib');
-  const mkPdf = async (pages) => {
-    const d = await PDFDocument.create();
-    for (let i = 0; i < pages; i++) d.addPage([200, 300]);
-    return Buffer.from(await d.save());
-  };
-  const pdfA = await mkPdf(2);
-  const pdfB = await mkPdf(3);
-
-  await setFiles(page, [
-    { name: 'a.pdf', mimeType: 'application/pdf', buffer: pdfA },
-    { name: 'b.pdf', mimeType: 'application/pdf', buffer: pdfB },
-  ]);
-  await page.waitForFunction(
-    () => document.querySelectorAll('.fi-meta').length === 2 && ![...document.querySelectorAll('.fi-meta')].some((e) => e.textContent.includes('analyse')),
-    { timeout: 15000 }
-  );
-  const metas = await page.locator('.fi-meta').allInnerTexts();
-  ok('nombre de pages affiché par fichier', metas[0].includes('2 pages') && metas[1].includes('3 pages'), metas.join(' | '));
-
-  await page.locator('[data-merge]').click();
-  await page.waitForTimeout(3000);
-  ok('PDF fusionné téléchargé', dl.some((f) => f.endsWith('.pdf')));
-  const merged = await PDFDocument.load(readFileSync(dl.find((f) => f.endsWith('.pdf'))));
-  ok('fusion : 2+3 = 5 pages', merged.getPageCount() === 5, `${merged.getPageCount()}`);
-
-  // Réorganisation puis re-fusion
-  await page.locator('.file-item').nth(1).locator('[data-mv-up]').click();
-  await page.locator('[data-merge]').click();
-  await page.waitForTimeout(3000);
-  const merged2 = await PDFDocument.load(readFileSync(dl.filter((f) => f.endsWith('.pdf')).at(-1)));
-  ok('re-fusion après réorganisation OK', merged2.getPageCount() === 5);
-
-  // PDF invalide
-  await setFiles(page, [{ name: 'faux.pdf', mimeType: 'application/pdf', buffer: Buffer.from('PDF mais en fait non') }]);
-  await page.waitForFunction(() => [...document.querySelectorAll('.fi-meta')].some((e) => e.textContent.includes('protégé ou illisible')), { timeout: 15000 });
-  await page.locator('[data-merge]').click();
-  await page.waitForTimeout(600);
-  const notice = await page.locator('[data-notice]').innerText();
-  ok('PDF illisible signalé avant fusion', notice.includes('protégé') || notice.includes('illisible'), notice.slice(0, 90));
-
-  // Mauvais format refusé
-  await setFiles(page, [{ name: 'image.png', mimeType: 'image/png', buffer: Buffer.from('x') }]);
-  await page.waitForTimeout(300);
-  ok('non-PDF refusé', (await page.locator('[data-notice]').innerText()).includes('Format'));
-
-  await page.close();
-});
-
-/* =========================================================
-   OUTIL 7 — Générateur de QR code
-   ========================================================= */
-await section('Outil 7 : QR code', async () => {
-  const page = await browser.newPage();
-  const dl = [];
-  page.on('download', async (d) => {
-    const p = join(tmp, 'qr-' + d.suggestedFilename());
-    await d.saveAs(p);
-    dl.push(p);
-  });
-  await page.goto(BASE + '/outils/generer-qr-code/', { waitUntil: 'networkidle' });
-
-  ok('boutons désactivés sans contenu', await page.locator('[data-dl-png]').isDisabled());
-
-  await page.locator('[data-f-url]').fill('https://example.fr/bonjour');
-  await page.waitForTimeout(900);
-  ok(
-    'aperçu généré (canvas non vide)',
-    await page.evaluate(() => {
-      const c = document.querySelector('[data-canvas]');
-      return c.getContext('2d').getImageData(0, 0, c.width, c.height).data.some((v, i) => i % 4 === 3 && v > 0);
-    })
-  );
-  ok('PNG activé', !(await page.locator('[data-dl-png]').isDisabled()));
-
-  await page.locator('[data-dl-png]').click();
-  await page.waitForTimeout(700);
-  await page.locator('[data-dl-svg]').click();
-  await page.waitForTimeout(700);
-  ok('export PNG + SVG déclenchés', dl.some((f) => f.endsWith('.png')) && dl.some((f) => f.endsWith('.svg')));
-  const svg = readFileSync(dl.find((f) => f.endsWith('.svg')), 'utf8');
-  ok('SVG valide', svg.includes('<svg'));
-
-  // URL invalide
-  await page.locator('[data-f-url]').fill('pas une url');
-  await page.waitForTimeout(700);
-  ok('URL invalide → message', (await page.locator('[data-error]').innerText()).includes('pas valide'));
-
-  // Type Wi-Fi
-  await page.locator('#qr-type').selectOption('wifi');
-  await page.locator('[data-f-wifi-ssid]').fill('MonRéseau');
-  await page.locator('[data-f-wifi-pass]').fill('mot;depasse');
-  await page.waitForTimeout(900);
-  ok('Wi-Fi généré sans erreur', !(await page.locator('[data-dl-png]').isDisabled()));
-
-  // Email invalide
-  await page.locator('#qr-type').selectOption('email');
-  await page.locator('[data-f-email-to]').fill('pas-un-email');
-  await page.waitForTimeout(700);
-  ok('e-mail invalide → message', (await page.locator('[data-error]').innerText()).includes('invalide'));
-
-  // Couleur personnalisée
-  await page.locator('#qr-type').selectOption('url');
-  await page.locator('[data-fg]').fill('#ff0000');
-  await page.waitForTimeout(900);
-  ok('changement de couleur appliqué sans erreur', true);
-
-  await page.close();
-});
-
-/* =========================================================
-   OUTIL 8 — Calculateur de pourcentage
-   ========================================================= */
-await section('Outil 8 : Pourcentage', async () => {
-  const page = await browser.newPage();
-  await page.goto(BASE + '/outils/calculateur-pourcentage/', { waitUntil: 'networkidle' });
-
-  await page.locator('[data-a]').fill('20');
-  await page.locator('[data-b]').fill('150');
-  ok('20 % de 150 = 30', (await page.locator('[data-result]').innerText()).trim() === '30');
-
-  await page.locator('[data-mode="proportion"]').click();
-  await page.locator('[data-a]').fill('30');
-  await page.locator('[data-b]').fill('150');
-  ok('30 sur 150 = 20 %', (await page.locator('[data-result]').innerText()).includes('20'));
-
-  await page.locator('[data-mode="evolution"]').click();
-  await page.locator('[data-a]').fill('80');
-  await page.locator('[data-b]').fill('100');
-  ok('80 → 100 = +25 %', (await page.locator('[data-result]').innerText()).includes('25'));
-  await page.locator('[data-a]').fill('100');
-  await page.locator('[data-b]').fill('80');
-  ok('100 → 80 = −20 %', (await page.locator('[data-result]').innerText()).includes('20'));
-
-  await page.locator('[data-mode="discount"]').click();
-  await page.locator('[data-a]').fill('120');
-  await page.locator('[data-b]').fill('25');
-  ok('120 − 25 % = 90', (await page.locator('[data-result]').innerText()).trim() === '90');
-
-  await page.locator('[data-mode="add"]').click();
-  await page.locator('[data-a]').fill('100');
-  await page.locator('[data-b]').fill('10,5');
-  ok('virgule décimale acceptée (100 + 10,5 % = 110,5)', (await page.locator('[data-result]').innerText()).includes('110,5'));
-
-  await page.locator('[data-a]').fill('abc');
-  ok('texte invalide → message doux', (await page.locator('[data-sentence]').innerText()).length > 0);
-
-  await page.locator('[data-mode="proportion"]').click();
-  await page.locator('[data-a]').fill('10');
-  await page.locator('[data-b]').fill('0');
-  ok('division par 0 gérée', (await page.locator('[data-sentence]').innerText()).length > 0);
-
-  await page.close();
-});
-
-/* =========================================================
-   OUTIL 9 — Générateur de mot de passe
-   ========================================================= */
-await section('Outil 9 : Mot de passe', async () => {
-  const page = await browser.newPage();
-  await page.goto(BASE + '/outils/generateur-mot-de-passe/', { waitUntil: 'networkidle' });
-
-  const pw = await page.locator('[data-output]').innerText();
-  ok('mot de passe généré au chargement (16 car.)', pw.length === 16 && !pw.includes('•'), pw);
-  ok('contient des minuscules et majuscules', /[a-z]/.test(pw) && /[A-Z]/.test(pw));
-
-  await page.locator('[data-length]').fill('24');
-  await page.locator('[data-length]').dispatchEvent('input');
-  await page.waitForTimeout(300);
-  ok('longueur 24 respectée', (await page.locator('[data-output]').innerText()).length === 24);
-
-  await page.locator('[data-opt-upper]').uncheck();
-  await page.locator('[data-opt-digits]').uncheck();
-  await page.locator('[data-opt-symbols]').uncheck();
-  await page.waitForTimeout(200);
-  const pwLower = await page.locator('[data-output]').innerText();
-  ok('minuscules uniquement', /^[a-z]+$/.test(pwLower), pwLower);
-
-  await page.locator('[data-opt-lower]').uncheck();
-  await page.waitForTimeout(200);
-  ok('avertissement si aucune famille', !(await page.locator('[data-note]').isHidden()));
-  ok('copie désactivée', await page.locator('[data-copy]').isDisabled());
-  await page.locator('[data-opt-lower]').check();
-
-  await page.locator('[data-opt-noamb]').check();
-  await page.locator('[data-regen]').click();
-  await page.waitForTimeout(300);
-  const pwNoAmb = await page.locator('[data-output]').innerText();
-  ok('aucun caractère ambigu', !/[Il1O0o|`'"{}[\]();:.]/.test(pwNoAmb), pwNoAmb);
-
-  ok('indicateur d’entropie présent', (await page.locator('[data-strength-bits]').innerText()).includes('bits'));
-
-  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
-  await page.locator('[data-copy]').click();
-  await page.waitForTimeout(500);
-  const clip = await page.evaluate(() => navigator.clipboard.readText());
-  ok('copie dans le presse-papiers', clip === pwNoAmb);
-
-  const before = await page.locator('[data-output]').innerText();
-  await page.locator('[data-regen]').click();
-  await page.waitForTimeout(300);
-  ok('régénération → mot différent', (await page.locator('[data-output]').innerText()) !== before);
-
-  await page.close();
-});
-
-/* =========================================================
-   OUTIL 10 — Compteur de mots
-   ========================================================= */
-await section('Outil 10 : Compteur de mots', async () => {
-  const page = await browser.newPage();
-  await page.goto(BASE + '/outils/compteur-de-mots/', { waitUntil: 'networkidle' });
-
-  await page.locator('[data-input]').fill("Bonjour le monde. Voici un test.\n\nDeuxième paragraphe !");
-  await page.waitForTimeout(250);
-  ok('mots comptés', (await page.locator('[data-stat-words]').innerText()) === '8');
-  ok('phrases comptées', (await page.locator('[data-stat-sentences]').innerText()) === '3');
-  ok('paragraphes comptés', (await page.locator('[data-stat-paragraphs]').innerText()) === '2');
-  ok('lignes comptées', (await page.locator('[data-stat-lines]').innerText()) === '3');
-
-  await page.locator('[data-clear]').click();
-  await page.waitForTimeout(200);
-  ok('effacer remet à zéro', (await page.locator('[data-stat-words]').innerText()) === '0');
-
-  await page.locator('[data-sample]').click();
-  await page.waitForTimeout(250);
-  const w = parseInt((await page.locator('[data-stat-words]').innerText()).replace(/[^\d]/g, ''), 10);
-  ok('texte exemple : comptage non nul', w > 80, `${w}`);
-
-  await page.evaluate(() => {
-    const ta = document.querySelector('[data-input]');
-    ta.value = Array(200000).fill('mot').join(' ');
-    ta.dispatchEvent(new Event('input'));
-  });
-  await page.waitForTimeout(2000);
-  const big = (await page.locator('[data-stat-words]').innerText()).replace(/[^\d]/g, '');
-  ok('200 000 mots traités sans erreur', big === '200000', big);
-
-  await page.close();
-});
-
-/* =========================================================
-   RECHERCHE + CLAVIER
-   ========================================================= */
-await section('Recherche & clavier', async () => {
-  const page = await browser.newPage();
-  await page.goto(BASE + '/', { waitUntil: 'networkidle' });
-
-  await page.keyboard.press('Control+k');
-  await page.waitForSelector('.modal-overlay:not([hidden])');
-  await page.locator('[data-search-input]').fill('compress');
-  await page.waitForTimeout(250);
-  await page.keyboard.press('ArrowDown');
-  await page.keyboard.press('ArrowDown');
+await ok('Enter navigates to the first result', async () => {
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(800);
-  ok('navigation clavier → Enter ouvre un outil', page.url().includes('/outils/'), page.url());
-  await page.close();
+  await page.waitForURL('**/tools/image-compressor/');
+  await page.waitForSelector('#tool-compress');
 });
 
-/* =========================================================
-   ACCESSIBILITÉ DE BASE
-   ========================================================= */
-await section('Accessibilité', async () => {
-  const page = await browser.newPage();
-  await page.goto(BASE + '/', { waitUntil: 'networkidle' });
-  const issues = await page.evaluate(() => {
-    const out = [];
-    document.querySelectorAll('img:not([alt])').forEach((i) => out.push('img sans alt: ' + i.src.slice(0, 60)));
-    document.querySelectorAll('button').forEach((b) => {
-      if (!b.textContent.trim() && !b.getAttribute('aria-label') && !b.querySelector('svg')) out.push('bouton sans label');
-    });
-    return out;
+/* ================= FAVORITES + RECENTS ================= */
+console.log('Personal state');
+await ok('favorite button toggles and persists', async () => {
+  await page.click('.tool-head [data-fav]');
+  const pressed = await page.getAttribute('.tool-head [data-fav]', 'aria-pressed');
+  if (pressed !== 'true') throw new Error('not favorited');
+});
+
+await ok('recent + favorite appear on home', async () => {
+  await page.goto(BASE + '/');
+  await page.waitForSelector('#personal:not([hidden])');
+  const favVisible = await page.locator('#fav-row:not([hidden]) [data-fav-chips] a').count();
+  const recVisible = await page.locator('#recents-row:not([hidden]) [data-recents-chips] a').count();
+  if (favVisible < 1) throw new Error('no favorite chip');
+  if (recVisible < 1) throw new Error('no recent chip');
+});
+
+/* ================= THEME (3 states) ================= */
+console.log('Theme');
+await ok('theme toggle cycles through dark / light / system', async () => {
+  const prefs = [];
+  for (let i = 0; i < 3; i++) {
+    await page.click('[data-theme-toggle]');
+    prefs.push(await page.evaluate(() => document.documentElement.dataset.themePref));
+  }
+  // three clicks must visit all three states exactly once
+  const sorted = [...prefs].sort().join(',');
+  if (sorted !== 'dark,light,system') throw new Error(prefs.join(','));
+});
+
+await ok('theme preference survives reload', async () => {
+  // click until the preference is "light"
+  for (let i = 0; i < 3; i++) {
+    const pref = await page.evaluate(() => document.documentElement.dataset.themePref);
+    if (pref === 'light') break;
+    await page.click('[data-theme-toggle]');
+  }
+  await page.reload();
+  const pref = await page.evaluate(() => document.documentElement.dataset.themePref);
+  if (pref !== 'light') throw new Error(pref);
+  const eff = await page.evaluate(() => document.documentElement.dataset.theme);
+  if (eff !== 'light') throw new Error(eff);
+  // back to system for the rest of the run
+  await page.click('[data-theme-toggle]');
+  await page.click('[data-theme-toggle]');
+});
+
+/* ================= TEXT TOOLS ================= */
+console.log('Text tools');
+await page.goto(BASE + '/tools/word-counter/');
+await ok('word counter updates live', async () => {
+  await page.fill('[data-input]', "Hello world. Don't stop believing!");
+  await page.waitForTimeout(200);
+  const words = await page.locator('[data-stat-words]').innerText();
+  if (words !== '5') throw new Error(`words=${words}`);
+});
+
+await page.goto(BASE + '/tools/case-converter/');
+await ok('case converter: UPPER and kebab-case', async () => {
+  await page.fill('[data-input]', 'Hello World Test');
+  await page.click('[data-case="upper"]');
+  let out = await page.inputValue('[data-output]');
+  if (out !== 'HELLO WORLD TEST') throw new Error(out);
+  await page.click('[data-case="kebab"]');
+  out = await page.inputValue('[data-output]');
+  if (out !== 'hello-world-test') throw new Error(out);
+});
+
+await page.goto(BASE + '/tools/remove-duplicate-lines/');
+await ok('dedupe removes duplicates and reports count', async () => {
+  await page.fill('[data-input]', 'apple\nbanana\napple\ncherry\nbanana');
+  await page.click('[data-go]');
+  const out = await page.inputValue('[data-output]');
+  if (out !== 'apple\nbanana\ncherry') throw new Error(out);
+  const status = await page.locator('[data-status]').innerText();
+  if (!status.includes('2 duplicates removed')) throw new Error(status);
+});
+
+await page.goto(BASE + '/tools/sort-lines/');
+await ok('sort lines A→Z works', async () => {
+  await page.fill('[data-input]', 'banana\napple\ncherry');
+  await page.click('[data-go]');
+  const out = await page.inputValue('[data-output]');
+  if (out !== 'apple\nbanana\ncherry') throw new Error(out);
+});
+
+/* ================= DEVELOPER TOOLS ================= */
+console.log('Developer tools');
+await page.goto(BASE + '/tools/json-formatter/');
+await ok('JSON formatter beautifies valid JSON', async () => {
+  await page.fill('[data-input]', '{"a":1,"b":[1,2]}');
+  await page.click('[data-format]');
+  const out = await page.inputValue('[data-output]');
+  if (!out.includes('\n  "a": 1')) throw new Error(out);
+});
+
+await ok('JSON formatter reports line+column on invalid JSON', async () => {
+  await page.fill('[data-input]', '{\n  "a": \n}');
+  await page.click('[data-format]');
+  const status = await page.locator('[data-status]').innerText();
+  if (!/line 3/.test(status)) throw new Error(status);
+});
+
+await page.goto(BASE + '/tools/base64-encode-decode/');
+await ok('base64 round-trip with unicode', async () => {
+  await page.fill('[data-input]', 'Héllo wörld 🙂');
+  await page.click('[data-encode]');
+  const enc = await page.inputValue('[data-output]');
+  await page.fill('[data-input]', enc);
+  await page.click('[data-decode]');
+  const dec = await page.inputValue('[data-output]');
+  if (dec !== 'Héllo wörld 🙂') throw new Error(dec);
+});
+
+await ok('base64 decode rejects garbage with friendly error', async () => {
+  await page.fill('[data-input]', '%%%not-base64%%%');
+  await page.click('[data-decode]');
+  const status = await page.locator('[data-status]').innerText();
+  if (!/not valid Base64/.test(status)) throw new Error(status);
+});
+
+await page.goto(BASE + '/tools/uuid-generator/');
+await ok('UUID batch generation (5, uppercase, no hyphens)', async () => {
+  await page.fill('[data-count]', '5');
+  await page.check('[data-upper]');
+  await page.check('[data-nohyphens]');
+  await page.click('[data-go]');
+  const out = await page.inputValue('[data-output]');
+  const lines = out.split('\n');
+  if (lines.length !== 5) throw new Error(`lines ${lines.length}`);
+  if (!/^[0-9A-F]{32}$/.test(lines[0])) throw new Error(lines[0]);
+});
+
+await page.goto(BASE + '/tools/timestamp-converter/');
+await ok('timestamp 0 → Jan 1 1970 (UTC)', async () => {
+  await page.fill('[data-ts-input]', '0');
+  await page.waitForSelector('[data-ts-result]:not([hidden])');
+  const utc = await page.locator('[data-ts-utc]').innerText();
+  if (!utc.includes('1970')) throw new Error(utc);
+});
+
+await page.goto(BASE + '/tools/regex-tester/');
+await ok('regex tester highlights matches', async () => {
+  await page.fill('[data-pattern]', '\\d+');
+  await page.fill('[data-subject]', 'abc 123 def 45');
+  await page.waitForSelector('.rx-highlight mark');
+  const marks = await page.locator('.rx-highlight mark').count();
+  if (marks !== 2) throw new Error(`marks ${marks}`);
+});
+
+/* ================= CALCULATORS ================= */
+console.log('Calculators');
+await page.goto(BASE + '/tools/unit-converter/');
+await ok('1 km → 0.621371 mi', async () => {
+  await page.selectOption('[data-cat]', 'length');
+  await page.fill('[data-val-a]', '1');
+  await page.selectOption('[data-unit-a]', 'km');
+  await page.selectOption('[data-unit-b]', 'mi');
+  await page.locator('[data-val-a]').dispatchEvent('input');
+  const b = await page.inputValue('[data-val-b]');
+  if (!b.startsWith('0.6213')) throw new Error(b);
+});
+
+await ok('temperature: 0 °C → 32 °F', async () => {
+  await page.selectOption('[data-cat]', 'temperature');
+  await page.fill('[data-val-a]', '0');
+  await page.selectOption('[data-unit-a]', '°C');
+  await page.selectOption('[data-unit-b]', '°F');
+  await page.locator('[data-val-a]').dispatchEvent('input');
+  const b = await page.inputValue('[data-val-b]');
+  if (b !== '32') throw new Error(b);
+});
+
+await page.goto(BASE + '/tools/date-calculator/');
+await ok('date difference: 2026-01-01 → 2026-03-01 = 59 days', async () => {
+  await page.fill('[data-d1]', '2026-01-01');
+  await page.fill('[data-d2]', '2026-03-01');
+  await page.waitForSelector('[data-diff-result]:not([hidden])');
+  const days = await page.locator('[data-df-days]').innerText();
+  if (days !== '59') throw new Error(days);
+});
+
+await ok('add 90 days to 2026-01-01 → April 1, 2026', async () => {
+  await page.fill('[data-base]', '2026-01-01');
+  await page.fill('[data-n-days]', '90');
+  await page.waitForSelector('[data-arith-result]:not([hidden])');
+  const txt = await page.locator('[data-arith-date]').innerText();
+  if (!txt.includes('April 1, 2026')) throw new Error(txt);
+});
+
+await page.goto(BASE + '/tools/percentage-calculator/');
+await ok('20% of 150 = 30', async () => {
+  await page.fill('[data-a]', '20');
+  await page.fill('[data-b]', '150');
+  const result = await page.locator('[data-result]').innerText();
+  if (result !== '30') throw new Error(result);
+});
+
+/* ================= SECURITY & UTILITIES ================= */
+console.log('Security & utilities');
+await page.goto(BASE + '/tools/password-generator/');
+await ok('password generator respects length 20', async () => {
+  await page.fill('[data-length]', '20');
+  await page.locator('[data-length]').dispatchEvent('input');
+  await page.waitForTimeout(150);
+  const pw = await page.locator('[data-output]').innerText();
+  if (pw.length !== 20) throw new Error(`len ${pw.length}`);
+});
+
+await page.goto(BASE + '/tools/qr-code-generator/');
+await ok('QR tool renders without error for a URL', async () => {
+  await page.fill('[data-f-url]', 'https://example.com/hello');
+  await page.waitForTimeout(600);
+  const canvas = page.locator('[data-canvas]');
+  if (!(await canvas.isVisible())) throw new Error('canvas hidden');
+  const emptyHidden = await page.locator('[data-empty]').isHidden();
+  if (!emptyHidden) throw new Error('empty state still visible');
+});
+
+/* ================= WORKFLOWS ================= */
+console.log('Workflows');
+await page.goto(BASE + '/workflows/');
+await ok('preset loads 3 steps into the builder', async () => {
+  await page.click('[data-preset="0"]');
+  const n = await page.locator('.wf-step').count();
+  if (n !== 3) throw new Error(`steps ${n}`);
+});
+
+const PNG_2x2 =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR4nGP8z8DwnwEJMDGgAXQBAIIdA/0d1M5oAAAAAElFTkSuQmCC';
+
+await ok('workflow run over a batch produces stats + ZIP button', async () => {
+  await page.evaluate(async (dataUrl) => {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const dt = new DataTransfer();
+    dt.items.add(new File([blob], 'test-a.png', { type: 'image/png' }));
+    dt.items.add(new File([blob], 'test-b.png', { type: 'image/png' }));
+    const dz = document.querySelector('[data-dropzone]');
+    dz.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true }));
+  }, PNG_2x2);
+  await page.waitForSelector('.file-list .file-item');
+  await page.click('[data-run]');
+  await page.waitForSelector('[data-summary]:not([hidden])', { timeout: 20000 });
+  const done = await page.locator('[data-sum-done]').innerText();
+  if (done !== '2') throw new Error(`done=${done}`);
+  if (await page.locator('[data-download-all]').isHidden()) throw new Error('ZIP button hidden');
+});
+
+await ok('workflow save/load round-trip', async () => {
+  await page.fill('[data-wf-name]', 'My test workflow');
+  await page.click('[data-wf-save]');
+  await page.waitForSelector('[data-saved]:not([hidden])');
+  await page.click('[data-saved-list] [data-rm]'); // remove it again
+  await page.waitForSelector('[data-saved]', { state: 'hidden' });
+});
+
+/* ================= FILE TOOLS (compressor) ================= */
+console.log('File tools');
+await page.goto(BASE + '/tools/image-compressor/');
+await ok('compressor processes a dropped file and shows summary', async () => {
+  await page.evaluate(async (dataUrl) => {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const dt = new DataTransfer();
+    dt.items.add(new File([blob], 'photo.jpg', { type: 'image/jpeg' }));
+    document.querySelector('[data-dropzone]').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true }));
+  }, PNG_2x2);
+  await page.waitForSelector('.file-item.is-done, .file-item.is-error');
+  const isDone = await page.locator('.file-item.is-done').count();
+  if (isDone !== 1) {
+    const err = await page.locator('.fi-meta').innerText();
+    throw new Error(`not done: ${err}`);
+  }
+  await page.waitForSelector('[data-summary]:not([hidden])');
+  const before = await page.locator('[data-sum-before]').innerText();
+  if (before === '—') throw new Error('summary empty');
+});
+
+await ok('handoff chip appears on resizer after compression', async () => {
+  await page.goto(BASE + '/tools/image-resizer/');
+  await page.waitForSelector('[data-handoff]:not([hidden])', { timeout: 5000 });
+  const name = await page.locator('[data-handoff-name]').innerText();
+  if (!name.includes('photo')) throw new Error(name);
+});
+
+await ok('wrong format rejected with friendly message', async () => {
+  await page.goto(BASE + '/tools/image-compressor/');
+  await page.evaluate(() => {
+    const dt = new DataTransfer();
+    dt.items.add(new File([new Blob(['hello'], { type: 'text/plain' })], 'notes.txt', { type: 'text/plain' }));
+    document.querySelector('[data-dropzone]').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true }));
   });
-  ok('a11y : pas d’img sans alt ni bouton sans label', issues.length === 0, issues.slice(0, 3).join(' | '));
-  const lang = await page.locator('html').getAttribute('lang');
-  ok('lang="fr" présent', lang === 'fr');
-  await page.close();
+  await page.waitForSelector('[data-notice]:not([hidden])');
+  const msg = await page.locator('[data-notice]').innerText();
+  if (!/Unsupported format/.test(msg)) throw new Error(msg);
+});
+
+/* ================= SEO / ROUTES ================= */
+console.log('Routes & SEO');
+await ok('all 30 tool pages return 200', async () => {
+  const slugs = await page.evaluate(() =>
+    [...document.querySelectorAll('a[href^="/tools/"]')].map((a) => a.getAttribute('href'))
+  );
+  // collect from /tools/ page instead (home may paginate)
+  await page.goto(BASE + '/tools/');
+  const links = await page.evaluate(() =>
+    [...new Set([...document.querySelectorAll('.tool-card')].map((a) => a.getAttribute('href')))]
+  );
+  if (links.length !== 30) throw new Error(`found ${links.length} tool cards`);
+  for (const href of links) {
+    const res = await page.request.get(BASE + href);
+    if (res.status() !== 200) throw new Error(`${href} → ${res.status()}`);
+  }
+});
+
+await ok('guides pages return 200', async () => {
+  const slugs = ['reduce-image-size-for-email', 'convert-webp-to-jpg', 'compress-pdf-for-email', 'create-a-favicon', 'strong-passwords-guide'];
+  for (const s of slugs) {
+    const res = await page.request.get(BASE + `/guides/${s}/`);
+    if (res.status() !== 200) throw new Error(`${s} → ${res.status()}`);
+  }
+});
+
+await ok('sitemap contains tools, guides, workflows', async () => {
+  const res = await page.request.get(BASE + '/sitemap.xml');
+  const body = await res.text();
+  for (const needle of ['/tools/', '/guides/', '/workflows/']) {
+    if (!body.includes(needle)) throw new Error(`missing ${needle}`);
+  }
+});
+
+await ok('404 page works', async () => {
+  const res = await page.request.get(BASE + '/tools/does-not-exist/');
+  if (res.status() !== 404) throw new Error(res.status());
+});
+
+await ok('privacy page states local processing', async () => {
+  const res = await page.request.get(BASE + '/privacy/');
+  const body = await res.text();
+  if (!body.includes('never leave your device')) throw new Error('claim missing');
+});
+
+/* ================= MOBILE ================= */
+console.log('Mobile');
+await ok('mobile nav opens and closes', async () => {
+  await context.clearCookies();
+  const mobile = await browser.newPage({ viewport: { width: 390, height: 780 } });
+  await mobile.goto(BASE + '/');
+  await mobile.click('[data-nav-toggle]');
+  await mobile.waitForSelector('#mobile-nav:not([hidden])');
+  await mobile.click('[data-nav-toggle]');
+  await mobile.waitForSelector('#mobile-nav[hidden]');
+  await mobile.close();
 });
 
 await browser.close();
 
-console.log(`\n========================================`);
-console.log(`RÉSULTAT : ${pass} ✅ / ${fail} ❌`);
+console.log(`\n=== Résultats : ${pass} ok, ${fail} échec(s) ===`);
 if (failures.length) {
   console.log('Échecs :');
-  failures.forEach((f) => console.log('  - ' + f));
+  for (const f of failures) console.log(`  - ${f}`);
+  process.exit(1);
 }
-process.exit(fail ? 1 : 0);

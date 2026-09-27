@@ -1,15 +1,15 @@
 ---
 const MODES = [
-  { id: 'percentOf', label: 'X % de Y', a: 'Le pourcentage', b: 'La valeur de départ' },
-  { id: 'proportion', label: 'Proportion', a: 'La valeur X', b: 'Le total Y' },
-  { id: 'evolution', label: 'Évolution', a: 'Valeur initiale', b: 'Valeur finale' },
-  { id: 'discount', label: 'Réduction', a: 'Le prix', b: 'La réduction (%)' },
-  { id: 'add', label: 'Augmentation', a: 'Le montant', b: 'L’ajout (%)' },
+  { id: 'percentOf', label: 'X% of Y' },
+  { id: 'proportion', label: 'Proportion' },
+  { id: 'evolution', label: 'Change' },
+  { id: 'discount', label: 'Discount' },
+  { id: 'add', label: 'Increase' },
 ];
 ---
 
 <div class="pct-tool" id="tool-percent">
-  <div class="pct-tabs" role="tablist" aria-label="Mode de calcul">
+  <div class="pct-tabs" role="tablist" aria-label="Calculation mode">
     {MODES.map((m, i) => (
       <button
         type="button"
@@ -26,18 +26,18 @@ const MODES = [
   <div class="pct-body">
     <div class="pct-inputs">
       <div class="field">
-        <label for="pct-a" data-label-a>Le pourcentage</label>
-        <input class="input pct-input" id="pct-a" type="text" inputmode="decimal" data-a placeholder="Ex. 20" autocomplete="off" />
+        <label for="pct-a" data-label-a>The percentage</label>
+        <input class="input pct-input" id="pct-a" type="text" inputmode="decimal" data-a placeholder="e.g. 20" autocomplete="off" />
       </div>
       <div class="field">
-        <label for="pct-b" data-label-b>La valeur de départ</label>
-        <input class="input pct-input" id="pct-b" type="text" inputmode="decimal" data-b placeholder="Ex. 150" autocomplete="off" />
+        <label for="pct-b" data-label-b>The starting value</label>
+        <input class="input pct-input" id="pct-b" type="text" inputmode="decimal" data-b placeholder="e.g. 150" autocomplete="off" />
       </div>
     </div>
 
     <div class="pct-result" aria-live="polite">
       <div class="pct-result-value" data-result>—</div>
-      <div class="pct-result-sentence" data-sentence>Saisissez deux nombres pour lancer le calcul.</div>
+      <div class="pct-result-sentence" data-sentence>Enter two numbers to start calculating.</div>
       <div class="pct-formula" data-formula></div>
     </div>
   </div>
@@ -149,11 +149,11 @@ const MODES = [
     const formulaEl = root.querySelector('[data-formula]');
 
     const LABELS = {
-      percentOf: ['Le pourcentage', 'La valeur de départ'],
-      proportion: ['La valeur X', 'Le total Y'],
-      evolution: ['Valeur initiale', 'Valeur finale'],
-      discount: ['Le prix', 'La réduction (%)'],
-      add: ['Le montant', 'L’ajout (%)'],
+      percentOf: ['The percentage', 'The starting value'],
+      proportion: ['The value X', 'The total Y'],
+      evolution: ['Initial value', 'Final value'],
+      discount: ['The price', 'The discount (%)'],
+      add: ['The amount', 'The increase (%)'],
     };
 
     let mode = 'percentOf';
@@ -182,13 +182,13 @@ const MODES = [
 
       if (inputA.value.trim() === '' || inputB.value.trim() === '') {
         resultEl.textContent = '—';
-        sentenceEl.textContent = 'Saisissez deux nombres pour lancer le calcul.';
+        sentenceEl.textContent = 'Enter two numbers to start calculating.';
         formulaEl.textContent = '';
         return;
       }
       if (!Number.isFinite(a) || !Number.isFinite(b)) {
         resultEl.textContent = '—';
-        sentenceEl.textContent = 'Ces valeurs ne ressemblent pas à des nombres. Utilisez des chiffres (ex. 12,5).';
+        sentenceEl.textContent = 'These values do not look like numbers. Use digits (e.g. 12.5).';
         formulaEl.textContent = '';
         return;
       }
@@ -202,7 +202,7 @@ const MODES = [
 
       if (!out) {
         resultEl.textContent = '—';
-        sentenceEl.textContent = 'Calcul impossible : vérifiez vos valeurs (le diviseur ne peut pas être 0).';
+        sentenceEl.textContent = 'Cannot compute — check your values (the divisor cannot be 0).';
         formulaEl.textContent = '';
         return;
       }
@@ -212,20 +212,20 @@ const MODES = [
 
       if (mode === 'percentOf') {
         resultEl.textContent = formatNumber(out.result);
-        sentenceEl.textContent = `${formatPercent(a)} de ${fb} = ${formatNumber(out.result)}`;
+        sentenceEl.textContent = `${formatPercent(a)} of ${fb} = ${formatNumber(out.result)}`;
       } else if (mode === 'proportion') {
         resultEl.textContent = formatPercent(out.result);
-        sentenceEl.textContent = `${fa} représente ${formatPercent(out.result)} de ${fb}.`;
+        sentenceEl.textContent = `${fa} is ${formatPercent(out.result)} of ${fb}.`;
       } else if (mode === 'evolution') {
         const up = out.result >= 0;
         resultEl.textContent = `${up ? '+' : ''}${formatPercent(out.result)}`;
-        sentenceEl.textContent = `De ${fa} à ${fb} : ${up ? 'une hausse' : 'une baisse'} de ${formatPercent(Math.abs(out.result))}.`;
+        sentenceEl.textContent = `From ${fa} to ${fb}: ${up ? 'an increase' : 'a decrease'} of ${formatPercent(Math.abs(out.result))}.`;
       } else if (mode === 'discount') {
         resultEl.textContent = formatNumber(out.result);
-        sentenceEl.textContent = `${fb} moins ${fa} % = ${formatNumber(out.result)} (économie : ${formatNumber(out.saved)}).`;
+        sentenceEl.textContent = `${fb} minus ${fa} % = ${formatNumber(out.result)} (you save ${formatNumber(out.saved)}).`;
       } else {
         resultEl.textContent = formatNumber(out.result);
-        sentenceEl.textContent = `${fb} plus ${fa} % = ${formatNumber(out.result)} (ajout : ${formatNumber(out.added)}).`;
+        sentenceEl.textContent = `${fb} plus ${fa} % = ${formatNumber(out.result)} (added ${formatNumber(out.added)}).`;
       }
       formulaEl.textContent = out.formula || '';
     }

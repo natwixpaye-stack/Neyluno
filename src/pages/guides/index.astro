@@ -1,0 +1,102 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
+import { guides } from '../../data/guides.js';
+
+const path = '/guides/';
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Guides — QuickTools',
+  description: 'Practical guides about images, PDFs, favicons and passwords.',
+  url: new URL(path, import.meta.env.SITE).href,
+};
+---
+
+<BaseLayout title="Guides — practical answers to real file problems" description="Short, honest guides: shrinking images for email, compressing PDFs, favicons, password entropy. No filler, no keyword soup." path={path} jsonLd={jsonLd}>
+  <div class="container list-page">
+    <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Guides' }]} />
+
+    <header class="list-head">
+      <h1>Guides</h1>
+      <p>Practical answers to the questions that bring people here — written to be useful, not to fill a page.</p>
+    </header>
+
+    <div class="guides-list">
+      {guides.map((g) => (
+        <a href={`/guides/${g.slug}/`} class="card guide-row">
+          <div>
+            <h2>{g.title}</h2>
+            <p>{g.description}</p>
+          </div>
+          <span class="guide-cta">Read →</span>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .list-page {
+    padding-top: 26px;
+    padding-bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .list-head h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    margin-bottom: 10px;
+  }
+
+  .list-head p {
+    color: var(--muted);
+    max-width: 560px;
+  }
+
+  .guides-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .guide-row {
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .guide-row h2 {
+    font-size: 1.12rem;
+    line-height: 1.4;
+    margin-bottom: 6px;
+  }
+
+  .guide-row p {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .guide-cta {
+    flex: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--faint);
+    transition: color 0.18s;
+  }
+
+  .guide-row:hover .guide-cta {
+    color: var(--accent);
+  }
+
+  @media (max-width: 620px) {
+    .guide-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+  }
+</style>

@@ -1,0 +1,251 @@
+---
+import Icon from '../../components/Icon.astro';
+---
+
+<div class="ftool" id="tool-split-pdf">
+  <div data-notice hidden></div>
+
+  <div class="dropzone" data-dropzone>
+    <input type="file" data-file-input hidden />
+    <span class="dz-icon" aria-hidden="true"><Icon name="upload" size={24} /></span>
+    <h3>Drag & drop your PDF here</h3>
+    <p>or click to browse · PDF only · up to 50 MB</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choose a PDF</span>
+  </div>
+
+  <div class="sp-panel" data-sp-panel hidden>
+    <div class="sp-file">
+      <span class="sp-file-icon" aria-hidden="true"><Icon name="pdf" size={20} /></span>
+      <div>
+        <p class="sp-file-name" data-sp-name></p>
+        <p class="sp-file-meta" data-sp-meta></p>
+      </div>
+    </div>
+
+    <div class="seg" role="radiogroup" aria-label="Split mode">
+      <button type="button" class="seg-btn is-active" data-mode-btn="extract" aria-pressed="true">Extract pages</button>
+      <button type="button" class="seg-btn" data-mode-btn="burst" aria-pressed="false">Split every page</button>
+    </div>
+
+    <div class="field" data-sp-extract>
+      <label for="sp-pages">Pages to extract</label>
+      <input class="input" id="sp-pages" type="text" data-pages placeholder="e.g. 1-3, 5, 8-10" autocomplete="off" />
+      <p class="sp-hint">One new PDF containing exactly these pages.</p>
+    </div>
+
+    <p class="sp-hint" data-sp-burst-hint hidden>Every page becomes its own PDF, delivered as a ZIP archive.</p>
+
+    <div class="crop-actions">
+      <button type="button" class="btn btn-ghost btn-sm" data-sp-reset>Start over</button>
+      <button type="button" class="btn btn-accent btn-sm" data-sp-go>Split</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .sp-panel {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .sp-file {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel);
+  }
+
+  .sp-file-icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    color: #ff6e59;
+    background: color-mix(in srgb, #ff6e59 12%, transparent);
+    flex: none;
+  }
+
+  .sp-file-name {
+    font-weight: 600;
+    font-size: 0.92rem;
+    word-break: break-all;
+  }
+
+  .sp-file-meta {
+    color: var(--muted);
+    font-size: 0.82rem;
+    margin-top: 2px;
+  }
+
+  .seg {
+    display: inline-flex;
+    padding: 4px;
+    gap: 4px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel);
+    align-self: flex-start;
+    flex-wrap: wrap;
+  }
+  .seg-btn {
+    padding: 8px 16px;
+    border-radius: 9px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    transition: all 0.18s var(--ease);
+  }
+  .seg-btn.is-active {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-fg);
+  }
+
+  .sp-hint {
+    font-size: 0.78rem;
+    color: var(--faint);
+    margin-top: 8px;
+  }
+
+  .crop-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+</style>
+
+<script>
+  import { toast, downloadBlob } from '../../lib/ui.js';
+  import { validateFile, MAX_FILE_BYTES } from '../../lib/files.js';
+  import { parsePageRanges } from '../../lib/pdfpages.js';
+  import { formatBytes } from '../../lib/format.js';
+
+  const root = document.getElementById('tool-split-pdf');
+  if (root) {
+    const dz = root.querySelector('[data-dropzone]');
+    const input = root.querySelector('[data-file-input]');
+    const panel = root.querySelector('[data-sp-panel]');
+    const nameEl = root.querySelector('[data-sp-name]');
+    const metaEl = root.querySelector('[data-sp-meta]');
+    const extractBox = root.querySelector('[data-sp-extract]');
+    const burstHint = root.querySelector('[data-sp-burst-hint]');
+    const pagesInput = root.querySelector('[data-pages]');
+    const goBtn = root.querySelector('[data-sp-go]');
+
+    let file = null;
+    let pagesTotal = 0;
+    let mode = 'extract';
+
+    dz.setAttribute('role', 'button');
+    dz.setAttribute('tabindex', '0');
+    dz.addEventListener('click', () => input.click());
+    dz.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        input.click();
+      }
+    });
+    dz.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (e.dataTransfer?.files?.length) loadFile(e.dataTransfer.files[0]);
+    });
+    input.addEventListener('change', () => {
+      if (input.files?.length) loadFile(input.files[0]);
+      input.value = '';
+    });
+
+    async function loadFile(f) {
+      const check = validateFile(f, { acceptTypes: ['application/pdf'], acceptExts: ['.pdf'], maxBytes: MAX_FILE_BYTES });
+      if (!check.ok) {
+        toast(check.error, 'error');
+        return;
+      }
+      try {
+        const { PDFDocument } = await import('pdf-lib');
+        const doc = await PDFDocument.load(await f.arrayBuffer(), { ignoreEncryption: true, updateMetadata: false });
+        if (doc.isEncrypted) throw new Error('protected');
+        pagesTotal = doc.getPageCount();
+      } catch (err) {
+        toast(
+          err?.message === 'protected'
+            ? 'This PDF is password-protected and cannot be split.'
+            : 'This PDF could not be read — it may be corrupted.',
+          'error'
+        );
+        return;
+      }
+      file = f;
+      nameEl.textContent = f.name;
+      metaEl.textContent = `${pagesTotal} page${pagesTotal > 1 ? 's' : ''} · ${formatBytes(f.size)}`;
+      dz.hidden = true;
+      panel.hidden = false;
+    }
+
+    root.querySelectorAll('[data-mode-btn]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        mode = btn.dataset.modeBtn;
+        root.querySelectorAll('[data-mode-btn]').forEach((b) => {
+          b.classList.toggle('is-active', b === btn);
+          b.setAttribute('aria-pressed', String(b === btn));
+        });
+        extractBox.hidden = mode !== 'extract';
+        burstHint.hidden = mode !== 'burst';
+      });
+    });
+
+    root.querySelector('[data-sp-reset]').addEventListener('click', () => {
+      file = null;
+      pagesTotal = 0;
+      panel.hidden = true;
+      dz.hidden = false;
+    });
+
+    goBtn.addEventListener('click', async () => {
+      if (!file) return;
+      goBtn.disabled = true;
+      const label = goBtn.textContent;
+      goBtn.textContent = 'Working…';
+      try {
+        const { PDFDocument } = await import('pdf-lib');
+        const src = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true, updateMetadata: false });
+
+        if (mode === 'extract') {
+          const parsed = parsePageRanges(pagesInput.value, pagesTotal);
+          if (!parsed.ok) {
+            toast(parsed.error, 'error', 6000);
+            return;
+          }
+          const out = await PDFDocument.create();
+          const copied = await out.copyPages(src, parsed.pages.map((p) => p - 1));
+          copied.forEach((p) => out.addPage(p));
+          const bytes = await out.save();
+          const base = file.name.replace(/\.pdf$/i, '');
+          downloadBlob(new Blob([bytes], { type: 'application/pdf' }), `${base}-extracted.pdf`);
+          toast(`Extracted ${parsed.pages.length} page${parsed.pages.length > 1 ? 's' : ''} into a new PDF.`, 'success');
+        } else {
+          const { zipSync } = await import('fflate');
+          const entries = {};
+          for (let i = 0; i < pagesTotal; i++) {
+            const out = await PDFDocument.create();
+            const [p] = await out.copyPages(src, [i]);
+            out.addPage(p);
+            entries[`page-${i + 1}.pdf`] = new Uint8Array(await out.save());
+          }
+          const base = file.name.replace(/\.pdf$/i, '');
+          downloadBlob(new Blob([zipSync(entries)], { type: 'application/zip' }), `${base}-split.zip`);
+          toast(`Split into ${pagesTotal} individual pages (ZIP).`, 'success');
+        }
+      } catch {
+        toast('This PDF could not be processed. It may be corrupted or protected.', 'error');
+      } finally {
+        goBtn.disabled = false;
+        goBtn.textContent = label;
+      }
+    });
+  }
+</script>

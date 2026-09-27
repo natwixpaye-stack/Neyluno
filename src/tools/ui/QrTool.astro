@@ -6,76 +6,76 @@ import Icon from '../../components/Icon.astro';
   <div class="qr-grid">
     <div class="qr-form">
       <div class="field">
-        <label for="qr-type">Type de contenu</label>
+        <label for="qr-type">Content type</label>
         <select class="select" id="qr-type" data-type>
-          <option value="url" selected>Adresse web (URL)</option>
-          <option value="text">Texte libre</option>
-          <option value="email">E-mail</option>
-          <option value="phone">Téléphone</option>
+          <option value="url" selected>Web address (URL)</option>
+          <option value="text">Free text</option>
+          <option value="email">Email</option>
+          <option value="phone">Phone</option>
           <option value="sms">SMS</option>
-          <option value="wifi">Accès Wi-Fi</option>
+          <option value="wifi">Wi-Fi access</option>
         </select>
       </div>
 
       <div data-fields-url>
         <div class="field">
-          <label for="qr-url">Adresse</label>
-          <input class="input" id="qr-url" type="text" data-f-url placeholder="https://exemple.fr" autocomplete="off" spellcheck="false" />
+          <label for="qr-url">Address</label>
+          <input class="input" id="qr-url" type="text" data-f-url placeholder="https://example.com" autocomplete="off" spellcheck="false" />
         </div>
       </div>
 
       <div data-fields-text hidden>
         <div class="field">
-          <label for="qr-text">Texte</label>
-          <textarea class="textarea" id="qr-text" data-f-text rows="4" placeholder="Le texte à encoder…"></textarea>
+          <label for="qr-text">Text</label>
+          <textarea class="textarea" id="qr-text" data-f-text rows="4" placeholder="The text to encode…"></textarea>
         </div>
       </div>
 
       <div data-fields-email hidden>
         <div class="field">
-          <label for="qr-email-to">Destinataire</label>
-          <input class="input" id="qr-email-to" type="email" data-f-email-to placeholder="contact@exemple.fr" />
+          <label for="qr-email-to">Recipient</label>
+          <input class="input" id="qr-email-to" type="email" data-f-email-to placeholder="contact@example.com" />
         </div>
         <div class="field" style="margin-top:12px">
-          <label for="qr-email-subject">Sujet (optionnel)</label>
+          <label for="qr-email-subject">Subject (optional)</label>
           <input class="input" id="qr-email-subject" type="text" data-f-email-subject />
         </div>
       </div>
 
       <div data-fields-phone hidden>
         <div class="field">
-          <label for="qr-phone">Numéro</label>
-          <input class="input" id="qr-phone" type="tel" data-f-phone placeholder="+33 6 12 34 56 78" />
+          <label for="qr-phone">Number</label>
+          <input class="input" id="qr-phone" type="tel" data-f-phone placeholder="+1 555 123 4567" />
         </div>
       </div>
 
       <div data-fields-sms hidden>
         <div class="field">
-          <label for="qr-sms-phone">Numéro</label>
-          <input class="input" id="qr-sms-phone" type="tel" data-f-sms-phone placeholder="+33 6 12 34 56 78" />
+          <label for="qr-sms-phone">Number</label>
+          <input class="input" id="qr-sms-phone" type="tel" data-f-sms-phone placeholder="+1 555 123 4567" />
         </div>
         <div class="field" style="margin-top:12px">
-          <label for="qr-sms-msg">Message (optionnel)</label>
+          <label for="qr-sms-msg">Message (optional)</label>
           <input class="input" id="qr-sms-msg" type="text" data-f-sms-msg />
         </div>
       </div>
 
       <div data-fields-wifi hidden>
         <div class="field">
-          <label for="qr-wifi-ssid">Nom du réseau (SSID)</label>
+          <label for="qr-wifi-ssid">Network name (SSID)</label>
           <input class="input" id="qr-wifi-ssid" type="text" data-f-wifi-ssid />
         </div>
         <div class="qr-wifi-row">
           <div class="field" style="flex:1">
-            <label for="qr-wifi-sec">Sécurité</label>
+            <label for="qr-wifi-sec">Security</label>
             <select class="select" id="qr-wifi-sec" data-f-wifi-sec>
               <option value="WPA" selected>WPA / WPA2 / WPA3</option>
               <option value="WEP">WEP</option>
-              <option value="nopass">Réseau ouvert</option>
+              <option value="nopass">Open network</option>
             </select>
           </div>
           <div class="field" style="flex:1.4" data-wifi-pass>
-            <label for="qr-wifi-pass">Mot de passe</label>
+            <label for="qr-wifi-pass">Password</label>
             <input class="input" id="qr-wifi-pass" type="text" data-f-wifi-pass />
           </div>
         </div>
@@ -87,15 +87,15 @@ import Icon from '../../components/Icon.astro';
 
       <div class="qr-style-grid">
         <div class="field">
-          <label for="qr-fg">Couleur du code</label>
+          <label for="qr-fg">Code color</label>
           <input class="color-input" id="qr-fg" type="color" value="#14161e" data-fg />
         </div>
         <div class="field">
-          <label for="qr-bg">Arrière-plan</label>
+          <label for="qr-bg">Background</label>
           <input class="color-input" id="qr-bg" type="color" value="#ffffff" data-bg />
         </div>
         <div class="field">
-          <label for="qr-size">Taille (px)</label>
+          <label for="qr-size">Size (px)</label>
           <select class="select" id="qr-size" data-size>
             <option value="256">256</option>
             <option value="512" selected>512</option>
@@ -104,7 +104,7 @@ import Icon from '../../components/Icon.astro';
           </select>
         </div>
         <div class="field">
-          <label for="qr-ecc">Correction d'erreur</label>
+          <label for="qr-ecc">Error correction</label>
           <select class="select" id="qr-ecc" data-ecc>
             <option value="L">L — 7 %</option>
             <option value="M" selected>M — 15 %</option>
@@ -115,17 +115,17 @@ import Icon from '../../components/Icon.astro';
       </div>
 
       <div class="field" style="margin-top:14px">
-        <label for="qr-margin">Marge <output data-margin-out>4</output></label>
+        <label for="qr-margin">Margin <output data-margin-out>4</output></label>
         <input type="range" id="qr-margin" min="0" max="10" value="4" data-margin />
       </div>
     </div>
 
     <div class="qr-preview">
       <div class="qr-canvas-wrap">
-        <canvas data-canvas width="256" height="256" role="img" aria-label="Aperçu du QR code"></canvas>
+        <canvas data-canvas width="256" height="256" role="img" aria-label="QR code preview"></canvas>
         <div class="qr-empty" data-empty>
           <Icon name="qr" size={30} />
-          <p>Saisissez un contenu<br />pour générer votre QR code</p>
+          <p>Enter some content<br />to generate your QR code</p>
         </div>
       </div>
       <div class="qr-download">
@@ -136,7 +136,7 @@ import Icon from '../../components/Icon.astro';
           <Icon name="download" size={15} /> SVG
         </button>
       </div>
-      <p class="qr-note">Le QR code est généré localement : son contenu n'est envoyé nulle part.</p>
+      <p class="qr-note">The QR code is generated locally: its content is never sent anywhere.</p>
     </div>
   </div>
 </div>
@@ -343,7 +343,7 @@ import Icon from '../../components/Icon.astro';
         errorEl.innerHTML = '';
         const div = document.createElement('div');
         div.className = 'notice notice-error';
-        div.textContent = 'Contenu trop long pour un QR code. Raccourcissez-le (un lien court fonctionne mieux).';
+        div.textContent = 'Content too long for a QR code. Shorten it (a short link works best).';
         errorEl.appendChild(div);
       }
     }
@@ -357,9 +357,9 @@ import Icon from '../../components/Icon.astro';
     dlPng.addEventListener('click', () => {
       if (!lastValue) return;
       canvas.toBlob((blob) => {
-        if (!blob) return toast('L’export PNG a échoué.', 'error');
+        if (!blob) return toast('The PNG export failed.', 'error');
         downloadBlob(blob, 'qrcode.png');
-        toast('QR code téléchargé en PNG.', 'success');
+        toast('QR code downloaded as PNG.', 'success');
       }, 'image/png');
     });
 
@@ -377,9 +377,9 @@ import Icon from '../../components/Icon.astro';
           },
         });
         downloadBlob(new Blob([svg], { type: 'image/svg+xml' }), 'qrcode.svg');
-        toast('QR code téléchargé en SVG.', 'success');
+        toast('QR code downloaded as SVG.', 'success');
       } catch {
-        toast('L’export SVG a échoué.', 'error');
+        toast('The SVG export failed.', 'error');
       }
     });
 

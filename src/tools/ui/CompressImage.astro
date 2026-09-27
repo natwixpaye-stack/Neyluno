@@ -4,10 +4,16 @@ import Icon from '../../components/Icon.astro';
 
 <div class="ftool" id="tool-compress">
   <div class="ftool-options">
+    <div class="preset-row" role="group" aria-label="Compression presets">
+      <button type="button" class="preset" data-preset="45">Max savings</button>
+      <button type="button" class="preset" data-preset="60">Email</button>
+      <button type="button" class="preset" data-preset="75" aria-pressed="true">Website</button>
+      <button type="button" class="preset" data-preset="90">High quality</button>
+    </div>
     <div class="opt">
-      <label for="ci-quality">Niveau de compression <output id="ci-out" data-quality-out>80 %</output></label>
-      <input type="range" id="ci-quality" min="10" max="100" value="80" step="1" data-quality aria-describedby="ci-hint" />
-      <p class="opt-hint" id="ci-hint">Plus la qualité est basse, plus le fichier est léger. Autour de 80 %, la différence reste imperceptible.</p>
+      <label for="ci-quality">Compression quality <output id="ci-out" data-quality-out>75 %</output></label>
+      <input type="range" id="ci-quality" min="10" max="100" value="75" step="1" data-quality aria-describedby="ci-hint" />
+      <p class="opt-hint" id="ci-hint">Lower quality means a lighter file. Around 75 %, the difference stays invisible.</p>
     </div>
   </div>
 
@@ -16,54 +22,54 @@ import Icon from '../../components/Icon.astro';
   <div class="dropzone" data-dropzone>
     <input type="file" data-file-input multiple hidden />
     <span class="dz-icon" aria-hidden="true"><Icon name="upload" size={24} /></span>
-    <h3>Glissez-déposez vos images ici</h3>
-    <p>ou cliquez pour parcourir · JPG, PNG, WebP · jusqu'à 50 Mo par fichier</p>
-    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choisir des images</span>
+    <h3>Drag & drop your images here</h3>
+    <p>or click to browse · JPG, PNG, WebP · up to 50 MB per file</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choose images</span>
   </div>
 
   <div class="ftool-actions">
     <span class="ftool-count" data-count aria-live="polite"></span>
     <span class="ftool-actions-btns">
-      <button type="button" class="btn btn-ghost btn-sm" data-clear-all hidden>Réinitialiser</button>
-      <button type="button" class="btn btn-accent btn-sm" data-download-all hidden>Tout télécharger (ZIP)</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-clear-all hidden>Start over</button>
+      <button type="button" class="btn btn-accent btn-sm" data-download-all hidden>Download all (ZIP)</button>
     </span>
   </div>
 
-  <ul class="file-list" data-file-list role="list" aria-label="Images en cours de compression"></ul>
+  <ul class="file-list" data-file-list role="list" aria-label="Images being compressed"></ul>
 
-  <!-- Récapitulatif avant/après -->
-  <div class="compress-summary" data-summary hidden>
-    <div class="stat">
-      <div class="stat-value" data-sum-before>—</div>
-      <div class="stat-label">Avant</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value" data-sum-after>—</div>
-      <div class="stat-label">Après</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value accent" data-sum-saved>—</div>
-      <div class="stat-label">Économie</div>
-    </div>
+  <div class="batch-summary" data-summary hidden>
+    <div class="stat"><div class="stat-value" data-sum-count>—</div><div class="stat-label">Files</div></div>
+    <div class="stat"><div class="stat-value" data-sum-done>—</div><div class="stat-label">Done</div></div>
+    <div class="stat"><div class="stat-value" data-sum-failed>—</div><div class="stat-label">Failed</div></div>
+    <div class="stat"><div class="stat-value" data-sum-before>—</div><div class="stat-label">Before</div></div>
+    <div class="stat"><div class="stat-value" data-sum-after>—</div><div class="stat-label">After</div></div>
+    <div class="stat"><div class="stat-value accent" data-sum-saved>—</div><div class="stat-label">Saved</div></div>
   </div>
 
-  <!-- Comparateur avant/après (un seul fichier terminé) -->
+  <!-- Before/after comparator (single finished file) -->
   <div class="compare" data-compare hidden>
     <div class="compare-head">
-      <h3>Comparaison avant / après</h3>
+      <h3>Before / after comparison</h3>
       <label class="compare-label">
-        Afficher l'après
-        <input type="range" min="0" max="100" value="50" data-compare-range aria-label="Révéler l'image compressée" />
+        Show result
+        <input type="range" min="0" max="100" value="50" data-compare-range aria-label="Reveal the compressed image" />
       </label>
     </div>
     <div class="compare-stage" data-compare-stage>
-      <img data-compare-before alt="Image originale avant compression" />
+      <img data-compare-before alt="Original image before compression" />
       <div class="compare-after" data-compare-after>
-        <img data-compare-afterimg alt="Image compressée après traitement" />
+        <img data-compare-afterimg alt="Compressed image after processing" />
       </div>
-      <span class="compare-tag tag-before">Avant</span>
-      <span class="compare-tag tag-after">Après</span>
+      <span class="compare-tag tag-before">Before</span>
+      <span class="compare-tag tag-after">After</span>
     </div>
+  </div>
+
+  <div class="handoff-chip" data-handoff hidden>
+    <Icon name="spark" size={16} />
+    <span>Continue with <strong data-handoff-name></strong> from the previous tool?</span>
+    <button type="button" class="btn btn-sm btn-ghost" data-handoff-use>Use this file</button>
+    <button type="button" class="icon-btn" data-handoff-dismiss aria-label="Dismiss">✕</button>
   </div>
 </div>
 
@@ -104,20 +110,6 @@ import Icon from '../../components/Icon.astro';
   .ftool-actions-btns {
     display: flex;
     gap: 10px;
-  }
-
-  .compress-summary {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-top: 22px;
-    animation: item-in 0.35s var(--ease) both;
-  }
-
-  @media (max-width: 560px) {
-    .compress-summary {
-      grid-template-columns: 1fr;
-    }
   }
 
   .compare {
@@ -202,13 +194,12 @@ import Icon from '../../components/Icon.astro';
   import { mountFileTool } from '../../lib/fileui.js';
   import { decodeImage, renderToBlob, renameWithExt } from '../../lib/image.js';
   import { bindRangeFill, toast } from '../../lib/ui.js';
-  import { formatBytes } from '../../lib/format.js';
+  import { saveHandoff, mountHandoffChip } from '../../lib/handoff.js';
 
   const root = document.getElementById('tool-compress');
   if (root) {
     const quality = root.querySelector('[data-quality]');
     const out = root.querySelector('[data-quality-out]');
-    const summary = root.querySelector('[data-summary]');
     const compare = root.querySelector('[data-compare]');
     const range = root.querySelector('[data-compare-range]');
     const afterWrap = root.querySelector('[data-compare-after]');
@@ -217,11 +208,25 @@ import Icon from '../../components/Icon.astro';
     quality.addEventListener('input', syncOut);
     syncOut();
 
+    // Presets
+    root.querySelectorAll('.preset').forEach((p) => {
+      p.addEventListener('click', () => {
+        quality.value = p.dataset.preset;
+        root.querySelectorAll('.preset').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+        p.setAttribute('aria-pressed', 'true');
+        bindRangeFill(quality);
+        syncOut();
+        quality.dispatchEvent(new Event('change'));
+      });
+    });
+    quality.addEventListener('input', () => root.querySelectorAll('.preset').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.preset === quality.value))));
+
     const extFor = (type) => (type === 'image/png' ? 'png' : type === 'image/webp' ? 'webp' : 'jpg');
 
     const api = mountFileTool(root, {
       acceptTypes: ['image/jpeg', 'image/png', 'image/webp'],
       acceptExts: ['.jpg', '.jpeg', '.png', '.webp'],
+      summary: true,
       process: async (item) => {
         const img = await decodeImage(item.file);
         try {
@@ -233,48 +238,29 @@ import Icon from '../../components/Icon.astro';
             quality: Number(quality.value) / 100,
           });
           const name = renameWithExt(item.file.name, extFor(format));
-          if (format === 'image/png' && blob.size >= item.file.size) {
-            item._pngWarn = true;
-          }
+          if (format === 'image/png' && blob.size >= item.file.size) item._pngWarn = true;
           return { blob, name };
         } finally {
           img.close();
         }
       },
-      onListChange: refreshSummary,
-    });
-
-    function refreshSummary(items) {
-      const done = items.filter((i) => i.status === 'done' && i.result?.blob);
-      if (!done.length) {
-        summary.hidden = true;
-        compare.hidden = true;
-        return;
-      }
-      const before = done.reduce((s, i) => s + i.file.size, 0);
-      const after = done.reduce((s, i) => s + i.result.blob.size, 0);
-      summary.hidden = false;
-      root.querySelector('[data-sum-before]').textContent = formatBytes(before);
-      root.querySelector('[data-sum-after]').textContent = formatBytes(after);
-      const saved = before > 0 ? Math.round((1 - after / before) * 100) : 0;
-      root.querySelector('[data-sum-saved]').textContent = `${saved >= 0 ? '−' : '+'}${Math.abs(saved)} %`;
-
-      // Comparateur interactif : uniquement quand un seul fichier est prêt
-      if (done.length === 1) {
-        const item = done[0];
-        compare.hidden = false;
-        const beforeImg = root.querySelector('[data-compare-before]');
-        const afterImg = root.querySelector('[data-compare-afterimg]');
-        setSrc(beforeImg, item.file);
-        setSrc(afterImg, item.result.blob);
-        if (item._pngWarn) {
-          toast('Le PNG est sans perte : pour un gain important, convertissez plutôt en WebP.', 'info', 6000);
-          item._pngWarn = false;
+      onListChange: (items) => {
+        const done = items.filter((i) => i.status === 'done' && i.result?.blob);
+        if (done.length === 1) {
+          const item = done[0];
+          compare.hidden = false;
+          setSrc(root.querySelector('[data-compare-before]'), item.file);
+          setSrc(root.querySelector('[data-compare-afterimg]'), item.result.blob);
+          if (item._pngWarn) {
+            toast('PNG is lossless — for big savings, convert to WebP instead.', 'info', 6000);
+            item._pngWarn = false;
+          }
+          saveHandoff({ fromTool: 'image-compressor', name: item.result.name, type: item.result.blob.type, blob: item.result.blob });
+        } else {
+          compare.hidden = true;
         }
-      } else {
-        compare.hidden = true;
-      }
-    }
+      },
+    });
 
     function setSrc(img, blobOrFile) {
       if (img._url) URL.revokeObjectURL(img._url);
@@ -292,7 +278,9 @@ import Icon from '../../components/Icon.astro';
     quality.addEventListener('change', async () => {
       if (!api.items.length) return;
       for (const item of api.items) await api.processItem(item);
-      toast(`Compression relancée à ${quality.value} %.`, 'success');
+      toast(`Re-compressed at ${quality.value} %.`, 'success');
     });
+
+    mountHandoffChip(root, api, 'image/');
   }
 </script>

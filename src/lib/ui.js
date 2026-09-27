@@ -128,41 +128,63 @@ export function bindRangeFill(range) {
   update();
 }
 
-/* ---------- Thème ---------- */
+/* ---------- Theme (3 states: light / dark / system) ---------- */
 export const THEME_KEY = 'qt-theme';
 
 export function getStoredTheme() {
   try {
-    return localStorage.getItem(THEME_KEY);
+    return localStorage.getItem(THEME_KEY); // 'light' | 'dark' | 'system' | null
   } catch {
     return null;
   }
 }
 
-export function applyTheme(theme) {
-  document.documentElement.dataset.theme = theme;
+/** Resolve a preference into the effective theme. */
+export function resolveTheme(pref) {
+  if (pref === 'light' || pref === 'dark') return pref;
+  if (typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: light)').matches) return 'light';
+  if (typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+  return 'dark'; // site default when no OS preference
+}
+
+export function applyTheme(pref) {
+  const effective = resolveTheme(pref);
+  const stored = pref === null ? 'system' : pref;
+  document.documentElement.dataset.theme = effective;
+  document.documentElement.dataset.themePref = stored;
   try {
-    localStorage.setItem(THEME_KEY, theme);
+    localStorage.setItem(THEME_KEY, stored);
   } catch {
-    /* stockage indisponible : le thème restera valable pour la session */
+    /* storage unavailable: theme stays valid for the session */
   }
-  document.querySelectorAll('[data-theme-toggle] [data-icon-sun]').forEach((el) => {
-    el.style.display = theme === 'dark' ? '' : 'none';
-  });
-  document.querySelectorAll('[data-theme-toggle] [data-icon-moon]').forEach((el) => {
-    el.style.display = theme === 'light' ? '' : 'none';
+  // Reflect the preference on every toggle button
+  document.querySelectorAll('[data-theme-toggle]').forEach((btn) => {
+    btn.setAttribute('data-mode', stored);
+    btn.setAttribute(
+      'aria-label',
+      stored === 'dark' ? 'Theme: dark — switch to light' : stored === 'light' ? 'Theme: light — switch to system' : 'Theme: system — switch to dark'
+    );
+    btn.querySelector('[data-icon-sun]')?.setAttribute('data-active', String(stored === 'light'));
+    btn.querySelector('[data-icon-moon]')?.setAttribute('data-active', String(stored === 'dark'));
+    btn.querySelector('[data-icon-sys]')?.setAttribute('data-active', String(stored === 'system'));
   });
 }
 
 export function initThemeToggle() {
+  const order = ['dark', 'light', 'system'];
   document.querySelectorAll('[data-theme-toggle]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const current = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
-      const next = current === 'dark' ? 'light' : 'dark';
+      const current = document.documentElement.dataset.themePref || 'dark';
+      const next = order[(order.indexOf(current) + 1) % order.length];
       applyTheme(next);
-      btn.setAttribute('aria-label', next === 'dark' ? 'Activer le thème clair' : 'Activer le thème sombre');
     });
   });
+  // Follow OS changes while in system mode
+  if (typeof matchMedia === 'function') {
+    matchMedia('(prefers-color-scheme: light)').addEventListener?.('change', () => {
+      if ((document.documentElement.dataset.themePref || '') === 'system') applyTheme('system');
+    });
+  }
 }
 
 /* ---------- Débounce ---------- */

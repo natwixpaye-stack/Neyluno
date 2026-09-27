@@ -1,0 +1,214 @@
+---
+import Icon from '../../components/Icon.astro';
+---
+
+<div class="ftool" id="tool-rotate-pdf">
+  <div data-notice hidden></div>
+
+  <div class="dropzone" data-dropzone>
+    <input type="file" data-file-input hidden />
+    <span class="dz-icon" aria-hidden="true"><Icon name="upload" size={24} /></span>
+    <h3>Drag & drop your PDF here</h3>
+    <p>or click to browse · PDF only · up to 50 MB</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choose a PDF</span>
+  </div>
+
+  <div class="cp-panel" data-rp-panel hidden>
+    <div class="sp-file">
+      <span class="sp-file-icon" aria-hidden="true"><Icon name="pdf" size={20} /></span>
+      <div>
+        <p class="sp-file-name" data-rp-name></p>
+        <p class="sp-file-meta" data-rp-meta></p>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="field-label">Rotation to apply to every page</span>
+      <div class="seg" role="radiogroup" aria-label="Rotation angle">
+        <button type="button" class="seg-btn is-active" data-angle="90" aria-pressed="true">↻ 90° clockwise</button>
+        <button type="button" class="seg-btn" data-angle="180" aria-pressed="false">180°</button>
+        <button type="button" class="seg-btn" data-angle="270" aria-pressed="false">↺ 270°</button>
+      </div>
+    </div>
+
+    <div class="crop-actions">
+      <button type="button" class="btn btn-ghost btn-sm" data-rp-reset>Start over</button>
+      <button type="button" class="btn btn-accent btn-sm" data-rp-go>Rotate PDF</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .cp-panel {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .sp-file {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel);
+  }
+
+  .sp-file-icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    color: #ff6e59;
+    background: color-mix(in srgb, #ff6e59 12%, transparent);
+    flex: none;
+  }
+
+  .sp-file-name {
+    font-weight: 600;
+    font-size: 0.92rem;
+    word-break: break-all;
+  }
+
+  .sp-file-meta {
+    color: var(--muted);
+    font-size: 0.82rem;
+    margin-top: 2px;
+  }
+
+  .seg {
+    display: inline-flex;
+    padding: 4px;
+    gap: 4px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel);
+    flex-wrap: wrap;
+  }
+  .seg-btn {
+    padding: 8px 16px;
+    border-radius: 9px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    transition: all 0.18s var(--ease);
+  }
+  .seg-btn.is-active {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-fg);
+  }
+
+  .crop-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+</style>
+
+<script>
+  import { toast, downloadBlob } from '../../lib/ui.js';
+  import { validateFile, MAX_FILE_BYTES } from '../../lib/files.js';
+  import { formatBytes } from '../../lib/format.js';
+
+  const root = document.getElementById('tool-rotate-pdf');
+  if (root) {
+    const dz = root.querySelector('[data-dropzone]');
+    const input = root.querySelector('[data-file-input]');
+    const panel = root.querySelector('[data-rp-panel]');
+    const nameEl = root.querySelector('[data-rp-name]');
+    const metaEl = root.querySelector('[data-rp-meta]');
+    const goBtn = root.querySelector('[data-rp-go]');
+
+    let file = null;
+    let pageCount = 0;
+    let angle = 90;
+
+    dz.setAttribute('role', 'button');
+    dz.setAttribute('tabindex', '0');
+    dz.addEventListener('click', () => input.click());
+    dz.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        input.click();
+      }
+    });
+    dz.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (e.dataTransfer?.files?.length) loadFile(e.dataTransfer.files[0]);
+    });
+    input.addEventListener('change', () => {
+      if (input.files?.length) loadFile(input.files[0]);
+      input.value = '';
+    });
+
+    root.querySelectorAll('[data-angle]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        angle = Number(btn.dataset.angle);
+        root.querySelectorAll('[data-angle]').forEach((b) => {
+          b.classList.toggle('is-active', b === btn);
+          b.setAttribute('aria-pressed', String(b === btn));
+        });
+      });
+    });
+
+    async function loadFile(f) {
+      const check = validateFile(f, { acceptTypes: ['application/pdf'], acceptExts: ['.pdf'], maxBytes: MAX_FILE_BYTES });
+      if (!check.ok) {
+        toast(check.error, 'error');
+        return;
+      }
+      try {
+        const { PDFDocument } = await import('pdf-lib');
+        const doc = await PDFDocument.load(await f.arrayBuffer(), { ignoreEncryption: true, updateMetadata: false });
+        if (doc.isEncrypted) throw new Error('protected');
+        pageCount = doc.getPageCount();
+      } catch (err) {
+        toast(
+          err?.message === 'protected'
+            ? 'This PDF is password-protected and cannot be modified.'
+            : 'This PDF could not be read — it may be corrupted.',
+          'error'
+        );
+        return;
+      }
+      file = f;
+      nameEl.textContent = f.name;
+      metaEl.textContent = `${pageCount} page${pageCount > 1 ? 's' : ''} · ${formatBytes(f.size)}`;
+      dz.hidden = true;
+      panel.hidden = false;
+    }
+
+    root.querySelector('[data-rp-reset]').addEventListener('click', () => {
+      file = null;
+      panel.hidden = true;
+      dz.hidden = false;
+    });
+
+    goBtn.addEventListener('click', async () => {
+      if (!file) return;
+      goBtn.disabled = true;
+      const label = goBtn.textContent;
+      goBtn.textContent = 'Rotating…';
+      try {
+        const { PDFDocument, degrees } = await import('pdf-lib');
+        const doc = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true, updateMetadata: false });
+        for (const page of doc.getPages()) {
+          const current = page.getRotation().angle;
+          page.setRotation(degrees(((current + angle) % 360 + 360) % 360));
+        }
+        const bytes = await doc.save();
+        const base = file.name.replace(/\.pdf$/i, '');
+        downloadBlob(new Blob([bytes], { type: 'application/pdf' }), `${base}-rotated.pdf`);
+        toast(`Rotated ${pageCount} page${pageCount > 1 ? 's' : ''} by ${angle}°.`, 'success');
+      } catch {
+        toast('This PDF could not be processed. It may be corrupted or protected.', 'error');
+      } finally {
+        goBtn.disabled = false;
+        goBtn.textContent = label;
+      }
+    });
+  }
+</script>

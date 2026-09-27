@@ -17,12 +17,12 @@ const catTools = getToolsByCategory(cat.slug);
 ---
 
 <BaseLayout
-  title={`Outils ${cat.name} — gratuits et locaux`}
+  title={`${cat.name} tools — free and local`}
   description={cat.description}
   path={`/categories/${cat.slug}/`}
 >
   <div class="container page-top">
-    <Breadcrumb items={[{ label: 'Accueil', href: '/' }, { label: 'Catégories', href: '/categories/' }, { label: cat.name }]} />
+    <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Categories', href: '/categories/' }, { label: cat.name }]} />
 
     <header class="cat-head">
       <span class="cat-icon" style={`--hue:${cat.hue}`} aria-hidden="true">

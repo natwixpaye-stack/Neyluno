@@ -1,0 +1,96 @@
+---
+---
+
+<div class="stool" id="tool-json">
+  <div class="stool-grid">
+    <div class="field">
+      <label for="jf-in">Your JSON</label>
+      <textarea class="textarea input" id="jf-in" data-input spellcheck="false" placeholder='{"paste": "your JSON here"}'></textarea>
+    </div>
+    <div class="field">
+      <div class="field-label-row">
+        <label for="jf-out">Result</label>
+        <button type="button" class="btn btn-ghost btn-sm" data-copy>Copy</button>
+      </div>
+      <textarea class="textarea input" id="jf-out" data-output readonly spellcheck="false" placeholder="Formatted JSON appears here"></textarea>
+    </div>
+  </div>
+
+  <div class="stool-toolbar">
+    <div class="field" style="min-width:130px">
+      <span class="sr-only">Indentation</span>
+      <select class="select" data-indent aria-label="Indentation">
+        <option value="2" selected>2 spaces</option>
+        <option value="4">4 spaces</option>
+        <option value="tab">Tabs</option>
+      </select>
+    </div>
+    <button type="button" class="btn btn-accent btn-sm" data-format>Format</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-minify>Minify</button>
+  </div>
+  <p class="stool-status" data-status aria-live="polite"></p>
+</div>
+
+<style>
+  .field-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .field-label-row label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+</style>
+
+<script>
+  import { copyText, toast } from '../../lib/ui.js';
+  import { locateJsonError, positionToLineCol } from '../../lib/jsonloc.js';
+
+  const root = document.getElementById('tool-json');
+  if (root) {
+    const input = root.querySelector('[data-input]');
+    const output = root.querySelector('[data-output]');
+    const status = root.querySelector('[data-status]');
+    const indentSel = root.querySelector('[data-indent]');
+
+    function friendlyError(text) {
+      const loc = locateJsonError(text);
+      if (!loc) return 'Invalid JSON.';
+      const { line, column } = positionToLineCol(text, loc.pos);
+      return `Invalid JSON at line ${line}, column ${column}: ${loc.message}.`;
+    }
+
+    function run(minify) {
+      const text = input.value;
+      if (!text.trim()) {
+        status.textContent = 'Paste some JSON first.';
+        status.className = 'stool-status err';
+        return;
+      }
+      try {
+        const parsed = JSON.parse(text);
+        const indent = minify ? undefined : indentSel.value === 'tab' ? '\t' : Number(indentSel.value);
+        output.value = JSON.stringify(parsed, null, indent);
+        const kind = Array.isArray(parsed) ? 'array' : typeof parsed;
+        status.textContent = minify ? `Valid JSON minified (${output.value.length} characters).` : `Valid JSON (${kind}) formatted.`;
+        status.className = 'stool-status ok';
+      } catch (err) {
+        output.value = '';
+        status.textContent = friendlyError(text);
+        status.className = 'stool-status err';
+      }
+    }
+
+    root.querySelector('[data-format]').addEventListener('click', () => run(false));
+    root.querySelector('[data-minify]').addEventListener('click', () => run(true));
+
+    root.querySelector('[data-copy]').addEventListener('click', async () => {
+      if (!output.value) return;
+      const ok = await copyText(output.value);
+      toast(ok ? 'Copied to clipboard.' : 'Could not copy automatically.', ok ? 'success' : 'error');
+    });
+  }
+</script>

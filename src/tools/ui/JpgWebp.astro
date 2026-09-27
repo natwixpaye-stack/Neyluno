@@ -4,10 +4,16 @@ import Icon from '../../components/Icon.astro';
 
 <div class="ftool" id="tool-jpg-webp">
   <div class="ftool-options">
+    <div class="preset-row" role="group" aria-label="Quality presets">
+      <button type="button" class="preset" data-preset="50">Small file</button>
+      <button type="button" class="preset" data-preset="75">Website</button>
+      <button type="button" class="preset" data-preset="82" aria-pressed="true">Balanced</button>
+      <button type="button" class="preset" data-preset="92">High quality</button>
+    </div>
     <div class="opt">
-      <label for="jw-quality">Qualité de conversion <output id="jw-out" data-quality-out>82 %</output></label>
+      <label for="jw-quality">Conversion quality <output id="jw-out" data-quality-out>82 %</output></label>
       <input type="range" id="jw-quality" min="10" max="100" value="82" step="1" data-quality aria-describedby="jw-hint" />
-      <p class="opt-hint" id="jw-hint">Entre 75 et 85 %, la perte est invisible pour la plupart des photos.</p>
+      <p class="opt-hint" id="jw-hint">Between 75 and 85 %, the loss is invisible on most photos.</p>
     </div>
   </div>
 
@@ -16,20 +22,36 @@ import Icon from '../../components/Icon.astro';
   <div class="dropzone" data-dropzone>
     <input type="file" data-file-input multiple hidden />
     <span class="dz-icon" aria-hidden="true"><Icon name="upload" size={24} /></span>
-    <h3>Glissez-déposez vos images JPG ici</h3>
-    <p>ou cliquez pour parcourir · JPG / JPEG · jusqu'à 50 Mo par fichier</p>
-    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choisir des images</span>
+    <h3>Drag & drop your JPG images here</h3>
+    <p>or click to browse · JPG / JPEG · up to 50 MB per file</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choose images</span>
   </div>
 
   <div class="ftool-actions">
     <span class="ftool-count" data-count aria-live="polite"></span>
     <span class="ftool-actions-btns">
-      <button type="button" class="btn btn-ghost btn-sm" data-clear-all hidden>Réinitialiser</button>
-      <button type="button" class="btn btn-accent btn-sm" data-download-all hidden>Tout télécharger (ZIP)</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-clear-all hidden>Start over</button>
+      <button type="button" class="btn btn-accent btn-sm" data-download-all hidden>Download all (ZIP)</button>
     </span>
   </div>
 
-  <ul class="file-list" data-file-list role="list" aria-label="Fichiers en cours de conversion"></ul>
+  <ul class="file-list" data-file-list role="list" aria-label="Files being converted"></ul>
+
+  <div class="batch-summary" data-summary hidden>
+    <div class="stat"><div class="stat-value" data-sum-count>—</div><div class="stat-label">Files</div></div>
+    <div class="stat"><div class="stat-value" data-sum-done>—</div><div class="stat-label">Done</div></div>
+    <div class="stat"><div class="stat-value" data-sum-failed>—</div><div class="stat-label">Failed</div></div>
+    <div class="stat"><div class="stat-value" data-sum-before>—</div><div class="stat-label">Before</div></div>
+    <div class="stat"><div class="stat-value" data-sum-after>—</div><div class="stat-label">After</div></div>
+    <div class="stat"><div class="stat-value accent" data-sum-saved>—</div><div class="stat-label">Saved</div></div>
+  </div>
+
+  <div class="handoff-chip" data-handoff hidden>
+    <Icon name="spark" size={16} />
+    <span>Continue with <strong data-handoff-name></strong> from the previous tool?</span>
+    <button type="button" class="btn btn-sm btn-ghost" data-handoff-use>Use this file</button>
+    <button type="button" class="icon-btn" data-handoff-dismiss aria-label="Dismiss">✕</button>
+  </div>
 </div>
 
 <style>
@@ -76,6 +98,7 @@ import Icon from '../../components/Icon.astro';
   import { mountFileTool } from '../../lib/fileui.js';
   import { decodeImage, renderToBlob, renameWithExt } from '../../lib/image.js';
   import { bindRangeFill, toast } from '../../lib/ui.js';
+  import { saveHandoff, mountHandoffChip } from '../../lib/handoff.js';
 
   const root = document.getElementById('tool-jpg-webp');
   if (root) {
@@ -86,9 +109,21 @@ import Icon from '../../components/Icon.astro';
     quality.addEventListener('input', syncOut);
     syncOut();
 
+    root.querySelectorAll('.preset').forEach((p) => {
+      p.addEventListener('click', () => {
+        quality.value = p.dataset.preset;
+        root.querySelectorAll('.preset').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+        p.setAttribute('aria-pressed', 'true');
+        bindRangeFill(quality);
+        syncOut();
+        quality.dispatchEvent(new Event('change'));
+      });
+    });
+
     const api = mountFileTool(root, {
       acceptTypes: ['image/jpeg'],
       acceptExts: ['.jpg', '.jpeg', '.jfif'],
+      summary: true,
       process: async (item) => {
         const img = await decodeImage(item.file);
         try {
@@ -103,12 +138,18 @@ import Icon from '../../components/Icon.astro';
           img.close();
         }
       },
+      onListChange: (items) => {
+        const last = [...items].reverse().find((i) => i.status === 'done' && i.result?.blob);
+        if (last) saveHandoff({ fromTool: 'jpg-to-webp', name: last.result.name, type: last.result.blob.type, blob: last.result.blob });
+      },
     });
 
     quality.addEventListener('change', async () => {
       if (!api.items.length) return;
       for (const item of api.items) await api.processItem(item);
-      toast(`Conversion relancée avec une qualité de ${quality.value} %.`, 'success');
+      toast(`Conversion re-run at ${quality.value} % quality.`, 'success');
     });
+
+    mountHandoffChip(root, api, 'image/');
   }
 </script>

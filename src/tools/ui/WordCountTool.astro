@@ -4,10 +4,10 @@ import Icon from '../../components/Icon.astro';
 
 <div class="wc-tool" id="tool-wordcount">
   <div class="wc-toolbar">
-    <span class="wc-toolbar-label">Votre texte reste dans le navigateur — rien n'est enregistré.</span>
+    <span class="wc-toolbar-label">Your text stays in your browser — nothing is stored or sent.</span>
     <span class="wc-toolbar-btns">
-      <button type="button" class="btn btn-ghost btn-sm" data-sample>Exemple</button>
-      <button type="button" class="btn btn-ghost btn-sm" data-clear>Effacer</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-sample>Example</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-clear>Clear</button>
     </span>
   </div>
 
@@ -15,38 +15,38 @@ import Icon from '../../components/Icon.astro';
     class="textarea wc-textarea"
     data-input
     rows="10"
-    placeholder="Collez ou écrivez votre texte ici…"
-    aria-label="Texte à analyser"
+    placeholder="Paste or type your text here…"
+    aria-label="Text to analyze"
     spellcheck="false"></textarea>
 
   <div class="stat-grid wc-stats" aria-live="polite">
     <div class="stat">
       <div class="stat-value accent" data-stat-words>0</div>
-      <div class="stat-label">Mots</div>
+      <div class="stat-label">Words</div>
     </div>
     <div class="stat">
       <div class="stat-value" data-stat-chars>0</div>
-      <div class="stat-label">Caractères</div>
+      <div class="stat-label">Characters</div>
     </div>
     <div class="stat">
       <div class="stat-value" data-stat-charsns>0</div>
-      <div class="stat-label">Caract. sans espaces</div>
+      <div class="stat-label">Chars, no spaces</div>
     </div>
     <div class="stat">
       <div class="stat-value" data-stat-sentences>0</div>
-      <div class="stat-label">Phrases</div>
+      <div class="stat-label">Sentences</div>
     </div>
     <div class="stat">
       <div class="stat-value" data-stat-paragraphs>0</div>
-      <div class="stat-label">Paragraphes</div>
+      <div class="stat-label">Paragraphs</div>
     </div>
     <div class="stat">
       <div class="stat-value" data-stat-lines>0</div>
-      <div class="stat-label">Lignes</div>
+      <div class="stat-label">Lines</div>
     </div>
     <div class="stat">
       <div class="stat-value" data-stat-reading>—</div>
-      <div class="stat-label">Lecture</div>
+      <div class="stat-label">Reading time</div>
     </div>
   </div>
 </div>
@@ -80,10 +80,37 @@ import Icon from '../../components/Icon.astro';
 
   .wc-stats {
     margin-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+  }
+
+  .stat {
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel);
+    text-align: center;
   }
 
   .stat .stat-value {
     font-variant-numeric: tabular-nums;
+    font-family: var(--font-display);
+    font-size: 1.22rem;
+    font-weight: 700;
+  }
+
+  .stat-value.accent {
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--faint);
+    margin-top: 4px;
   }
 </style>
 
@@ -107,12 +134,12 @@ import Icon from '../../components/Icon.astro';
     function update() {
       queued = false;
       const stats = countText(input.value);
-      el.words.textContent = stats.words.toLocaleString('fr-FR');
-      el.chars.textContent = stats.chars.toLocaleString('fr-FR');
-      el.charsns.textContent = stats.charsNoSpaces.toLocaleString('fr-FR');
-      el.sentences.textContent = stats.sentences.toLocaleString('fr-FR');
-      el.paragraphs.textContent = stats.paragraphs.toLocaleString('fr-FR');
-      el.lines.textContent = stats.lines.toLocaleString('fr-FR');
+      el.words.textContent = stats.words.toLocaleString('en-US');
+      el.chars.textContent = stats.chars.toLocaleString('en-US');
+      el.charsns.textContent = stats.charsNoSpaces.toLocaleString('en-US');
+      el.sentences.textContent = stats.sentences.toLocaleString('en-US');
+      el.paragraphs.textContent = stats.paragraphs.toLocaleString('en-US');
+      el.lines.textContent = stats.lines.toLocaleString('en-US');
       el.reading.textContent = stats.words === 0 ? '—' : stats.readingTimeMin <= 1 ? '≈ 1 min' : `≈ ${stats.readingTimeMin} min`;
     }
 
@@ -129,13 +156,13 @@ import Icon from '../../components/Icon.astro';
     });
 
     root.querySelector('[data-sample]').addEventListener('click', () => {
-      input.value = `Le renard et le corbeau
+      input.value = `The Fox and the Crow
 
-Maître Corbeau, sur un arbre perché, tenait en son bec un fromage. Maître Renard, par l'odeur alléché, lui tint à peu près ce langage : « Hé ! bonjour, Monsieur du Corbeau. Que vous êtes joli ! que vous me semblez beau ! »
+A crow sat high in a tree, a piece of cheese in her beak. A fox, drawn by the smell, stopped beneath the branches and looked up. "Good morning, beautiful creature," he said. "Your feathers shine like polished ink, and I am sure your voice must match your beauty."
 
-À ces mots, le Corbeau ne se sent pas de joie ; et pour montrer sa belle voix, il ouvre un large bec, laisse tomber sa proie. Le Renard s'en saisit, et dit : « Apprenez que tout flatteur vit aux dépens de celui qui l'écoute. »
+Flattered, the crow opened her beak to sing — and down fell the cheese. The fox caught it neatly and added, "A word of advice: don't trade your dinner for a compliment."
 
-Le Corbeau, honteux et confus, jura, mais un peu tard, qu'on ne l'y prendrait plus.`;
+The crow, embarrassed but wiser, decided then and there that she wouldn't fall for flattery again.`;
       update();
     });
 

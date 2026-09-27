@@ -1,0 +1,431 @@
+---
+import Icon from '../../components/Icon.astro';
+---
+
+<div class="ftool" id="tool-crop">
+  <div data-notice hidden></div>
+
+  <div class="dropzone" data-dropzone>
+    <input type="file" data-file-input hidden />
+    <span class="dz-icon" aria-hidden="true"><Icon name="upload" size={24} /></span>
+    <h3>Drag & drop your image here</h3>
+    <p>or click to browse · JPG, PNG, WebP · up to 50 MB</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choose an image</span>
+  </div>
+
+  <div class="crop-panel" data-crop-panel hidden>
+    <div class="crop-controls">
+      <div class="seg" role="radiogroup" aria-label="Aspect ratio">
+        <button type="button" class="seg-btn is-active" data-ratio="free" aria-pressed="true">Free</button>
+        <button type="button" class="seg-btn" data-ratio="1:1" aria-pressed="false">1:1</button>
+        <button type="button" class="seg-btn" data-ratio="4:3" aria-pressed="false">4:3</button>
+        <button type="button" class="seg-btn" data-ratio="16:9" aria-pressed="false">16:9</button>
+        <button type="button" class="seg-btn" data-ratio="9:16" aria-pressed="false">9:16</button>
+      </div>
+      <span class="crop-dims" data-crop-dims aria-live="polite"></span>
+      <div class="field" style="min-width:140px;margin-left:auto">
+        <span class="field-label sr-only">Output format</span>
+        <select class="select" data-format aria-label="Output format">
+          <option value="image/jpeg">JPG</option>
+          <option value="image/png">PNG</option>
+          <option value="image/webp" selected>WebP</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="crop-stage" data-crop-stage>
+      <img data-crop-img alt="Image to crop" />
+      <div class="crop-sel" data-crop-sel tabindex="0" role="application" aria-label="Crop selection — drag to move">
+        <span class="crop-handle h-nw" data-handle="nw" aria-hidden="true"></span>
+        <span class="crop-handle h-ne" data-handle="ne" aria-hidden="true"></span>
+        <span class="crop-handle h-sw" data-handle="sw" aria-hidden="true"></span>
+        <span class="crop-handle h-se" data-handle="se" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <div class="crop-actions">
+      <button type="button" class="btn btn-ghost btn-sm" data-crop-reset>Start over</button>
+      <button type="button" class="btn btn-accent btn-sm" data-crop-go>Crop image</button>
+    </div>
+
+    <div class="crop-result" data-crop-result hidden>
+      <h3>Result</h3>
+      <img data-crop-result-img alt="Cropped image result" />
+      <div class="crop-actions">
+        <button type="button" class="btn btn-primary btn-sm" data-crop-download>Download</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="handoff-chip" data-handoff hidden>
+    <Icon name="spark" size={16} />
+    <span>Continue with <strong data-handoff-name></strong> from the previous tool?</span>
+    <button type="button" class="btn btn-sm btn-ghost" data-handoff-use>Use this file</button>
+    <button type="button" class="icon-btn" data-handoff-dismiss aria-label="Dismiss">✕</button>
+  </div>
+</div>
+
+<style>
+  .crop-panel {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .crop-controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .seg {
+    display: inline-flex;
+    padding: 4px;
+    gap: 4px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel);
+    flex-wrap: wrap;
+  }
+  .seg-btn {
+    padding: 7px 14px;
+    border-radius: 9px;
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: var(--muted);
+    transition: all 0.18s var(--ease);
+  }
+  .seg-btn.is-active {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-fg);
+  }
+
+  .crop-dims {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .crop-stage {
+    position: relative;
+    line-height: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--panel-strong);
+    user-select: none;
+    touch-action: none;
+  }
+
+  .crop-stage img {
+    width: 100%;
+    max-height: 480px;
+    object-fit: contain;
+    display: block;
+    pointer-events: none;
+  }
+
+  .crop-sel {
+    position: absolute;
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 0 9999px rgba(5, 6, 10, 0.55);
+    cursor: move;
+    border-radius: 4px;
+  }
+
+  .crop-sel:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--accent) 70%, white);
+  }
+
+  .crop-handle {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 4px;
+  }
+  .h-nw { top: -7px; left: -7px; cursor: nwse-resize; }
+  .h-ne { top: -7px; right: -7px; cursor: nesw-resize; }
+  .h-sw { bottom: -7px; left: -7px; cursor: nesw-resize; }
+  .h-se { bottom: -7px; right: -7px; cursor: nwse-resize; }
+
+  .crop-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .crop-result {
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .crop-result h3 {
+    font-size: 0.95rem;
+  }
+
+  .crop-result img {
+    border-radius: 10px;
+    max-width: 100%;
+    max-height: 380px;
+    object-fit: contain;
+    background: var(--panel-strong);
+  }
+</style>
+
+<script>
+  import { decodeImage, renameWithExt } from '../../lib/image.js';
+  import { toast, downloadBlob } from '../../lib/ui.js';
+  import { saveHandoff, getHandoff, clearHandoff } from '../../lib/handoff.js';
+  import { MAX_FILE_BYTES, validateFile } from '../../lib/files.js';
+
+  const root = document.getElementById('tool-crop');
+  if (root) {
+    const dz = root.querySelector('[data-dropzone]');
+    const input = root.querySelector('[data-file-input]');
+    const panel = root.querySelector('[data-crop-panel]');
+    const stage = root.querySelector('[data-crop-stage]');
+    const imgEl = root.querySelector('[data-crop-img]');
+    const sel = root.querySelector('[data-crop-sel]');
+    const dimsEl = root.querySelector('[data-crop-dims]');
+    const formatSel = root.querySelector('[data-format]');
+    const resultBox = root.querySelector('[data-crop-result]');
+    const resultImg = root.querySelector('[data-crop-result-img]');
+
+    let file = null;
+    let src = null; // decoded {source,width,height,close}
+    let ratio = null; // null = free
+    // selection in DISPLAY pixels
+    let selBox = { x: 0, y: 0, w: 0, h: 0 };
+    let scale = 1; // display px -> image px
+    let resultBlob = null;
+    let resultName = '';
+
+    dz.setAttribute('role', 'button');
+    dz.setAttribute('tabindex', '0');
+    dz.addEventListener('click', () => input.click());
+    dz.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        input.click();
+      }
+    });
+    dz.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (e.dataTransfer?.files?.length) loadFile(e.dataTransfer.files[0]);
+    });
+    input.addEventListener('change', () => {
+      if (input.files?.length) loadFile(input.files[0]);
+      input.value = '';
+    });
+
+    // Handoff chip
+    (async () => {
+      const h = await getHandoff('image/');
+      if (!h) return;
+      const chip = root.querySelector('[data-handoff]');
+      chip.hidden = false;
+      chip.querySelector('[data-handoff-name]').textContent = h.name;
+      chip.querySelector('[data-handoff-use]').addEventListener('click', () => {
+        chip.hidden = true;
+        loadFile(h);
+        clearHandoff();
+      });
+      chip.querySelector('[data-handoff-dismiss]').addEventListener('click', () => (chip.hidden = true));
+    })();
+
+    async function loadFile(f) {
+      const check = validateFile(f, { acceptTypes: ['image/jpeg', 'image/png', 'image/webp'], acceptExts: ['.jpg', '.jpeg', '.png', '.webp'], maxBytes: MAX_FILE_BYTES });
+      if (!check.ok) {
+        toast(check.error, 'error');
+        return;
+      }
+      try {
+        src?.close();
+        src = await decodeImage(f);
+      } catch (err) {
+        toast(err.message || 'This image could not be read.', 'error');
+        return;
+      }
+      file = f;
+      resultBlob = null;
+      resultBox.hidden = true;
+      dz.hidden = true;
+      panel.hidden = false;
+      imgEl.src = URL.createObjectURL(f);
+      imgEl.onload = () => {
+        scale = src.width / imgEl.getBoundingClientRect().width;
+        const rect = stage.getBoundingClientRect();
+        // default selection: centered 80%
+        selBox = { x: rect.width * 0.1, y: rect.height * 0.1, w: rect.width * 0.8, h: rect.height * 0.8 };
+        applyRatio();
+        drawSel();
+      };
+    }
+
+    root.querySelectorAll('[data-ratio]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        root.querySelectorAll('[data-ratio]').forEach((b) => {
+          b.classList.toggle('is-active', b === btn);
+          b.setAttribute('aria-pressed', String(b === btn));
+        });
+        ratio = btn.dataset.ratio === 'free' ? null : btn.dataset.ratio.split(':').map(Number);
+        applyRatio();
+        drawSel();
+      });
+    });
+
+    function applyRatio() {
+      if (!ratio) return;
+      const [rw, rh] = ratio;
+      const r = rw / rh;
+      let w = selBox.w;
+      let h = w / r;
+      if (h > stage.clientHeight * 0.9) {
+        h = stage.clientHeight * 0.9;
+        w = h * r;
+      }
+      selBox.w = w;
+      selBox.h = h;
+      selBox.x = Math.min(Math.max(0, selBox.x), stage.clientWidth - w);
+      selBox.y = Math.min(Math.max(0, selBox.y), stage.clientHeight - h);
+    }
+
+    function drawSel() {
+      sel.style.left = `${selBox.x}px`;
+      sel.style.top = `${selBox.y}px`;
+      sel.style.width = `${selBox.w}px`;
+      sel.style.height = `${selBox.h}px`;
+      const iw = Math.round(selBox.w * scale);
+      const ih = Math.round(selBox.h * scale);
+      dimsEl.textContent = `Selection: ${iw} × ${ih} px`;
+    }
+
+    /* ---- Pointer interactions ---- */
+    let drag = null; // {mode, startX, startY, box}
+    sel.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      const handle = e.target.closest('[data-handle]')?.dataset.handle || 'move';
+      drag = { mode: handle, startX: e.clientX, startY: e.clientY, box: { ...selBox } };
+      sel.setPointerCapture(e.pointerId);
+    });
+    sel.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      const dx = e.clientX - drag.startX;
+      const dy = e.clientY - drag.startY;
+      const b = drag.box;
+      const W = stage.clientWidth;
+      const H = stage.clientHeight;
+      const MIN = 24;
+
+      if (drag.mode === 'move') {
+        selBox.x = Math.min(Math.max(0, b.x + dx), W - b.w);
+        selBox.y = Math.min(Math.max(0, b.y + dy), H - b.h);
+      } else {
+        let { x, y, w, h } = b;
+        if (drag.mode.includes('e')) w = Math.max(MIN, b.w + dx);
+        if (drag.mode.includes('s')) h = Math.max(MIN, b.h + dy);
+        if (drag.mode.includes('w')) {
+          w = Math.max(MIN, b.w - dx);
+          x = b.x + (b.w - w);
+        }
+        if (drag.mode.includes('n')) {
+          h = Math.max(MIN, b.h - dy);
+          y = b.y + (b.h - h);
+        }
+        if (ratio) {
+          const r = ratio[0] / ratio[1];
+          if (drag.mode === 'se') h = w / r;
+          else if (drag.mode === 'nw') { w = h * r; x = b.x + b.w - w; y = b.y + b.h - h; }
+          else if (drag.mode === 'ne') { h = w / r; y = b.y + b.h - h; }
+          else if (drag.mode === 'sw') { w = h * r; x = b.x + b.w - w; }
+        }
+        // clamp to stage
+        x = Math.max(0, x);
+        y = Math.max(0, y);
+        w = Math.min(w, W - x);
+        h = Math.min(h, H - y);
+        if (ratio) {
+          const r = ratio[0] / ratio[1];
+          if (w / h > r) w = h * r;
+          else h = w / r;
+        }
+        selBox = { x, y, w, h };
+      }
+      drawSel();
+    });
+    sel.addEventListener('pointerup', () => (drag = null));
+    sel.addEventListener('pointercancel', () => (drag = null));
+
+    // Keyboard: arrow keys move the selection
+    sel.addEventListener('keydown', (e) => {
+      const step = e.shiftKey ? 10 : 2;
+      let handled = true;
+      if (e.key === 'ArrowLeft') selBox.x = Math.max(0, selBox.x - step);
+      else if (e.key === 'ArrowRight') selBox.x = Math.min(stage.clientWidth - selBox.w, selBox.x + step);
+      else if (e.key === 'ArrowUp') selBox.y = Math.max(0, selBox.y - step);
+      else if (e.key === 'ArrowDown') selBox.y = Math.min(stage.clientHeight - selBox.h, selBox.y + step);
+      else handled = false;
+      if (handled) {
+        e.preventDefault();
+        drawSel();
+      }
+    });
+
+    root.querySelector('[data-crop-go]').addEventListener('click', async () => {
+      if (!src) return;
+      const sx = Math.round(selBox.x * scale);
+      const sy = Math.round(selBox.y * scale);
+      const sw = Math.min(src.width - sx, Math.round(selBox.w * scale));
+      const sh = Math.min(src.height - sy, Math.round(selBox.h * scale));
+      if (sw < 2 || sh < 2) {
+        toast('Selection is too small — drag a bigger area.', 'error');
+        return;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = sw;
+      canvas.height = sh;
+      const ctx = canvas.getContext('2d');
+      const format = formatSel.value;
+      if (format === 'image/jpeg') {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, sw, sh);
+      }
+      ctx.drawImage(src.source, sx, sy, sw, sh, 0, 0, sw, sh);
+      try {
+        resultBlob = await new Promise((resolve, reject) => {
+          canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Crop failed — try another format.'))), format, 0.92);
+        });
+      } catch (err) {
+        toast(err.message, 'error');
+        return;
+      }
+      const ext = format === 'image/png' ? 'png' : format === 'image/webp' ? 'webp' : 'jpg';
+      resultName = renameWithExt(file.name, ext);
+      resultImg.src = URL.createObjectURL(resultBlob);
+      resultBox.hidden = false;
+      saveHandoff({ fromTool: 'image-cropper', name: resultName, type: resultBlob.type, blob: resultBlob });
+      resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+
+    root.querySelector('[data-crop-download]').addEventListener('click', () => {
+      if (resultBlob) downloadBlob(resultBlob, resultName);
+    });
+
+    root.querySelector('[data-crop-reset]').addEventListener('click', () => {
+      src?.close();
+      src = null;
+      file = null;
+      resultBlob = null;
+      panel.hidden = true;
+      resultBox.hidden = true;
+      dz.hidden = false;
+    });
+  }
+</script>

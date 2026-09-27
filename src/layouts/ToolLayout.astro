@@ -1,5 +1,5 @@
 ---
-/** Structure commune de toutes les pages outils. */
+/** Common structure for every tool page. */
 import BaseLayout from './BaseLayout.astro';
 import Breadcrumb from '../components/Breadcrumb.astro';
 import HowItWorks from '../components/HowItWorks.astro';
@@ -8,12 +8,13 @@ import RelatedTools from '../components/RelatedTools.astro';
 import AdPlaceholder from '../components/AdPlaceholder.astro';
 import Icon from '../components/Icon.astro';
 import { site, getCategory } from '../data/site.js';
-import { getRelatedTools } from '../data/tools.js';
+import { getRelatedTools, nextSteps } from '../data/tools.js';
 
 const { tool } = Astro.props;
 const cat = getCategory(tool.category);
 const related = getRelatedTools(tool, 4);
-const path = `/outils/${tool.slug}/`;
+const path = `/tools/${tool.slug}/`;
+const next = (nextSteps[tool.slug] || []).map((n) => ({ ...n })).slice(0, 3);
 
 const jsonLd = [
   {
@@ -24,8 +25,8 @@ const jsonLd = [
     applicationCategory: 'UtilityApplication',
     operatingSystem: 'Web',
     url: new URL(path, Astro.site).href,
-    inLanguage: 'fr',
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+    inLanguage: 'en',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
     featureList: tool.steps.join(' · '),
   },
   {
@@ -40,11 +41,11 @@ const jsonLd = [
 ];
 ---
 
-<BaseLayout title={`${tool.name} — gratuit et sans inscription`} description={tool.shortDesc} path={path} jsonLd={jsonLd}>
+<BaseLayout title={`${tool.name} — free, no sign-up`} description={tool.shortDesc} path={path} jsonLd={jsonLd}>
   <div class="container tool-page">
     <Breadcrumb
       items={[
-        { label: 'Accueil', href: '/' },
+        { label: 'Home', href: '/' },
         { label: cat.name, href: `/categories/${cat.slug}/` },
         { label: tool.name },
       ]}
@@ -57,14 +58,37 @@ const jsonLd = [
       <h1>{tool.name}</h1>
       <p class="tool-desc">{tool.description}</p>
       <div class="tool-badges">
-        <span class="badge"><span class="dot"></span>100 % dans votre navigateur</span>
-        <span class="badge">Gratuit</span>
-        <span class="badge">Sans compte</span>
+        <span class="badge"><span class="dot"></span>Processed on your device</span>
+        <span class="badge">Free</span>
+        <span class="badge">No sign-up</span>
+        <span class="tool-head-actions">
+          <button type="button" class="chip-btn" data-fav={tool.slug} aria-pressed="false" aria-label={`Add ${tool.name} to favorites`}>
+            <Icon name="star" size={14} /> Favorite
+          </button>
+          <button type="button" class="chip-btn" data-share>
+            <Icon name="share" size={14} /> Share
+          </button>
+        </span>
       </div>
     </header>
 
-    <section class="tool-panel panel" aria-label={`Zone principale de l’outil ${tool.name}`}>
+    <section class="tool-panel panel" aria-label={`${tool.name} main tool area`}>
       <slot />
+
+      {
+        next.length > 0 && (
+          <div class="what-next">
+            <h3>Do more with your result</h3>
+            <div class="what-next-links">
+              {next.map((n) => (
+                <a href={`/tools/${n.slug}/`}>
+                  {n.label} <Icon name="arrow-right" size={14} />
+                </a>
+              ))}
+            </div>
+          </div>
+        )
+      }
     </section>
 
     <AdPlaceholder slot="tool-after-result" />
@@ -75,11 +99,40 @@ const jsonLd = [
 
     <RelatedTools tools={related} />
 
-    <section class="tool-seo" aria-label="En savoir plus">
-      <h2>Bon à savoir</h2>
+    <section class="tool-seo" aria-label="Learn more">
+      <h2>Good to know</h2>
       <div class="prose" set:html={tool.seo} />
     </section>
   </div>
+
+  <script>
+    import { pushRecent } from '../lib/local.js';
+    import { toast } from '../lib/ui.js';
+
+    const slugMatch = location.pathname.match(/\/tools\/([^/]+)/);
+    if (slugMatch) pushRecent(slugMatch[1]);
+
+    // Share / copy link
+    document.querySelectorAll('[data-share]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const url = location.href;
+        if (navigator.share) {
+          try {
+            await navigator.share({ title: document.title, url });
+            return;
+          } catch {
+            /* fall through to clipboard */
+          }
+        }
+        try {
+          await navigator.clipboard.writeText(url);
+          toast('Link copied to clipboard', 'success');
+        } catch {
+          toast('Could not copy the link automatically.', 'error');
+        }
+      });
+    });
+  </script>
 </BaseLayout>
 
 <style>
@@ -123,6 +176,42 @@ const jsonLd = [
     flex-wrap: wrap;
     gap: 8px;
     margin-top: 20px;
+    align-items: center;
+  }
+
+  .tool-head-actions {
+    display: inline-flex;
+    gap: 8px;
+    margin-left: 6px;
+  }
+
+  .chip-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    transition: color 0.18s, border-color 0.18s, background 0.18s;
+  }
+
+  .chip-btn:hover {
+    color: var(--text);
+    border-color: var(--border-strong);
+  }
+
+  .chip-btn[aria-pressed='true'] {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+
+  .chip-btn[aria-pressed='true'] :global(svg) {
+    fill: currentColor;
   }
 
   .tool-panel {

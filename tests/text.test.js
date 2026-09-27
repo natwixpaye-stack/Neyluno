@@ -25,9 +25,10 @@ test('cas simple : une phrase', () => {
   assert.equal(r.lines, 1);
 });
 
-test("l'arbre compte 2 mots (convention documentée)", () => {
-  assert.equal(countText("l'arbre").words, 2);
-  assert.equal(countText('l’arbre').words, 2); // apostrophe typographique
+test("don't counts as one word (documented EN convention)", () => {
+  assert.equal(countText("don't").words, 1);
+  assert.equal(countText('don’t').words, 1); // curly apostrophe
+  assert.equal(countText('well-known').words, 1); // hyphenated
 });
 
 test('paragraphes séparés par ligne vide', () => {

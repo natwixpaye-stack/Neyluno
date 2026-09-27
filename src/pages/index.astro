@@ -1,100 +1,107 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Icon from '../components/Icon.astro';
 import ToolCard from '../components/ToolCard.astro';
-import AdPlaceholder from '../components/AdPlaceholder.astro';
-import FAQ from '../components/FAQ.astro';
+import Icon from '../components/Icon.astro';
 import { site, categories } from '../data/site.js';
-import { tools } from '../data/tools.js';
+import { tools, popularActions, getTool } from '../data/tools.js';
 
+const path = '/';
 const jsonLd = [
   {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: site.name,
-    url: Astro.site.href,
-    description: site.shortDescription,
-    inLanguage: 'fr',
+    url: new URL(path, Astro.site).href,
+    description: site.tagline,
   },
   {
     '@context': 'https://schema.org',
-    '@type': 'ItemList',
-    itemListElement: tools.map((t, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      name: t.name,
-      url: new URL(`/outils/${t.slug}/`, Astro.site).href,
-    })),
+    '@type': 'WebApplication',
+    name: site.name,
+    applicationCategory: 'UtilityApplication',
+    operatingSystem: 'Web',
+    description: site.shortDescription,
+    url: new URL(path, Astro.site).href,
+    inLanguage: 'en',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   },
 ];
 
-const heroSearchExamples = ['Convertir une image…', 'Compresser un PDF…', 'Créer un QR code…', 'Calculer une réduction…'];
-
-const globalFaq = [
-  { q: 'Mes fichiers sont-ils envoyés sur un serveur ?', a: 'Non. Tous les traitements (conversion, compression, fusion…) sont réalisés directement dans votre navigateur avec des technologies web standards. Vos fichiers ne quittent jamais votre appareil.' },
-  { q: 'Faut-il créer un compte ?', a: 'Jamais. Aucun compte, aucune inscription, aucun e-mail. Vous arrivez, vous utilisez un outil, vous repartez.' },
-  { q: 'Le site est-il vraiment gratuit ?', a: 'Oui, tous les outils sont gratuits et sans limite d’utilisation cachée. Le site est conçu pour fonctionner sans coûts de serveur, ce qui nous permet de le rester.' },
-  { q: 'Puis-je utiliser les outils hors ligne ?', a: 'Une fois la page chargée, la plupart des outils fonctionnent sans connexion, car tout le traitement est local. Seule la navigation entre pages nécessite le réseau.' },
+const guides = [
+  { slug: 'reduce-image-size-for-email', title: 'How to reduce image size for email', blurb: 'The exact settings that get attachments under 10 MB without visible quality loss.' },
+  { slug: 'convert-webp-to-jpg', title: 'Convert WebP to JPG when nothing opens it', blurb: 'Why WebP files confuse older apps, and the fastest way to make them universal.' },
+  { slug: 'compress-pdf-for-email', title: 'Compress a PDF for email (honestly)', blurb: 'What actually shrinks a PDF, what only pretends to, and when to split instead.' },
+  { slug: 'create-a-favicon', title: 'Create a favicon that works everywhere', blurb: 'ICO, apple-touch-icon, PWA icons: the complete set, generated in one step.' },
+  { slug: 'strong-passwords-guide', title: 'What makes a password strong in 2026', blurb: 'Length beats complexity — the numbers behind it, and how to generate good ones.' },
 ];
 ---
 
-<BaseLayout title={site.name} description={site.tagline} path="/" jsonLd={jsonLd}>
+<BaseLayout title="Free online tools — images, PDF, text" description={site.shortDescription} path={path} jsonLd={jsonLd}>
   <!-- ================= HERO ================= -->
   <section class="hero">
-    <canvas id="hero-canvas" aria-hidden="true"></canvas>
     <div class="hero-orb hero-orb-a" aria-hidden="true"></div>
     <div class="hero-orb hero-orb-b" aria-hidden="true"></div>
     <div class="hero-grid" aria-hidden="true"></div>
 
     <div class="container hero-content">
-      <span class="badge hero-badge reveal"><span class="dot"></span>100 % local · gratuit · sans compte</span>
+      <span class="badge hero-badge reveal"><span class="dot"></span>100% local · free · no account</span>
       <h1 class="reveal">
-        Les bons outils.<br />
-        <span class="gradient-text">Sans les complications.</span>
+        Get things done. <span class="gradient-text">Fast.</span>
       </h1>
       <p class="hero-sub reveal">
-        Des outils rapides, gratuits et simples pour transformer, convertir, calculer et créer
-        directement dans ton navigateur.
+        {tools.length} free tools for images, PDFs, text and everyday tasks — everything runs in your
+        browser, your files never leave your device.
       </p>
 
       <div class="hero-search reveal" role="search">
-        <Icon name="search" size={20} />
+        <Icon name="search" size={19} />
         <input
           type="search"
-          id="hero-search"
           data-hero-search
-          placeholder="Que veux-tu faire ?"
-          aria-label="Rechercher un outil : que veux-tu faire ?"
+          placeholder="What do you want to do?"
+          aria-label="What do you want to do? Search tools"
           autocomplete="off"
+          spellcheck="false"
         />
-        <kbd aria-hidden="true">Ctrl K</kbd>
+        <button type="button" class="btn btn-primary" data-search-open>Search</button>
       </div>
 
-      <div class="hero-chips reveal" aria-label="Outils populaires">
-        <span class="hero-chips-label">Populaires :</span>
-        <a href="/outils/generer-qr-code/">QR code</a>
-        <a href="/outils/compresser-image/">Compresser une image</a>
-        <a href="/outils/fusionner-pdf/">Fusionner des PDF</a>
-        <a href="/outils/generateur-mot-de-passe/">Mot de passe</a>
+      <div class="hero-chips reveal" aria-label="Popular quick actions">
+        <span class="hero-chips-label">Popular:</span>
+        {popularActions.map((a) => (
+          <a href={`/tools/${a.slug}/`} class="hero-chip">
+            <Icon name={a.icon} size={13} /> {a.label}
+          </a>
+        ))}
       </div>
     </div>
-
-    <div class="hero-scroll" aria-hidden="true"></div>
   </section>
 
-  <AdPlaceholder slot="home-after-hero" />
+  <!-- ============ PERSONAL (recents & favorites) ============ -->
+  <section class="section personal" id="personal" hidden>
+    <div class="container">
+      <div class="personal-row" id="fav-row" hidden>
+        <h2 class="personal-title"><Icon name="star" size={15} /> Favorites</h2>
+        <div class="personal-chips" data-fav-chips></div>
+      </div>
+      <div class="personal-row" id="recents-row" hidden>
+        <h2 class="personal-title"><Icon name="clock" size={15} /> Recent</h2>
+        <div class="personal-chips" data-recents-chips></div>
+      </div>
+    </div>
+  </section>
 
-  <!-- ================= OUTILS ================= -->
-  <section class="section" id="outils">
+  <!-- ================= TOOLS ================= -->
+  <section class="section" id="tools">
     <div class="container">
       <div class="section-head reveal">
-        <span class="eyebrow">Boîte à outils</span>
-        <h2>Tout ce qu'il faut, rien de superflu.</h2>
-        <p>Dix outils essentiels, chacun pensé pour faire une seule chose parfaitement — dans votre navigateur.</p>
+        <span class="eyebrow">Toolbox</span>
+        <h2>{tools.length} tools, zero friction</h2>
+        <p class="muted">Drop a file or paste some text — the result is ready in seconds.</p>
       </div>
 
-      <div class="filter-bar reveal" role="group" aria-label="Filtrer les outils par catégorie">
-        <button type="button" class="filter-chip is-active" data-filter="all">Tous</button>
+      <div class="filter-bar reveal" role="group" aria-label="Filter tools by category">
+        <button type="button" class="filter-chip is-active" data-filter="all">All</button>
         {categories.filter((c) => tools.some((t) => t.category === c.slug)).map((c) => (
           <button type="button" class="filter-chip" data-filter={c.slug} style={`--hue:${c.hue}`}>
             {c.name}
@@ -104,76 +111,86 @@ const globalFaq = [
 
       <div class="tools-grid">
         {tools.map((tool, i) => (
-          <div class="reveal" style={`transition-delay:${Math.min(i * 45, 360)}ms`} data-tool-wrap={tool.category}>
+          <div class="reveal" style={`transition-delay:${Math.min(i * 30, 300)}ms`} data-tool-wrap={tool.category}>
             <ToolCard tool={tool} />
           </div>
+        ))}
+      </div>
+
+      <p class="all-tools-link"><a href="/tools/" class="btn btn-ghost">Browse all tools <Icon name="arrow-right" size={15} /></a></p>
+    </div>
+  </section>
+
+  <!-- ================= WORKFLOWS ================= -->
+  <section class="section">
+    <div class="container">
+      <div class="wf-band reveal">
+        <div class="wf-copy">
+          <span class="eyebrow">The differentiator</span>
+          <h2>Chain tools into workflows</h2>
+          <p>
+            Resize, then compress, then convert — in one pass over your whole batch. Build the pipeline,
+            save it locally, reuse it whenever you need. Results come out as a single ZIP.
+          </p>
+          <a href="/workflows/" class="btn btn-primary">Build a workflow <Icon name="arrow-right" size={16} /></a>
+        </div>
+        <ol class="wf-demo" aria-label="Example workflow: resize, compress, convert">
+          <li><span class="wf-step-n">1</span> Resize <span class="wf-meta">max 1920 px</span></li>
+          <li class="wf-arrow" aria-hidden="true"></li>
+          <li><span class="wf-step-n">2</span> Compress <span class="wf-meta">quality 80%</span></li>
+          <li class="wf-arrow" aria-hidden="true"></li>
+          <li><span class="wf-step-n">3</span> Convert <span class="wf-meta">to WebP</span></li>
+          <li class="wf-arrow" aria-hidden="true"></li>
+          <li class="wf-out"><Icon name="download" size={15} /> ZIP</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= GUIDES ================= -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Guides</span>
+        <h2>Short answers to real questions</h2>
+        <p class="muted">Practical, honest, no filler — written by people who actually use these tools.</p>
+      </div>
+      <div class="guides-grid">
+        {guides.map((g, i) => (
+          <a href={`/guides/${g.slug}/`} class="card guide-card reveal" style={`transition-delay:${i * 60}ms`}>
+            <h3>{g.title}</h3>
+            <p>{g.blurb}</p>
+            <span class="guide-cta">Read the guide <Icon name="arrow-right" size={14} /></span>
+          </a>
         ))}
       </div>
     </div>
   </section>
 
-  <!-- ================= POURQUOI ================= -->
+  <!-- ================= WHY ================= -->
   <section class="section why-section">
     <div class="container why-grid">
       <div class="why-left reveal">
-        <span class="eyebrow">Pourquoi QuickTools</span>
-        <h2>
-          Vos fichiers méritent mieux qu'un upload vers on ne sait où.
-        </h2>
+        <span class="eyebrow">Why {site.name}</span>
+        <h2>Private because of how it's built, not because of a promise.</h2>
         <p class="muted">
-          La plupart des sites d'outils envoient vos documents sur leurs serveurs. Ici, le traitement se passe
-          <strong>chez vous</strong>, dans l'onglet de votre navigateur. C'est plus rapide, plus privé, et ça ne coûte rien.
+          Most “online tools” upload your files to a server first. Here, your browser does the whole job —
+          you can watch the Network tab and see nothing leave your device.
         </p>
       </div>
       <div class="why-stats">
         <div class="why-stat reveal">
           <span class="why-num">0</span>
-          <p><strong>upload serveur.</strong><br /><span class="muted">Vos fichiers restent sur votre appareil, du début à la fin.</span></p>
+          <p><strong>server uploads.</strong><br /><span class="muted">Your files stay on your device from start to finish.</span></p>
         </div>
         <div class="why-stat reveal" style="transition-delay:80ms">
           <span class="why-num">100<span class="why-pct">%</span></span>
-          <p><strong>traitement local.</strong><br /><span class="muted">Canvas, Web Crypto, pdf-lib : le web sait déjà tout faire.</span></p>
+          <p><strong>local processing.</strong><br /><span class="muted">Canvas, Web Crypto, pdf-lib: the web already knows how.</span></p>
         </div>
         <div class="why-stat reveal" style="transition-delay:160ms">
           <span class="why-num">0</span>
-          <p><strong>compte requis.</strong><br /><span class="muted">Aucune inscription, aucun e-mail, aucune limite cachée.</span></p>
+          <p><strong>accounts required.</strong><br /><span class="muted">No sign-up, no email, no hidden limits.</span></p>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= COMMENT ================= -->
-  <section class="section">
-    <div class="container">
-      <div class="section-head reveal">
-        <span class="eyebrow">Mode d'emploi</span>
-        <h2>Opérationnel en trois secondes.</h2>
-      </div>
-      <div class="steps-row">
-        <div class="step-card reveal">
-          <span class="step-num">1</span>
-          <h3>Choisissez un outil</h3>
-          <p>Parcourez la liste ou tapez ce que vous voulez faire dans la recherche.</p>
-        </div>
-        <div class="step-card reveal" style="transition-delay:90ms">
-          <span class="step-num">2</span>
-          <h3>Déposez ou saisissez</h3>
-          <p>Glissez-déposez un fichier ou saisissez votre texte : le traitement démarre immédiatement.</p>
-        </div>
-        <div class="step-card reveal" style="transition-delay:180ms">
-          <span class="step-num">3</span>
-          <h3>Téléchargez</h3>
-          <p>Récupérez le résultat en un clic. Ensuite, fermez l'onglet : rien ne reste derrière vous.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= FAQ ================= -->
-  <section class="section">
-    <div class="container">
-      <div class="reveal">
-        <FAQ items={globalFaq} title="Les questions qu'on nous pose" />
       </div>
     </div>
   </section>
@@ -183,15 +200,16 @@ const globalFaq = [
     <div class="container">
       <div class="cta-band reveal">
         <div class="cta-orb" aria-hidden="true"></div>
-        <h2>Un outil à faire, là, maintenant&nbsp;?</h2>
-        <p>Ouvrez-en un. Aucune installation, aucune inscription.</p>
-        <a href="/outils/" class="btn btn-primary">
-          Voir les {tools.length} outils <Icon name="arrow-right" size={16} />
-        </a>
+        <h2>What do you want to do?</h2>
+        <p>Tell us the task — we'll find the tool.</p>
+        <button type="button" class="btn btn-primary" data-search-open>
+          <Icon name="search" size={16} /> Search {tools.length} tools
+        </button>
       </div>
     </div>
   </section>
 </BaseLayout>
+
 
 <style>
   /* ---------- HERO ---------- */
@@ -552,128 +570,237 @@ const globalFaq = [
       font-size: 2.1rem;
     }
   }
+
+  /* ---------- Personal strip ---------- */
+  .personal {
+    padding-top: 0;
+    padding-bottom: 8px;
+  }
+
+  .personal-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 10px 0;
+  }
+
+  .personal-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--faint);
+    min-width: 96px;
+  }
+
+  .personal-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .p-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 13px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: var(--muted);
+    transition: border-color 0.18s, color 0.18s, transform 0.18s;
+  }
+
+  .p-chip:hover {
+    color: var(--text);
+    border-color: var(--border-strong);
+    transform: translateY(-1px);
+  }
+
+  /* ---------- Workflows band ---------- */
+  .wf-band {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: clamp(28px, 5vw, 60px);
+    align-items: center;
+    padding: clamp(28px, 5vw, 52px);
+    border-radius: var(--radius-l);
+    border: 1px solid var(--border-strong);
+    background: var(--bg-2);
+  }
+
+  .wf-copy h2 {
+    font-size: clamp(1.6rem, 3.4vw, 2.3rem);
+    margin-bottom: 12px;
+  }
+
+  .wf-copy p {
+    color: var(--muted);
+    margin-bottom: 22px;
+    max-width: 480px;
+  }
+
+  .wf-demo {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    list-style: none;
+  }
+
+  .wf-demo li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    font-weight: 600;
+    font-size: 0.92rem;
+  }
+
+  .wf-step-n {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent-grad);
+    color: #241203;
+    font-size: 0.75rem;
+    font-weight: 800;
+    flex: none;
+  }
+
+  .wf-meta {
+    margin-left: auto;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--faint);
+  }
+
+  .wf-arrow {
+    width: 1px;
+    height: 10px;
+    margin-left: 28px;
+    background: var(--border-strong);
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  .wf-out {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 35%, transparent) !important;
+  }
+
+  /* ---------- Guides ---------- */
+  .guides-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 14px;
+  }
+
+  .guide-card {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .guide-card h3 {
+    font-size: 1.02rem;
+    line-height: 1.35;
+  }
+
+  .guide-card p {
+    color: var(--muted);
+    font-size: 0.87rem;
+    line-height: 1.5;
+  }
+
+  .guide-cta {
+    margin-top: auto;
+    padding-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--faint);
+    transition: color 0.18s, gap 0.18s var(--ease);
+  }
+
+  .guide-card:hover .guide-cta {
+    color: var(--accent);
+    gap: 9px;
+  }
+
+  .all-tools-link {
+    margin-top: 26px;
+    text-align: center;
+  }
+
+  @media (max-width: 900px) {
+    .wf-band {
+      grid-template-columns: 1fr;
+    }
+  }
 </style>
 
 <script>
   import { rotatingPlaceholder } from '../lib/ui.js';
+  import { getRecents, getFavorites } from '../lib/local.js';
+  import { getTool } from '../data/tools.js';
+  import { ICON_PATHS } from '../lib/icons.js';
 
-  /* Placeholder animé de la barre hero */
-  rotatingPlaceholder(document.getElementById('hero-search'), [
-    'Convertir une image…',
-    'Compresser un PDF…',
-    'Créer un QR code…',
-    'Calculer une réduction…',
+  // Rotating example phrases in the hero bar
+  rotatingPlaceholder(document.querySelector('[data-hero-search]'), [
+    'What do you want to do?',
+    'Make my photo smaller…',
+    'Convert WebP to JPG…',
+    'Merge two PDFs…',
+    'Remove duplicate lines…',
+    'Generate a strong password…',
   ]);
 
-  /* Filtres de catégorie */
-  const chips = document.querySelectorAll('[data-filter]');
-  const wraps = document.querySelectorAll('[data-tool-wrap]');
-  chips.forEach((chip) => {
+  // Category filter
+  document.querySelectorAll('.filter-chip').forEach((chip) => {
     chip.addEventListener('click', () => {
-      chips.forEach((c) => c.classList.remove('is-active'));
+      document.querySelectorAll('.filter-chip').forEach((c) => c.classList.remove('is-active'));
       chip.classList.add('is-active');
       const f = chip.dataset.filter;
-      wraps.forEach((w) => {
-        w.classList.toggle('filtered-out', f !== 'all' && w.dataset.toolWrap !== f);
+      document.querySelectorAll('[data-tool-wrap]').forEach((w) => {
+        w.style.display = f === 'all' || w.dataset.toolWrap === f ? '' : 'none';
       });
     });
   });
 
-  /* Particules + parallaxe du hero */
-  const canvas = document.getElementById('hero-canvas');
-  const hero = document.querySelector('.hero');
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  if (canvas && !reduced) {
-    const ctx = canvas.getContext('2d');
-    let w, h, dpr, particles, raf;
-    const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
-
-    function resize() {
-      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-      w = hero.offsetWidth;
-      h = hero.offsetHeight;
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const count = Math.min(70, Math.floor((w * h) / 22000));
-      particles = Array.from({ length: count }, () => ({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (Math.random() - 0.5) * 0.22,
-        vy: (Math.random() - 0.5) * 0.22,
-        r: Math.random() * 1.6 + 0.6,
-      }));
-    }
-
-    function tick() {
-      ctx.clearRect(0, 0, w, h);
-      mouse.x += (mouse.tx - mouse.x) * 0.05;
-      mouse.y += (mouse.ty - mouse.y) * 0.05;
-      hero.style.setProperty('--px', (mouse.x - 0.5).toFixed(3));
-      hero.style.setProperty('--py', (mouse.y - 0.5).toFixed(3));
-
-      const linkDist = 110;
-      for (const p of particles) {
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < -20) p.x = w + 20;
-        if (p.x > w + 20) p.x = -20;
-        if (p.y < -20) p.y = h + 20;
-        if (p.y > h + 20) p.y = -20;
-      }
-      for (let i = 0; i < particles.length; i++) {
-        const a = particles[i];
-        for (let j = i + 1; j < particles.length; j++) {
-          const b = particles[j];
-          const dx = a.x - b.x;
-          const dy = a.y - b.y;
-          const d2 = dx * dx + dy * dy;
-          if (d2 < linkDist * linkDist) {
-            const alpha = (1 - Math.sqrt(d2) / linkDist) * 0.16;
-            ctx.strokeStyle = `rgba(${ACC_RGB}, ${alpha.toFixed(3)})`;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(a.x, a.y);
-            ctx.lineTo(b.x, b.y);
-            ctx.stroke();
-          }
-        }
-      }
-      ctx.fillStyle = `rgba(${ACC_RGB}, 0.5)`;
-      for (const p of particles) {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      raf = requestAnimationFrame(tick);
-    }
-
-    /* Convertit la couleur d'accent hex en RGB (canvas n'aime pas color-mix). */
-    function hexToRgb(hex) {
-      const h = hex.replace('#', '');
-      const v = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
-      const n = parseInt(v, 16);
-      return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
-    }
-    const ACC_RGB = hexToRgb(getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#ffb454');
-
-    function start() {
-      if (!raf) raf = requestAnimationFrame(tick);
-    }
-    function stop() {
-      cancelAnimationFrame(raf);
-      raf = null;
-    }
-
-    resize();
-    start();
-    window.addEventListener('resize', resize);
-    document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
-    hero.addEventListener('pointermove', (e) => {
-      const r = hero.getBoundingClientRect();
-      mouse.tx = (e.clientX - r.left) / r.width;
-      mouse.ty = (e.clientY - r.top) / r.height;
-    }, { passive: true });
+  // Favorites & recents strip
+  function chipHtml(slug) {
+    const t = getTool(slug);
+    if (!t) return '';
+    return `<a class="p-chip" href="/tools/${t.slug}/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_PATHS[t.icon] || ''}</svg>${t.name}</a>`;
   }
+
+  const favs = getFavorites();
+  const recents = getRecents().map((e) => e.slug);
+  const favRow = document.getElementById('fav-row');
+  const recRow = document.getElementById('recents-row');
+  const personal = document.getElementById('personal');
+
+  if (favs.length) {
+    favRow.querySelector('[data-fav-chips]').innerHTML = favs.map(chipHtml).join('');
+    favRow.hidden = false;
+  }
+  if (recents.length) {
+    recRow.querySelector('[data-recents-chips]').innerHTML = recents.map(chipHtml).join('');
+    recRow.hidden = false;
+  }
+  if (favs.length || recents.length) personal.hidden = false;
 </script>

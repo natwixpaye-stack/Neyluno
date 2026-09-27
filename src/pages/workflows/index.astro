@@ -1,0 +1,754 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
+import Icon from '../../components/Icon.astro';
+
+const path = '/workflows/';
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Image Workflows — QuickTools',
+  applicationCategory: 'UtilityApplication',
+  operatingSystem: 'Web',
+  description: 'Chain image operations — resize, compress, convert — into reusable workflows and run them over entire batches, locally.',
+  url: new URL(path, import.meta.env.SITE).href,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+---
+
+<BaseLayout title="Workflows — chain tools, run them in batches" description="Build image pipelines: resize, then compress, then convert. Save your workflows locally, run them over dozens of files, get a ZIP." path={path} jsonLd={jsonLd}>
+  <div class="container wf-page">
+    <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Workflows' }]} />
+
+    <header class="wf-head">
+      <span class="eyebrow">The differentiator</span>
+      <h1>Workflows</h1>
+      <p class="wf-sub">
+        Chain operations into a pipeline — resize, then compress, then convert — and run it over your whole
+        batch in one pass. Saved locally, run privately, exported as a ZIP.
+      </p>
+    </header>
+
+    <div class="wf-layout">
+      <!-- ============ BUILDER ============ -->
+      <section class="panel wf-builder" aria-label="Workflow builder">
+        <h2>1 · Build the pipeline</h2>
+
+        <div class="wf-presets">
+          <span class="wf-presets-label">Start from a preset:</span>
+          <button type="button" class="preset" data-preset="0">Optimize for web</button>
+          <button type="button" class="preset" data-preset="1">Email-friendly</button>
+          <button type="button" class="preset" data-preset="2">Thumbnails</button>
+        </div>
+
+        <ol class="wf-steps" data-steps role="list" aria-label="Pipeline steps"></ol>
+        <p class="wf-empty" data-empty>Add your first step — or load a preset above.</p>
+
+        <div class="wf-add-row">
+          <button type="button" class="btn btn-ghost btn-sm" data-add="resize">+ Resize</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-add="compress">+ Compress</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-add="convert">+ Convert</button>
+        </div>
+
+        <div class="wf-save-row">
+          <input class="input" type="text" data-wf-name placeholder="Workflow name…" maxlength="60" aria-label="Workflow name" />
+          <button type="button" class="btn btn-primary btn-sm" data-wf-save>Save</button>
+        </div>
+
+        <div class="wf-saved" data-saved hidden>
+          <h3>Saved workflows</h3>
+          <ul class="wf-saved-list" data-saved-list role="list"></ul>
+        </div>
+      </section>
+
+      <!-- ============ RUNNER ============ -->
+      <section class="panel wf-runner" aria-label="Run the workflow">
+        <h2>2 · Run it on your files</h2>
+
+        <div data-notice hidden></div>
+
+        <div class="dropzone" data-dropzone>
+          <input type="file" data-file-input multiple hidden accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" />
+          <span class="dz-icon" aria-hidden="true"><Icon name="upload" size={24} /></span>
+          <h3>Drag & drop your images here</h3>
+          <p>or click to browse · JPG, PNG, WebP · up to 40 files</p>
+          <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choose images</span>
+        </div>
+
+        <div class="wf-run-row">
+          <span class="wf-file-count" data-count aria-live="polite"></span>
+          <span class="wf-run-btns">
+            <button type="button" class="btn btn-ghost btn-sm" data-clear hidden>Clear</button>
+            <button type="button" class="btn btn-accent btn-sm" data-run hidden>
+              <Icon name="bolt" size={15} /> Run workflow
+            </button>
+          </span>
+        </div>
+
+        <div class="wf-progress" data-progress hidden>
+          <div class="wf-progress-bar"><span data-progress-fill></span></div>
+          <p class="wf-progress-label" data-progress-label role="status"></p>
+        </div>
+
+        <ul class="file-list" data-file-list role="list" aria-label="Workflow batch"></ul>
+
+        <div class="batch-summary" data-summary hidden>
+          <div class="stat"><div class="stat-value" data-sum-count>—</div><div class="stat-label">Files</div></div>
+          <div class="stat"><div class="stat-value" data-sum-done>—</div><div class="stat-label">Done</div></div>
+          <div class="stat"><div class="stat-value" data-sum-failed>—</div><div class="stat-label">Failed</div></div>
+          <div class="stat"><div class="stat-value" data-sum-before>—</div><div class="stat-label">Before</div></div>
+          <div class="stat"><div class="stat-value" data-sum-after>—</div><div class="stat-label">After</div></div>
+          <div class="stat"><div class="stat-value accent" data-sum-saved>—</div><div class="stat-label">Saved</div></div>
+        </div>
+
+        <div class="wf-run-row">
+          <span></span>
+          <button type="button" class="btn btn-primary btn-sm" data-download-all hidden>Download all (ZIP)</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .wf-page {
+    padding-top: 26px;
+    padding-bottom: 50px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .wf-head h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    margin-bottom: 12px;
+  }
+
+  .wf-sub {
+    color: var(--muted);
+    max-width: 640px;
+  }
+
+  .wf-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 18px;
+    align-items: start;
+  }
+
+  .wf-builder,
+  .wf-runner {
+    padding: clamp(20px, 3vw, 30px);
+  }
+
+  .wf-builder h2,
+  .wf-runner h2 {
+    font-size: 1.1rem;
+    margin-bottom: 18px;
+  }
+
+  .wf-presets {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+
+  .wf-presets-label {
+    font-size: 0.8rem;
+    color: var(--faint);
+    font-weight: 600;
+  }
+
+  .wf-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    list-style: none;
+    padding: 0;
+  }
+
+  .wf-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel);
+    flex-wrap: wrap;
+  }
+
+  .wf-step-n {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--accent-grad);
+    color: #241203;
+    font-size: 0.78rem;
+    font-weight: 800;
+    flex: none;
+  }
+
+  .wf-step .select,
+  .wf-step .input {
+    min-height: 38px;
+    padding: 8px 10px;
+    font-size: 0.86rem;
+  }
+
+  .wf-step-type {
+    font-weight: 700;
+    font-size: 0.9rem;
+    min-width: 76px;
+  }
+
+  .wf-step-cfg {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex: 1;
+    flex-wrap: wrap;
+  }
+
+  .wf-step-move {
+    margin-left: auto;
+    display: flex;
+    gap: 4px;
+  }
+
+  .wf-empty {
+    padding: 20px;
+    text-align: center;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: 12px;
+    color: var(--faint);
+    font-size: 0.88rem;
+    margin-bottom: 14px;
+  }
+
+  .wf-add-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+
+  .wf-save-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .wf-save-row .input {
+    flex: 1;
+  }
+
+  .wf-saved h3 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--faint);
+    margin-bottom: 10px;
+  }
+
+  .wf-saved-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+  }
+
+  .wf-saved-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--panel);
+    font-size: 0.86rem;
+  }
+
+  .wf-saved-item .wf-saved-name {
+    font-weight: 600;
+  }
+
+  .wf-saved-item .wf-saved-desc {
+    color: var(--faint);
+    font-size: 0.78rem;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .wf-run-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .wf-run-btns {
+    display: flex;
+    gap: 10px;
+  }
+
+  .wf-file-count {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .wf-progress {
+    margin-top: 16px;
+  }
+
+  .wf-progress-bar {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--panel-strong);
+    overflow: hidden;
+  }
+
+  .wf-progress-bar span {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: var(--accent-grad);
+    border-radius: 999px;
+    transition: width 0.25s var(--ease);
+  }
+
+  .wf-progress-label {
+    margin-top: 8px;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
+  @media (max-width: 960px) {
+    .wf-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  import { STEP_TYPES, WORKFLOW_PRESETS, mergeSteps, runPipeline, describeWorkflow } from '../../lib/workflow.js';
+  import { validateFile, MAX_FILE_BYTES } from '../../lib/files.js';
+  import { formatBytes } from '../../lib/format.js';
+  import { toast, downloadBlob } from '../../lib/ui.js';
+  import { getSavedWorkflows, saveWorkflows } from '../../lib/local.js';
+
+  const root = document.querySelector('.wf-page');
+  if (root) {
+    /* ================= BUILDER ================= */
+    let steps = [...WORKFLOW_PRESETS[0].steps.map((s) => ({ ...s }))];
+
+    const stepsEl = root.querySelector('[data-steps]');
+    const emptyEl = root.querySelector('[data-empty]');
+
+    const stepDefaults = {
+      resize: { type: 'resize', maxSide: 1920 },
+      compress: { type: 'compress', quality: 80 },
+      convert: { type: 'convert', format: 'image/webp' },
+    };
+
+    function renderSteps() {
+      stepsEl.innerHTML = '';
+      emptyEl.hidden = steps.length > 0;
+      steps.forEach((step, i) => {
+        const li = document.createElement('li');
+        li.className = 'wf-step';
+
+        const n = document.createElement('span');
+        n.className = 'wf-step-n';
+        n.textContent = String(i + 1);
+
+        const typeLabel = document.createElement('span');
+        typeLabel.className = 'wf-step-type';
+        typeLabel.textContent = STEP_TYPES[step.type].label;
+
+        const cfg = document.createElement('span');
+        cfg.className = 'wf-step-cfg';
+
+        if (step.type === 'resize') {
+          cfg.innerHTML = `Max side <input class="input" style="width:90px" type="number" min="16" max="8192" value="${step.maxSide}" aria-label="Maximum side in pixels" /> px`;
+          cfg.querySelector('input').addEventListener('input', (e) => {
+            step.maxSide = Math.max(16, Math.min(8192, Number(e.target.value) || 16));
+          });
+        } else if (step.type === 'compress') {
+          cfg.innerHTML = `Quality <input class="input" style="width:80px" type="number" min="10" max="100" value="${step.quality}" aria-label="Quality percent" /> %`;
+          cfg.querySelector('input').addEventListener('input', (e) => {
+            step.quality = Math.max(10, Math.min(100, Number(e.target.value) || 10));
+          });
+        } else {
+          cfg.innerHTML = `
+            <select class="select" aria-label="Target format">
+              <option value="image/webp">WebP</option>
+              <option value="image/jpeg">JPG</option>
+              <option value="image/png">PNG</option>
+            </select>`;
+          const sel = cfg.querySelector('select');
+          sel.value = step.format;
+          sel.addEventListener('change', () => (step.format = sel.value));
+        }
+
+        const move = document.createElement('span');
+        move.className = 'wf-step-move';
+        move.innerHTML = `
+          <button type="button" class="icon-btn" data-mv="-1" aria-label="Move step up" ${i === 0 ? 'disabled' : ''}>↑</button>
+          <button type="button" class="icon-btn" data-mv="1" aria-label="Move step down" ${i === steps.length - 1 ? 'disabled' : ''}>↓</button>
+          <button type="button" class="icon-btn" data-rm aria-label="Remove step">✕</button>`;
+        move.querySelectorAll('[data-mv]').forEach((btn) =>
+          btn.addEventListener('click', () => {
+            const j = i + Number(btn.dataset.mv);
+            if (j < 0 || j >= steps.length) return;
+            [steps[i], steps[j]] = [steps[j], steps[i]];
+            renderSteps();
+          })
+        );
+        move.querySelector('[data-rm]').addEventListener('click', () => {
+          steps.splice(i, 1);
+          renderSteps();
+        });
+
+        li.append(n, typeLabel, cfg, move);
+        stepsEl.appendChild(li);
+      });
+    }
+
+    root.querySelectorAll('[data-add]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        steps.push({ ...stepDefaults[btn.dataset.add] });
+        renderSteps();
+      });
+    });
+
+    root.querySelectorAll('[data-preset]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        steps = WORKFLOW_PRESETS[Number(btn.dataset.preset)].steps.map((s) => ({ ...s }));
+        renderSteps();
+        toast(`Loaded preset “${WORKFLOW_PRESETS[Number(btn.dataset.preset)].name}”.`, 'success');
+      });
+    });
+
+    /* ---------- Saved workflows ---------- */
+    const savedBox = root.querySelector('[data-saved]');
+    const savedList = root.querySelector('[data-saved-list]');
+    const nameInput = root.querySelector('[data-wf-name]');
+
+    function renderSaved() {
+      const saved = getSavedWorkflows();
+      savedBox.hidden = saved.length === 0;
+      savedList.innerHTML = '';
+      saved.forEach((wf, idx) => {
+        const li = document.createElement('li');
+        li.className = 'wf-saved-item';
+        const name = document.createElement('span');
+        name.className = 'wf-saved-name';
+        name.textContent = wf.name;
+        const desc = document.createElement('span');
+        desc.className = 'wf-saved-desc';
+        desc.textContent = describeWorkflow(wf.steps);
+        const load = document.createElement('button');
+        load.type = 'button';
+        load.className = 'btn btn-ghost btn-sm';
+        load.textContent = 'Load';
+        load.addEventListener('click', () => {
+          steps = wf.steps.map((s) => ({ ...s }));
+          nameInput.value = wf.name;
+          renderSteps();
+          toast(`Loaded “${wf.name}”.`, 'success');
+        });
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'icon-btn';
+        del.dataset.rm = '';
+        del.setAttribute('aria-label', `Delete workflow ${wf.name}`);
+        del.textContent = '✕';
+        del.addEventListener('click', () => {
+          const list = getSavedWorkflows().filter((_, i) => i !== idx);
+          saveWorkflows(list);
+          renderSaved();
+        });
+        li.append(name, desc, load, del);
+        savedList.appendChild(li);
+      });
+    }
+
+    root.querySelector('[data-wf-save]').addEventListener('click', () => {
+      if (!steps.length) {
+        toast('Add at least one step before saving.', 'error');
+        return;
+      }
+      const name = nameInput.value.trim() || `Workflow ${getSavedWorkflows().length + 1}`;
+      const list = getSavedWorkflows().filter((wf) => wf.name !== name);
+      list.unshift({ name, steps: steps.map((s) => ({ ...s })) });
+      saveWorkflows(list);
+      renderSaved();
+      toast(`Saved “${name}”.`, 'success');
+    });
+
+    /* ================= RUNNER ================= */
+    const dz = root.querySelector('[data-dropzone]');
+    const input = root.querySelector('[data-file-input]');
+    const noticeEl = root.querySelector('[data-notice]');
+    const countEl = root.querySelector('[data-count]');
+    const clearBtn = root.querySelector('[data-clear]');
+    const runBtn = root.querySelector('[data-run]');
+    const zipBtn = root.querySelector('[data-download-all]');
+    const fileList = root.querySelector('[data-file-list]');
+    const summaryEl = root.querySelector('[data-summary]');
+    const progressBox = root.querySelector('[data-progress]');
+    const progressFill = root.querySelector('[data-progress-fill]');
+    const progressLabel = root.querySelector('[data-progress-label]');
+
+    let files = []; // {file, el, status, result, error}
+
+    function showNotice(msg, type = 'error') {
+      noticeEl.innerHTML = '';
+      if (!msg) {
+        noticeEl.hidden = true;
+        return;
+      }
+      noticeEl.hidden = false;
+      const div = document.createElement('div');
+      div.className = `notice notice-${type}`;
+      div.setAttribute('role', type === 'error' ? 'alert' : 'status');
+      div.textContent = msg;
+      noticeEl.appendChild(div);
+    }
+
+    function addFiles(list) {
+      const arr = Array.from(list || []);
+      let rejected = '';
+      for (const f of arr) {
+        if (files.length >= 40) {
+          rejected = `Limit of 40 files reached — “${f.name}” was not added.`;
+          continue;
+        }
+        const check = validateFile(f, { acceptTypes: ['image/jpeg', 'image/png', 'image/webp'], acceptExts: ['.jpg', '.jpeg', '.png', '.webp'], maxBytes: MAX_FILE_BYTES });
+        if (!check.ok) {
+          rejected = check.error;
+          continue;
+        }
+        files.push({ file: f, status: 'pending', result: null, error: null, el: null });
+      }
+      if (rejected) {
+        showNotice(rejected);
+        toast(rejected, 'error');
+      } else {
+        showNotice('');
+      }
+      renderFiles();
+    }
+
+    function renderFiles() {
+      fileList.innerHTML = '';
+      for (const item of files) {
+        const el = document.createElement('li');
+        el.className = 'file-item' + (item.status === 'done' ? ' is-done' : item.status === 'error' ? ' is-error' : '');
+        const thumb = document.createElement('img');
+        thumb.className = 'thumb';
+        thumb.alt = '';
+        const url = URL.createObjectURL(item.file);
+        thumb.src = url;
+        thumb.addEventListener('load', () => URL.revokeObjectURL(url), { once: true });
+        const body = document.createElement('div');
+        body.className = 'fi-body';
+        const nameEl = document.createElement('div');
+        nameEl.className = 'fi-name';
+        nameEl.textContent = item.file.name;
+        const meta = document.createElement('div');
+        meta.className = 'fi-meta';
+        if (item.status === 'error') meta.textContent = item.error;
+        else if (item.status === 'done' && item.result) {
+          const saved = 1 - item.result.after / Math.max(1, item.result.before);
+          meta.textContent = `${formatBytes(item.result.before)} → ${formatBytes(item.result.after)} (${saved >= 0 ? '−' : '+'}${Math.abs(Math.round(saved * 100))} %) · ${item.result.width} × ${item.result.height}`;
+        } else meta.textContent = formatBytes(item.file.size);
+        body.append(nameEl, meta);
+        const actions = document.createElement('div');
+        actions.className = 'fi-actions';
+        const status = document.createElement('span');
+        status.className = 'fi-status' + (item.status === 'done' ? ' ok' : item.status === 'error' ? ' err' : '');
+        status.setAttribute('aria-live', 'polite');
+        status.textContent = item.status === 'working' ? 'Processing…' : item.status === 'done' ? 'Done' : item.status === 'error' ? 'Failed' : '';
+        actions.appendChild(status);
+        if (item.status === 'done' && item.result) {
+          const dl = document.createElement('button');
+          dl.type = 'button';
+          dl.className = 'btn btn-sm btn-ghost';
+          dl.textContent = 'Download';
+          dl.addEventListener('click', () => downloadBlob(item.result.blob, item.result.name));
+          actions.insertBefore(dl, status);
+        }
+        const rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'icon-btn';
+        rm.setAttribute('aria-label', `Remove ${item.file.name}`);
+        rm.textContent = '✕';
+        rm.addEventListener('click', () => {
+          files = files.filter((x) => x !== item);
+          renderFiles();
+        });
+        actions.appendChild(rm);
+        el.append(thumb, body, actions);
+        item.el = el;
+        fileList.appendChild(el);
+      }
+      countEl.textContent = files.length ? `${files.length} file${files.length > 1 ? 's' : ''}` : '';
+      clearBtn.hidden = files.length === 0;
+      runBtn.hidden = files.length === 0;
+      if (files.length === 0) {
+        summaryEl.hidden = true;
+        zipBtn.hidden = true;
+      } else if ([...files].some((f) => f.status === 'done')) {
+        zipBtn.hidden = false;
+      }
+      dz.classList.toggle('compact', files.length > 0);
+      if (!dz.hasAttribute('data-keep-hidden')) dz.hidden = files.length > 0 && files.length >= 40;
+    }
+
+    dz.setAttribute('role', 'button');
+    dz.setAttribute('tabindex', '0');
+    dz.addEventListener('click', () => input.click());
+    dz.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        input.click();
+      }
+    });
+    dz.addEventListener('drop', (e) => {
+      e.preventDefault();
+      addFiles(e.dataTransfer?.files);
+    });
+    input.addEventListener('change', () => {
+      addFiles(input.files);
+      input.value = '';
+    });
+    ['dragenter', 'dragover'].forEach((evt) =>
+      dz.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dz.classList.add('is-dragover');
+      })
+    );
+    ['dragleave', 'drop'].forEach((evt) =>
+      dz.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dz.classList.remove('is-dragover');
+      })
+    );
+
+    clearBtn.addEventListener('click', () => {
+      files = [];
+      renderFiles();
+      showNotice('');
+    });
+
+    function refreshSummary() {
+      const done = files.filter((f) => f.status === 'done' && f.result);
+      const failed = files.filter((f) => f.status === 'error');
+      if (!done.length) {
+        summaryEl.hidden = true;
+        return;
+      }
+      summaryEl.hidden = false;
+      const before = files.reduce((s, f) => s + f.file.size, 0);
+      const after = done.reduce((s, f) => s + f.result.after, 0);
+      const saved = before - after;
+      const set = (sel, v) => (summaryEl.querySelector(sel).textContent = v);
+      set('[data-sum-count]', String(files.length));
+      set('[data-sum-done]', String(done.length));
+      set('[data-sum-failed]', String(failed.length));
+      set('[data-sum-before]', formatBytes(before));
+      set('[data-sum-after]', formatBytes(after));
+      set('[data-sum-saved]', saved >= 0 ? `−${Math.round((saved / Math.max(1, before)) * 100)} %` : '—');
+    }
+
+    runBtn.addEventListener('click', async () => {
+      if (!steps.length) {
+        showNotice('Add at least one step to the pipeline first.');
+        return;
+      }
+      if (!files.length) {
+        showNotice('Add some images to process.');
+        return;
+      }
+      showNotice('');
+      runBtn.disabled = true;
+      progressBox.hidden = false;
+      let doneCount = 0;
+
+      for (let i = 0; i < files.length; i++) {
+        const item = files[i];
+        item.status = 'working';
+        renderFiles();
+        progressLabel.textContent = `Processing file ${i + 1} of ${files.length}…`;
+        try {
+          item.result = await runPipeline(item.file, steps);
+          item.status = 'done';
+          doneCount++;
+        } catch (err) {
+          item.status = 'error';
+          item.error = err?.message || 'This file could not be processed.';
+        }
+        progressFill.style.width = `${Math.round(((i + 1) / files.length) * 100)}%`;
+        renderFiles();
+        refreshSummary();
+      }
+
+      progressLabel.textContent = `Finished — ${doneCount}/${files.length} file${files.length > 1 ? 's' : ''} processed.`;
+      setTimeout(() => {
+        progressBox.hidden = true;
+        progressFill.style.width = '0%';
+      }, 1800);
+      runBtn.disabled = false;
+      if (doneCount) {
+        zipBtn.hidden = doneCount < 1;
+        toast(doneCount === files.length ? 'Workflow complete.' : `Workflow complete with ${files.length - doneCount} error(s).`, doneCount === files.length ? 'success' : 'info');
+      }
+    });
+
+    zipBtn.addEventListener('click', async () => {
+      const done = files.filter((f) => f.status === 'done' && f.result);
+      if (!done.length) return;
+      zipBtn.disabled = true;
+      zipBtn.textContent = 'Preparing ZIP…';
+      try {
+        const { zipSync } = await import('fflate');
+        const entries = {};
+        const used = new Set();
+        for (const item of done) {
+          let name = item.result.name;
+          let k = 1;
+          while (used.has(name)) {
+            const dot = item.result.name.lastIndexOf('.');
+            name = dot > 0 ? `${item.result.name.slice(0, dot)}-${++k}${item.result.name.slice(dot)}` : `${item.result.name}-${++k}`;
+          }
+          used.add(name);
+          entries[name] = new Uint8Array(await item.result.blob.arrayBuffer());
+        }
+        downloadBlob(new Blob([zipSync(entries)], { type: 'application/zip' }), 'quicktools-workflow.zip');
+        toast(`${done.length} file(s) downloaded as a ZIP.`, 'success');
+      } catch {
+        toast('Creating the ZIP failed — download the files one by one.', 'error');
+      } finally {
+        zipBtn.disabled = false;
+        zipBtn.textContent = 'Download all (ZIP)';
+      }
+    });
+
+    renderSteps();
+    renderSaved();
+    renderFiles();
+  }
+</script>

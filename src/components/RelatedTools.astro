@@ -1,5 +1,5 @@
 ---
-/** Outils similaires — réutilise ToolCard en version compacte. */
+/** Similar tools — reuses ToolCard in compact mode. */
 import ToolCard from './ToolCard.astro';
 const { tools = [] } = Astro.props;
 ---
@@ -7,7 +7,7 @@ const { tools = [] } = Astro.props;
 {
   tools.length > 0 && (
     <section class="related" aria-labelledby="related-title">
-      <h2 id="related-title">Outils similaires</h2>
+      <h2 id="related-title">Related tools</h2>
       <div class="related-grid">
         {tools.map((t) => <ToolCard tool={t} compact />)}
       </div>

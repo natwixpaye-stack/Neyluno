@@ -2,14 +2,14 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<BaseLayout title="Page introuvable" description="Cette page n'existe pas (ou plus)." path="/404/" noindex>
+<BaseLayout title="Page not found" description="This page doesn't exist (anymore)." path="/404/" noindex>
   <div class="container nf">
     <span class="nf-code" aria-hidden="true">404</span>
-    <h1>Cette page a pris des vacances.</h1>
-    <p>Le lien est peut-être erroné, ou la page a été déplacée. Les outils, eux, sont toujours là.</p>
+    <h1>This page took a day off.</h1>
+    <p>The link may be wrong, or the page moved. The tools are still right where they should be.</p>
     <div class="nf-actions">
-      <a href="/" class="btn btn-primary">Retour à l'accueil</a>
-      <button type="button" class="btn btn-ghost" data-search-open>Rechercher un outil</button>
+      <a href="/" class="btn btn-primary">Back to home</a>
+      <button type="button" class="btn btn-ghost" data-search-open>Search for a tool</button>
     </div>
   </div>
 </BaseLayout>

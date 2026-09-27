@@ -1,0 +1,182 @@
+---
+---
+
+<div class="stool" id="tool-unit">
+  <div class="field" style="max-width:280px">
+    <label for="uc-cat">Category</label>
+    <select class="select" id="uc-cat" data-cat>
+      <option value="length" selected>Length</option>
+      <option value="weight">Weight / Mass</option>
+      <option value="temperature">Temperature</option>
+      <option value="data">Data storage</option>
+      <option value="volume">Volume</option>
+      <option value="speed">Speed</option>
+    </select>
+  </div>
+
+  <div class="uc-grid">
+    <div class="field">
+      <label for="uc-a-unit" class="sr-only">First unit</label>
+      <input class="input uc-value" id="uc-a" type="text" inputmode="decimal" data-val-a placeholder="0" autocomplete="off" />
+      <select class="select" id="uc-a-unit" data-unit-a aria-label="First unit"></select>
+    </div>
+
+    <div class="uc-eq" aria-hidden="true">=</div>
+
+    <div class="field">
+      <label for="uc-b-unit" class="sr-only">Second unit</label>
+      <input class="input uc-value" id="uc-b" type="text" inputmode="decimal" data-val-b placeholder="0" autocomplete="off" />
+      <select class="select" id="uc-b-unit" data-unit-b aria-label="Second unit"></select>
+    </div>
+  </div>
+
+  <p class="stool-status" data-status aria-live="polite"></p>
+</div>
+
+<style>
+  .uc-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .uc-grid .field {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .uc-value {
+    font-size: 1.3rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .uc-eq {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    color: var(--faint);
+    padding-top: 18px;
+  }
+
+  @media (max-width: 620px) {
+    .uc-grid {
+      grid-template-columns: 1fr;
+    }
+    .uc-eq {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  const root = document.getElementById('tool-unit');
+  if (root) {
+    const catSel = root.querySelector('[data-cat]');
+    const valA = root.querySelector('[data-val-a]');
+    const valB = root.querySelector('[data-val-b]');
+    const unitA = root.querySelector('[data-unit-a]');
+    const unitB = root.querySelector('[data-unit-b]');
+    const status = root.querySelector('[data-status]');
+
+    // Factors convert each unit TO the category's base unit.
+    const CATS = {
+      length: { base: 'm', units: { m: 1, km: 1000, cm: 0.01, mm: 0.001, mi: 1609.344, yd: 0.9144, ft: 0.3048, in: 0.0254 } },
+      weight: { base: 'kg', units: { kg: 1, g: 0.001, mg: 0.000001, t: 1000, lb: 0.45359237, oz: 0.028349523125 } },
+      data: { base: 'MB', units: { B: 1 / 1e6, KB: 0.001, MB: 1, GB: 1000, TB: 1e6 } },
+      volume: { base: 'L', units: { L: 1, mL: 0.001, 'gal (US)': 3.785411784, 'qt (US)': 0.946352946, 'pt (US)': 0.473176473, 'cup (US)': 0.2365882365, 'fl oz (US)': 0.0295735295625 } },
+      speed: { base: 'm/s', units: { 'm/s': 1, 'km/h': 1 / 3.6, mph: 0.44704, 'ft/s': 0.3048, knot: 0.514444 } },
+      temperature: { base: 'C', units: { '°C': 'C', '°F': 'F', K: 'K' } },
+    };
+
+    const LABELS = {
+      length: { m: 'meters (m)', km: 'kilometers (km)', cm: 'centimeters (cm)', mm: 'millimeters (mm)', mi: 'miles (mi)', yd: 'yards (yd)', ft: 'feet (ft)', in: 'inches (in)' },
+      weight: { kg: 'kilograms (kg)', g: 'grams (g)', mg: 'milligrams (mg)', t: 'tonnes (t)', lb: 'pounds (lb)', oz: 'ounces (oz)' },
+      data: { B: 'bytes (B)', KB: 'kilobytes (KB)', MB: 'megabytes (MB)', GB: 'gigabytes (GB)', TB: 'terabytes (TB)' },
+      volume: { L: 'liters (L)', mL: 'milliliters (mL)', 'gal (US)': 'gallons (US)', 'qt (US)': 'quarts (US)', 'pt (US)': 'pints (US)', 'cup (US)': 'cups (US)', 'fl oz (US)': 'fluid ounces (US)' },
+      speed: { 'm/s': 'meters/sec (m/s)', 'km/h': 'kilometers/hour', mph: 'miles/hour (mph)', 'ft/s': 'feet/sec', knot: 'knots' },
+      temperature: { '°C': 'Celsius (°C)', '°F': 'Fahrenheit (°F)', K: 'Kelvin (K)' },
+    };
+
+    function toBase(cat, unit, value) {
+      if (cat === 'temperature') {
+        if (unit === '°C') return value;
+        if (unit === '°F') return ((value - 32) * 5) / 9;
+        return value - 273.15; // K
+      }
+      return value * CATS[cat].units[unit];
+    }
+
+    function fromBase(cat, unit, base) {
+      if (cat === 'temperature') {
+        if (unit === '°C') return base;
+        if (unit === '°F') return (base * 9) / 5 + 32;
+        return base + 273.15;
+      }
+      return base / CATS[cat].units[unit];
+    }
+
+    function fmt(n) {
+      if (!Number.isFinite(n)) return '';
+      const abs = Math.abs(n);
+      if (abs !== 0 && (abs >= 1e12 || abs < 1e-9)) return n.toExponential(6);
+      const rounded = Math.round(n * 1e8) / 1e8;
+      return rounded.toLocaleString('en-US', { maximumFractionDigits: 8 });
+    }
+
+    function fillUnits() {
+      const cat = catSel.value;
+      const keys = Object.keys(CATS[cat].units);
+      for (const [sel, preferred] of [[unitA, keys[0]], [unitB, keys[1] || keys[0]]]) {
+        const current = sel.value;
+        sel.innerHTML = '';
+        for (const k of keys) {
+          const opt = document.createElement('option');
+          opt.value = k;
+          opt.textContent = LABELS[cat][k] || k;
+          sel.appendChild(opt);
+        }
+        sel.value = keys.includes(current) ? current : preferred;
+      }
+      convert('a');
+    }
+
+    function parse(v) {
+      const n = parseFloat(String(v).trim().replace(/\s/g, '').replace(',', '.'));
+      return Number.isFinite(n) ? n : NaN;
+    }
+
+    function convert(side) {
+      const cat = catSel.value;
+      const src = side === 'a' ? valA : valB;
+      const dst = side === 'a' ? valB : valA;
+      const srcUnit = side === 'a' ? unitA.value : unitB.value;
+      const dstUnit = side === 'a' ? unitB.value : unitA.value;
+
+      if (!src.value.trim()) {
+        dst.value = '';
+        status.textContent = '';
+        return;
+      }
+      const n = parse(src.value);
+      if (!Number.isFinite(n)) {
+        dst.value = '';
+        status.textContent = 'Enter a number to convert.';
+        status.className = 'stool-status err';
+        return;
+      }
+      const result = fromBase(cat, dstUnit, toBase(cat, srcUnit, n));
+      dst.value = fmt(result);
+      status.textContent = `${fmt(n)} ${srcUnit} = ${fmt(result)} ${dstUnit}`;
+      status.className = 'stool-status ok';
+    }
+
+    catSel.addEventListener('change', fillUnits);
+    valA.addEventListener('input', () => convert('a'));
+    valB.addEventListener('input', () => convert('b'));
+    unitA.addEventListener('change', () => convert('a'));
+    unitB.addEventListener('change', () => convert('a'));
+
+    fillUnits();
+  }
+</script>

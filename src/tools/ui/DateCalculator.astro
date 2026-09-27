@@ -1,0 +1,244 @@
+---
+---
+
+<div class="stool" id="tool-date">
+  <div class="seg" role="tablist" aria-label="Calculator mode">
+    <button type="button" class="seg-btn is-active" role="tab" aria-selected="true" data-tab="diff">Difference between dates</button>
+    <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tab="arith">Add / subtract</button>
+  </div>
+
+  <!-- Difference mode -->
+  <div class="dc-mode" data-mode-diff>
+    <div class="dc-inputs">
+      <div class="field">
+        <label for="dc-d1">Start date</label>
+        <input class="input" id="dc-d1" type="date" data-d1 />
+      </div>
+      <div class="field">
+        <label for="dc-d2">End date</label>
+        <input class="input" id="dc-d2" type="date" data-d2 />
+      </div>
+    </div>
+    <div class="dc-result" data-diff-result hidden>
+      <div class="batch-summary" style="margin-top:0">
+        <div class="stat"><div class="stat-value" data-df-years>—</div><div class="stat-label">Years</div></div>
+        <div class="stat"><div class="stat-value" data-df-months>—</div><div class="stat-label">Months</div></div>
+        <div class="stat"><div class="stat-value" data-df-weeks>—</div><div class="stat-label">Weeks</div></div>
+        <div class="stat"><div class="stat-value accent" data-df-days>—</div><div class="stat-label">Days (total)</div></div>
+      </div>
+      <p class="stool-status ok" data-df-sentence></p>
+    </div>
+  </div>
+
+  <!-- Arithmetic mode -->
+  <div class="dc-mode" data-mode-arith hidden>
+    <div class="dc-inputs">
+      <div class="field">
+        <label for="dc-base">Starting date</label>
+        <input class="input" id="dc-base" type="date" data-base />
+      </div>
+      <div class="field">
+        <label for="dc-op">Operation</label>
+        <select class="select" id="dc-op" data-op>
+          <option value="add" selected>Add</option>
+          <option value="sub">Subtract</option>
+        </select>
+      </div>
+    </div>
+    <div class="dc-inputs">
+      <div class="field">
+        <label for="dc-n-years">Years</label>
+        <input class="input" id="dc-n-years" type="number" min="0" max="500" value="0" data-n-years inputmode="numeric" />
+      </div>
+      <div class="field">
+        <label for="dc-n-months">Months</label>
+        <input class="input" id="dc-n-months" type="number" min="0" max="6000" value="0" data-n-months inputmode="numeric" />
+      </div>
+      <div class="field">
+        <label for="dc-n-days">Days</label>
+        <input class="input" id="dc-n-days" type="number" min="0" max="200000" value="0" data-n-days inputmode="numeric" />
+      </div>
+    </div>
+    <div class="dc-result" data-arith-result hidden>
+      <p class="dc-big">Result: <strong data-arith-date></strong></p>
+      <p class="stool-status" data-arith-note></p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .seg {
+    display: inline-flex;
+    padding: 4px;
+    gap: 4px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel);
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .seg-btn {
+    padding: 8px 16px;
+    border-radius: 9px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    transition: all 0.18s var(--ease);
+  }
+  .seg-btn.is-active {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-fg);
+  }
+
+  .dc-mode {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .dc-inputs {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .dc-inputs .field {
+    min-width: 160px;
+    flex: 1;
+  }
+
+  .dc-result {
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .dc-big {
+    font-size: 1.05rem;
+  }
+
+  .dc-big strong {
+    color: var(--accent);
+    font-family: var(--font-display);
+  }
+</style>
+
+<script>
+  const root = document.getElementById('tool-date');
+  if (root) {
+    const modeDiff = root.querySelector('[data-mode-diff]');
+    const modeArith = root.querySelector('[data-mode-arith]');
+
+    root.querySelectorAll('[data-tab]').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        root.querySelectorAll('[data-tab]').forEach((t) => {
+          t.classList.toggle('is-active', t === tab);
+          t.setAttribute('aria-selected', String(t === tab));
+        });
+        modeDiff.hidden = tab.dataset.tab !== 'diff';
+        modeArith.hidden = tab.dataset.tab !== 'arith';
+      });
+    });
+
+    /* ---------- Difference ---------- */
+    const d1 = root.querySelector('[data-d1]');
+    const d2 = root.querySelector('[data-d2]');
+    const diffResult = root.querySelector('[data-diff-result]');
+
+    function toLocalDate(v) {
+      if (!v) return null;
+      const [y, m, d] = v.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function updateDiff() {
+      const a = toLocalDate(d1.value);
+      const b = toLocalDate(d2.value);
+      if (!a || !b) {
+        diffResult.hidden = true;
+        return;
+      }
+      const [start, end] = a <= b ? [a, b] : [b, a];
+      const totalDays = Math.round((end - start) / 86400000);
+
+      // Calendar breakdown
+      let years = end.getFullYear() - start.getFullYear();
+      let months = end.getMonth() - start.getMonth();
+      let days = end.getDate() - start.getDate();
+      if (days < 0) {
+        months--;
+        days += new Date(end.getFullYear(), end.getMonth(), 0).getDate();
+      }
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+      const wholeMonths = years * 12 + months;
+
+      root.querySelector('[data-df-years]').textContent = years;
+      root.querySelector('[data-df-months]').textContent = wholeMonths;
+      root.querySelector('[data-df-weeks]').textContent = Math.floor(totalDays / 7);
+      root.querySelector('[data-df-days]').textContent = totalDays.toLocaleString('en-US');
+      root.querySelector('[data-df-sentence]').textContent =
+        totalDays === 0
+          ? 'Both dates are the same day.'
+          : `${years} year${years !== 1 ? 's' : ''}, ${months} month${months !== 1 ? 's' : ''} and ${days} day${days !== 1 ? 's' : ''} apart${a > b ? ' (start date is after end date — swapped automatically)' : ''}.`;
+      diffResult.hidden = false;
+    }
+
+    d1.addEventListener('input', updateDiff);
+    d2.addEventListener('input', updateDiff);
+
+    /* ---------- Arithmetic ---------- */
+    const base = root.querySelector('[data-base]');
+    const op = root.querySelector('[data-op]');
+    const nYears = root.querySelector('[data-n-years]');
+    const nMonths = root.querySelector('[data-n-months]');
+    const nDays = root.querySelector('[data-n-days]');
+    const arithResult = root.querySelector('[data-arith-result]');
+    const arithDate = root.querySelector('[data-arith-date]');
+    const arithNote = root.querySelector('[data-arith-note]');
+
+    // Default base date: today
+    const today = new Date();
+    base.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    function updateArith() {
+      const start = toLocalDate(base.value);
+      if (!start) {
+        arithResult.hidden = true;
+        return;
+      }
+      const sign = op.value === 'add' ? 1 : -1;
+      const y = (parseInt(nYears.value, 10) || 0) * sign;
+      const m = (parseInt(nMonths.value, 10) || 0) * sign;
+      const dd = (parseInt(nDays.value, 10) || 0) * sign;
+
+      if (!y && !m && !dd) {
+        arithResult.hidden = true;
+        return;
+      }
+
+      const day = start.getDate();
+      const result = new Date(start.getFullYear(), start.getMonth(), day);
+      result.setFullYear(result.getFullYear() + y);
+      result.setMonth(result.getMonth() + m);
+      // If the target month overflowed (e.g. Jan 31 + 1 month), clamp to month end
+      if (result.getDate() !== day) result.setDate(0);
+      result.setDate(result.getDate() + dd);
+
+      arithDate.textContent = result.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const diffDays = Math.round((result - start) / 86400000);
+      arithNote.textContent = diffDays === 0 ? 'Same day.' : `${Math.abs(diffDays).toLocaleString('en-US')} calendar day${Math.abs(diffDays) > 1 ? 's' : ''} ${diffDays > 0 ? 'later' : 'earlier'}.`;
+      arithNote.className = 'stool-status ok';
+      arithResult.hidden = false;
+    }
+
+    [base, op, nYears, nMonths, nDays].forEach((el) => el.addEventListener('input', updateArith));
+    op.addEventListener('change', updateArith);
+  }
+</script>

@@ -1,16 +1,16 @@
-/** Statistiques de texte — fonction pure, testable. */
+/** Text statistics — pure function, testable. */
 
 /**
- * Convention retenue (documentée dans la FAQ de l'outil) :
- * un mot = suite de lettres/chiffres ; apostrophes et tirets séparent les mots
- * (« l'arbre » compte 2 mots, comme la plupart des correcteurs français).
+ * Counting convention (documented in the tool FAQ):
+ * a word = a run of letters/marks/digits; apostrophes and hyphens inside a word
+ * keep it as ONE word ("don't" and "well-known" each count as one word).
  */
 export function countText(text) {
   const value = typeof text === 'string' ? text : '';
   const chars = [...value].length;
   const charsNoSpaces = [...value.replace(/\s/g, '')].length;
 
-  const words = value.match(/[\p{L}\p{M}\p{N}]+/gu) || [];
+  const words = value.match(/[\p{L}\p{M}\p{N}]+(?:['’-][\p{L}\p{M}\p{N}]+)*/gu) || [];
 
   const sentences = value.match(/[.!?…]+["')\]]*(?=\s|$)/gu) || [];
 

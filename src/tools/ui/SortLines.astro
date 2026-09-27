@@ -1,0 +1,120 @@
+---
+---
+
+<div class="stool" id="tool-sort">
+  <div class="stool-grid">
+    <div class="field">
+      <label for="sl-in">Your list (one item per line)</label>
+      <textarea class="textarea input" id="sl-in" data-input placeholder="banana&#10;apple&#10;cherry…"></textarea>
+    </div>
+    <div class="field">
+      <div class="field-label-row">
+        <label for="sl-out">Sorted result</label>
+        <button type="button" class="btn btn-ghost btn-sm" data-copy>Copy</button>
+      </div>
+      <textarea class="textarea input" id="sl-out" data-output readonly placeholder="Sorted lines appear here"></textarea>
+    </div>
+  </div>
+
+  <div class="stool-toolbar">
+    <div class="seg" role="radiogroup" aria-label="Sort order">
+      <button type="button" class="seg-btn is-active" data-order="az" aria-pressed="true">A → Z</button>
+      <button type="button" class="seg-btn" data-order="za" aria-pressed="false">Z → A</button>
+      <button type="button" class="seg-btn" data-order="num" aria-pressed="false">Numeric</button>
+    </div>
+    <label class="pill-check"><input type="checkbox" checked data-ignore-case /><span class="dot" aria-hidden="true"></span>Ignore case</label>
+    <label class="pill-check"><input type="checkbox" data-trim /><span class="dot" aria-hidden="true"></span>Trim spaces</label>
+    <button type="button" class="btn btn-accent btn-sm" data-go>Sort lines</button>
+  </div>
+  <p class="stool-status" data-status aria-live="polite"></p>
+</div>
+
+<style>
+  .field-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .field-label-row label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .seg {
+    display: inline-flex;
+    padding: 4px;
+    gap: 4px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel);
+  }
+  .seg-btn {
+    padding: 7px 14px;
+    border-radius: 9px;
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: var(--muted);
+    transition: all 0.18s var(--ease);
+  }
+  .seg-btn.is-active {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-fg);
+  }
+</style>
+
+<script>
+  import { copyText, toast } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-sort');
+  if (root) {
+    const input = root.querySelector('[data-input]');
+    const output = root.querySelector('[data-output]');
+    const status = root.querySelector('[data-status]');
+    const ignoreCase = root.querySelector('[data-ignore-case]');
+    const trimBox = root.querySelector('[data-trim]');
+    let order = 'az';
+
+    root.querySelectorAll('[data-order]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        order = btn.dataset.order;
+        root.querySelectorAll('[data-order]').forEach((b) => {
+          b.classList.toggle('is-active', b === btn);
+          b.setAttribute('aria-pressed', String(b === btn));
+        });
+      });
+    });
+
+    root.querySelector('[data-go]').addEventListener('click', () => {
+      let lines = input.value.split('\n').filter((l) => l.trim() !== '');
+      if (!lines.length) {
+        status.textContent = 'Paste some lines to sort first.';
+        status.className = 'stool-status err';
+        return;
+      }
+      if (trimBox.checked) lines = lines.map((l) => l.trim());
+
+      const collator = new Intl.Collator(undefined, { sensitivity: ignoreCase.checked ? 'base' : 'variant' });
+      if (order === 'num') {
+        const num = (l) => {
+          const m = l.match(/-?\d+(\.\d+)?/);
+          return m ? parseFloat(m[0]) : 0;
+        };
+        lines.sort((a, b) => num(a) - num(b));
+      } else {
+        lines.sort(collator.compare);
+        if (order === 'za') lines.reverse();
+      }
+
+      output.value = lines.join('\n');
+      status.textContent = `${lines.length} lines sorted.`;
+      status.className = 'stool-status ok';
+    });
+
+    root.querySelector('[data-copy]').addEventListener('click', async () => {
+      if (!output.value) return;
+      const ok = await copyText(output.value);
+      toast(ok ? 'Copied to clipboard.' : 'Could not copy automatically.', ok ? 'success' : 'error');
+    });
+  }
+</script>

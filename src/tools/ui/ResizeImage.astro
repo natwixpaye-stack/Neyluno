@@ -4,19 +4,26 @@ import Icon from '../../components/Icon.astro';
 
 <div class="ftool" id="tool-resize">
   <div class="rz-options">
+    <div class="preset-row" role="group" aria-label="Resize presets">
+      <button type="button" class="preset" data-preset="1280">Email (≤ 1280 px)</button>
+      <button type="button" class="preset" data-preset="1920">Website (≤ 1920 px)</button>
+      <button type="button" class="preset" data-preset="1080">Social (≤ 1080 px)</button>
+      <button type="button" class="preset" data-preset="2560">High quality (≤ 2560 px)</button>
+    </div>
+
     <div class="rz-row">
       <div class="field" style="flex:1">
         <span class="field-label">Mode</span>
-        <div class="seg" role="radiogroup" aria-label="Mode de redimensionnement">
+        <div class="seg" role="radiogroup" aria-label="Resize mode">
           <button type="button" class="seg-btn is-active" data-mode-btn="dims" aria-pressed="true">Dimensions</button>
-          <button type="button" class="seg-btn" data-mode-btn="percent" aria-pressed="false">Pourcentage</button>
+          <button type="button" class="seg-btn" data-mode-btn="percent" aria-pressed="false">Percentage</button>
         </div>
       </div>
 
       <div class="field" style="flex:1">
-        <span class="field-label">Format de sortie</span>
-        <select class="select" data-format aria-label="Format de sortie">
-          <option value="keep">Identique à l'original</option>
+        <span class="field-label">Output format</span>
+        <select class="select" data-format aria-label="Output format">
+          <option value="keep">Same as original</option>
           <option value="image/jpeg">JPG</option>
           <option value="image/png">PNG</option>
           <option value="image/webp" selected>WebP</option>
@@ -26,39 +33,39 @@ import Icon from '../../components/Icon.astro';
 
     <div class="rz-dims" data-mode-dims>
       <div class="field">
-        <label for="rz-w">Largeur (px)</label>
+        <label for="rz-w">Width (px)</label>
         <input class="input" type="number" id="rz-w" min="1" max="8192" inputmode="numeric" data-width placeholder="—" />
       </div>
       <label class="pill-check rz-lock">
         <input type="checkbox" checked data-lock />
         <span class="dot" aria-hidden="true"></span>
-        Ratio verrouillé
+        Keep ratio
       </label>
       <div class="field">
-        <label for="rz-h">Hauteur (px)</label>
+        <label for="rz-h">Height (px)</label>
         <input class="input" type="number" id="rz-h" min="1" max="8192" inputmode="numeric" data-height placeholder="—" />
       </div>
     </div>
 
     <div class="rz-percent" data-mode-percent hidden>
-      <div class="pct-presets" role="group" aria-label="Pourcentages rapides">
+      <div class="pct-presets" role="group" aria-label="Quick percentages">
         <button type="button" class="pct-btn" data-pct="25">25 %</button>
         <button type="button" class="pct-btn" data-pct="50">50 %</button>
         <button type="button" class="pct-btn" data-pct="75">75 %</button>
         <button type="button" class="pct-btn is-active" data-pct="100">100 %</button>
       </div>
       <div class="field" style="max-width:160px">
-        <label for="rz-pct">Personnalisé (%)</label>
+        <label for="rz-pct">Custom (%)</label>
         <input class="input" type="number" id="rz-pct" min="1" max="500" value="100" inputmode="numeric" data-pct-input />
       </div>
     </div>
 
     <div class="rz-quality" data-quality-row hidden>
-      <label for="rz-q">Qualité <output data-q-out>85 %</output></label>
+      <label for="rz-q">Quality <output data-q-out>85 %</output></label>
       <input type="range" id="rz-q" min="10" max="100" value="85" data-quality />
     </div>
 
-    <p class="rz-info" data-info aria-live="polite">Ajoutez une image pour commencer.</p>
+    <p class="rz-info" data-info aria-live="polite">Add an image to get started.</p>
   </div>
 
   <div data-notice hidden></div>
@@ -66,20 +73,27 @@ import Icon from '../../components/Icon.astro';
   <div class="dropzone" data-dropzone>
     <input type="file" data-file-input hidden />
     <span class="dz-icon" aria-hidden="true"><Icon name="upload" size={24} /></span>
-    <h3>Glissez-déposez votre image ici</h3>
-    <p>ou cliquez pour parcourir · JPG, PNG, WebP · jusqu'à 50 Mo</p>
-    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choisir une image</span>
+    <h3>Drag & drop your image here</h3>
+    <p>or click to browse · JPG, PNG, WebP · up to 50 MB</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choose an image</span>
   </div>
 
   <div class="ftool-actions">
     <span class="ftool-count" data-count aria-live="polite"></span>
     <span class="ftool-actions-btns">
-      <button type="button" class="btn btn-ghost btn-sm" data-clear-all hidden>Réinitialiser</button>
-      <button type="button" class="btn btn-accent btn-sm" data-go hidden>Redimensionner</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-clear-all hidden>Start over</button>
+      <button type="button" class="btn btn-accent btn-sm" data-go hidden>Resize</button>
     </span>
   </div>
 
-  <ul class="file-list" data-file-list role="list" aria-label="Image à redimensionner"></ul>
+  <ul class="file-list" data-file-list role="list" aria-label="Image to resize"></ul>
+
+  <div class="handoff-chip" data-handoff hidden>
+    <Icon name="spark" size={16} />
+    <span>Continue with <strong data-handoff-name></strong> from the previous tool?</span>
+    <button type="button" class="btn btn-sm btn-ghost" data-handoff-use>Use this file</button>
+    <button type="button" class="icon-btn" data-handoff-dismiss aria-label="Dismiss">✕</button>
+  </div>
 </div>
 
 <style>
@@ -199,6 +213,7 @@ import Icon from '../../components/Icon.astro';
   import { mountFileTool } from '../../lib/fileui.js';
   import { decodeImage, renderToBlob, renameWithExt, scaleDimensions } from '../../lib/image.js';
   import { bindRangeFill, toast } from '../../lib/ui.js';
+  import { saveHandoff, mountHandoffChip } from '../../lib/handoff.js';
 
   const root = document.getElementById('tool-resize');
   if (root) {
@@ -245,8 +260,35 @@ import Icon from '../../components/Icon.astro';
       updateInfo();
     });
 
-    // ⚠️ `api` n'existe pas encore pendant le premier onListChange (TDZ) :
-    // on suit donc la liste via une variable locale.
+    // Presets: set a max width target (mode dims) and switch to dims mode
+    root.querySelectorAll('.preset[data-preset]').forEach((p) => {
+      p.addEventListener('click', () => {
+        root.querySelectorAll('.preset[data-preset]').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+        p.setAttribute('aria-pressed', 'true');
+        mode = 'dims';
+        root.querySelectorAll('[data-mode-btn]').forEach((b) => {
+          const on = b.dataset.modeBtn === 'dims';
+          b.classList.toggle('is-active', on);
+          b.setAttribute('aria-pressed', String(on));
+        });
+        modeDims.hidden = false;
+        modePercent.hidden = true;
+        widthInput.value = p.dataset.preset;
+        const item = currentItems[0];
+        if (item?._dims) {
+          const w = Number(p.dataset.preset);
+          if (w >= item._dims.width) {
+            widthInput.value = item._dims.width;
+            heightInput.value = item._dims.height;
+            toast('Image already fits — keeping original dimensions.', 'info');
+          }
+        }
+        updateInfo();
+      });
+    });
+
+    // ⚠️ `api` does not exist yet during the first onListChange (TDZ):
+    // track the list through a local variable instead.
     let currentItems = [];
 
     const api = mountFileTool(root, {
@@ -255,7 +297,7 @@ import Icon from '../../components/Icon.astro';
       multiple: false,
       autoProcess: false,
       process: async (item) => {
-        if (!item._dims) throw new Error('Dimensions de l’image introuvables. Réessayez avec un autre fichier.');
+        if (!item._dims) throw new Error('Could not read the image dimensions. Try another file.');
         const { width: ow, height: oh } = item._dims;
         let target;
         if (mode === 'percent') {
@@ -263,7 +305,7 @@ import Icon from '../../components/Icon.astro';
         } else {
           const tw = parseInt(widthInput.value, 10);
           const th = parseInt(heightInput.value, 10);
-          if (!tw && !th) throw new Error('Indiquez une largeur ou une hauteur cible.');
+          if (!tw && !th) throw new Error('Enter a target width or height.');
           if (lockInput.checked) {
             if (tw) target = { width: tw, height: Math.max(1, Math.round((tw * oh) / ow)) };
             else target = { width: Math.max(1, Math.round((th * ow) / oh)), height: th };
@@ -272,7 +314,7 @@ import Icon from '../../components/Icon.astro';
           }
         }
         if (target.width > 8192 || target.height > 8192) {
-          throw new Error('Dimensions cibles trop grandes (maximum 8192 px par côté).');
+          throw new Error('Target dimensions too large (maximum 8192 px per side).');
         }
         let format = formatSel.value;
         if (format === 'keep') {
@@ -303,14 +345,17 @@ import Icon from '../../components/Icon.astro';
               item._dims = { width: img.width, height: img.height };
               img.close();
               if (lockInput.checked) {
-                widthInput.value = img.width;
-                heightInput.value = img.height;
+                widthInput.value = item._dims.width;
+                heightInput.value = item._dims.height;
               }
               updateInfo();
             })
             .catch(() => {
-              /* l'erreur sera levée au moment de la conversion, avec un message clair */
+              /* the error will surface at processing time with a clear message */
             });
+        }
+        if (item?.status === 'done' && item.result?.blob) {
+          saveHandoff({ fromTool: 'image-resizer', name: item.result.name, type: item.result.blob.type, blob: item.result.blob });
         }
         updateInfo();
       },
@@ -343,33 +388,35 @@ import Icon from '../../components/Icon.astro';
     function updateInfo() {
       const item = currentItems[0];
       if (!item?._dims) {
-        info.textContent = item ? 'Lecture des dimensions…' : 'Ajoutez une image pour commencer.';
+        info.textContent = item ? 'Reading dimensions…' : 'Add an image to get started.';
         return;
       }
       const { width: ow, height: oh } = item._dims;
-      let txt = `Original : ${ow} × ${oh} px`;
+      let txt = `Original: ${ow} × ${oh} px`;
       if (mode === 'percent') {
         const t = scaleDimensions(ow, oh, Number(pctInput.value) || 100);
-        txt += ` → Sortie : ${t.width} × ${t.height} px`;
+        txt += ` → Output: ${t.width} × ${t.height} px`;
       } else {
         const w = widthInput.value || '?';
         const h = heightInput.value || '?';
-        txt += ` → Sortie : ${w} × ${h} px`;
+        txt += ` → Output: ${w} × ${h} px`;
       }
       info.textContent = txt;
     }
 
     goBtn.addEventListener('click', async () => {
       goBtn.disabled = true;
-      goBtn.textContent = 'Traitement…';
+      goBtn.textContent = 'Working…';
       try {
         await api.processAll();
         const item = api.items[0];
-        if (item?.status === 'done') toast('Image redimensionnée. Vous pouvez la télécharger.', 'success');
+        if (item?.status === 'done') toast('Image resized — you can download it now.', 'success');
       } finally {
         goBtn.disabled = false;
-        goBtn.textContent = 'Redimensionner';
+        goBtn.textContent = 'Resize';
       }
     });
+
+    mountHandoffChip(root, api, 'image/');
   }
 </script>

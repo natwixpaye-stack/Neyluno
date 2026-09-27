@@ -1,0 +1,100 @@
+---
+---
+
+<div class="stool" id="tool-case">
+  <div class="stool-grid">
+    <div class="field">
+      <label for="cc-in">Your text</label>
+      <textarea class="textarea input" id="cc-in" data-input placeholder="Paste or type your text…"></textarea>
+    </div>
+    <div class="field">
+      <div class="field-label-row">
+        <label for="cc-out">Result</label>
+        <button type="button" class="btn btn-ghost btn-sm" data-copy>Copy</button>
+      </div>
+      <textarea class="textarea input" id="cc-out" data-output readonly placeholder="The converted text appears here"></textarea>
+    </div>
+  </div>
+
+  <div class="stool-toolbar" role="group" aria-label="Case conversions">
+    <button type="button" class="btn btn-ghost btn-sm" data-case="upper">UPPERCASE</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-case="lower">lowercase</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-case="title">Title Case</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-case="sentence">Sentence case</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-case="camel">camelCase</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-case="pascal">PascalCase</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-case="snake">snake_case</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-case="kebab">kebab-case</button>
+  </div>
+  <p class="stool-status" data-status aria-live="polite"></p>
+</div>
+
+<style>
+  .field-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .field-label-row label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+</style>
+
+<script>
+  import { copyText, toast } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-case');
+  if (root) {
+    const input = root.querySelector('[data-input]');
+    const output = root.querySelector('[data-output]');
+    const status = root.querySelector('[data-status]');
+
+    /** Split text into words, handling spaces, punctuation and case boundaries. */
+    function words(text) {
+      return (
+        String(text)
+          // split camelCase / PascalCase boundaries
+          .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+          .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+          .split(/[^A-Za-z0-9]+/)
+          .filter(Boolean)
+      );
+    }
+
+    const transforms = {
+      upper: (t) => t.toUpperCase(),
+      lower: (t) => t.toLowerCase(),
+      title: (t) => t.replace(/\S+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()),
+      sentence: (t) =>
+        t
+          .toLowerCase()
+          .replace(/(^\s*\w|[.!?]\s+\w)/g, (c) => c.toUpperCase()),
+      camel: (t) => words(t).map((w, i) => (i === 0 ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())).join(''),
+      pascal: (t) => words(t).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(''),
+      snake: (t) => words(t).map((w) => w.toLowerCase()).join('_'),
+      kebab: (t) => words(t).map((w) => w.toLowerCase()).join('-'),
+    };
+
+    root.querySelectorAll('[data-case]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (!input.value.trim()) {
+          status.textContent = 'Type or paste some text first.';
+          status.className = 'stool-status err';
+          return;
+        }
+        output.value = transforms[btn.dataset.case](input.value);
+        status.textContent = '';
+        status.className = 'stool-status';
+      });
+    });
+
+    root.querySelector('[data-copy]').addEventListener('click', async () => {
+      if (!output.value) return;
+      const ok = await copyText(output.value);
+      toast(ok ? 'Copied to clipboard.' : 'Could not copy automatically.', ok ? 'success' : 'error');
+    });
+  }
+</script>

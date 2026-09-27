@@ -15,7 +15,7 @@ export function formatNumber(value, maxDecimals = 4) {
   if (!Number.isFinite(value)) return '—';
   const factor = 10 ** maxDecimals;
   const rounded = Math.round(value * factor) / factor;
-  return rounded.toLocaleString('fr-FR', { maximumFractionDigits: maxDecimals });
+  return rounded.toLocaleString('en-US', { maximumFractionDigits: maxDecimals });
 }
 
 export function formatPercent(value, maxDecimals = 2) {

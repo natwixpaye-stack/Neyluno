@@ -1,0 +1,132 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
+import FAQ from '../../components/FAQ.astro';
+import ToolCard from '../../components/ToolCard.astro';
+import { guides, getGuide } from '../../data/guides.js';
+import { getTool } from '../../data/tools.js';
+
+export function getStaticPaths() {
+  return guides.map((g) => ({ params: { slug: g.slug }, props: { guide: g } }));
+}
+
+const { guide } = Astro.props;
+const path = `/guides/${guide.slug}/`;
+const related = (guide.relatedTools || []).map((s) => getTool(s)).filter(Boolean);
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: guide.title,
+    description: guide.description,
+    url: new URL(path, import.meta.env.SITE).href,
+    dateModified: guide.updated,
+    inLanguage: 'en',
+  },
+  ...(guide.faq?.length
+    ? [{
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: guide.faq.map((f) => ({
+          '@type': 'Question',
+          name: f.q,
+          acceptedAnswer: { '@type': 'Answer', text: f.a },
+        })),
+      }]
+    : []),
+];
+---
+
+<BaseLayout title={guide.title} description={guide.description} path={path} jsonLd={jsonLd}>
+  <div class="container guide-page">
+    <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Guides', href: '/guides/' }, { label: guide.title }]} />
+
+    <header class="guide-head">
+      <h1>{guide.title}</h1>
+      <p class="guide-updated">Updated {guide.updated}</p>
+    </header>
+
+    <article class="prose guide-body" set:html={guide.html} />
+
+    {guide.faq?.length > 0 && <FAQ items={guide.faq} title="FAQ" />}
+
+    {related.length > 0 && (
+      <section class="guide-tools" aria-label="Tools mentioned in this guide">
+        <h2>Tools used in this guide</h2>
+        <div class="tools-grid">
+          {related.map((t) => <ToolCard tool={t} compact />)}
+        </div>
+      </section>
+    )}
+
+    <p class="guide-back"><a href="/guides/">← All guides</a></p>
+  </div>
+</BaseLayout>
+
+<style>
+  .guide-page {
+    padding-top: 26px;
+    padding-bottom: 50px;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .guide-head h1 {
+    font-size: clamp(1.7rem, 4vw, 2.6rem);
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+
+  .guide-updated {
+    color: var(--faint);
+    font-size: 0.83rem;
+  }
+
+  .guide-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 18px 0;
+    font-size: 0.9rem;
+  }
+
+  .guide-body th,
+  .guide-body td {
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    text-align: left;
+  }
+
+  .guide-body th {
+    background: var(--panel);
+    font-weight: 600;
+  }
+
+  .guide-body pre {
+    padding: 16px;
+    border-radius: 10px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    overflow-x: auto;
+    font-size: 0.82rem;
+  }
+
+  .guide-tools {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+  }
+
+  .guide-back a {
+    color: var(--muted);
+    font-weight: 600;
+  }
+</style>

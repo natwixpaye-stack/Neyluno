@@ -1,0 +1,128 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import { site } from '../data/site.js';
+import { tools } from '../data/tools.js';
+
+const values = [
+  {
+    icon: 'bolt',
+    title: 'Fast by design',
+    text: 'No uploads, no server round-trips, no queues. Your browser does the work the moment you drop a file.',
+  },
+  {
+    icon: 'lock',
+    title: 'Private by architecture',
+    text: 'Privacy here is not a promise, it is a property of the system: files are processed on your device and there is no code path that could send them anywhere.',
+  },
+  {
+    icon: 'check',
+    title: 'Free without traps',
+    text: 'No account wall, no “sign up to download”, no fake progress bar. Every tool is fully usable in one visit.',
+  },
+];
+---
+
+<BaseLayout
+  title="About"
+  description={`${site.name}: free web tools that process your files directly in the browser. No account, no upload, no tracking.`}
+  path="/about/"
+>
+  <div class="container about-page">
+    <span class="eyebrow">About</span>
+    <h1>Useful tools, without the hidden cost.</h1>
+
+    <div class="prose">
+      <p>
+        {site.name} started from a simple observation: for a three-second task — converting an image,
+        merging two PDFs, counting words — you too often end up on slow sites covered in intrusive ads,
+        uploading your files to their servers to “process” what your browser already knows how to do.
+      </p>
+
+      <h2>The principle: your browser does the work</h2>
+      <p>
+        Modern browsers ship everything needed: an image rendering engine (Canvas), a cryptographic random
+        generator (Web Crypto), and robust open-source libraries like <strong>pdf-lib</strong> to manipulate PDFs.
+        {site.name} assembles these building blocks so every tool works <strong>entirely on your device</strong>.
+      </p>
+      <p>
+        The consequences are concrete: tools are fast (no server round-trip), private (nothing is transmitted
+        or stored), and free (no compute bill to pass on).
+      </p>
+
+      <h2>What we will not do</h2>
+      <ul>
+        <li>No mandatory account, no “sign up to unlock” features.</li>
+        <li>No uploading of your files to a server.</li>
+        <li>No invasive tracking or selling of data. By default, nothing is collected.</li>
+        <li>No dark patterns: no fake countdowns, no invented urgency, no misleading buttons.</li>
+      </ul>
+
+      <h2>Today and next</h2>
+      <p>
+        {tools.length} tools are available today. The roadmap follows one rule: add a tool only when it can be
+        excellent — fast, reliable, local, genuinely useful. Quality over quantity, always.
+      </p>
+      <p>
+        Paid tiers (more power, team features) may exist one day to sustain the project — but the core tools
+        will remain free and local.
+      </p>
+    </div>
+
+    <div class="about-cards">
+      {values.map((v) => (
+        <div class="card about-card">
+          <span class="ac-icon" aria-hidden="true"><Icon name={v.icon} size={20} /></span>
+          <h2>{v.title}</h2>
+          <p>{v.text}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .about-page {
+    padding-top: clamp(40px, 7vw, 72px);
+    padding-bottom: 50px;
+    max-width: 820px;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 4.6vw, 3rem);
+    margin-bottom: 26px;
+  }
+
+  .about-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+    margin-top: 44px;
+  }
+
+  .about-card {
+    padding: 22px;
+  }
+
+  .ac-icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    margin-bottom: 12px;
+  }
+
+  .about-card h2 {
+    font-size: 1.02rem;
+    margin-bottom: 6px;
+  }
+
+  .about-card p {
+    color: var(--muted);
+    font-size: 0.87rem;
+    line-height: 1.55;
+  }
+</style>

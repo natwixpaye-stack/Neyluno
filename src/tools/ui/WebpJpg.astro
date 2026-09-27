@@ -1,0 +1,155 @@
+---
+import Icon from '../../components/Icon.astro';
+---
+
+<div class="ftool" id="tool-webp-jpg">
+  <div class="ftool-options">
+    <div class="preset-row" role="group" aria-label="Quality presets">
+      <button type="button" class="preset" data-preset="50">Small file</button>
+      <button type="button" class="preset" data-preset="75">Website</button>
+      <button type="button" class="preset" data-preset="82" aria-pressed="true">Balanced</button>
+      <button type="button" class="preset" data-preset="92">High quality</button>
+    </div>
+    <div class="opt">
+      <label for="wj-quality">Conversion quality <output id="wj-out" data-quality-out>82 %</output></label>
+      <input type="range" id="wj-quality" min="10" max="100" value="82" step="1" data-quality aria-describedby="wj-hint" />
+      <p class="opt-hint" id="wj-hint">Between 75 and 85 %, the loss is invisible on most photos.</p>
+    </div>
+  </div>
+
+  <div data-notice hidden></div>
+
+  <div class="dropzone" data-dropzone>
+    <input type="file" data-file-input multiple hidden />
+    <span class="dz-icon" aria-hidden="true"><Icon name="upload" size={24} /></span>
+    <h3>Drag & drop your WebP images here</h3>
+    <p>or click to browse · WebP · up to 50 MB per file</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choose images</span>
+  </div>
+
+  <div class="ftool-actions">
+    <span class="ftool-count" data-count aria-live="polite"></span>
+    <span class="ftool-actions-btns">
+      <button type="button" class="btn btn-ghost btn-sm" data-clear-all hidden>Start over</button>
+      <button type="button" class="btn btn-accent btn-sm" data-download-all hidden>Download all (ZIP)</button>
+    </span>
+  </div>
+
+  <ul class="file-list" data-file-list role="list" aria-label="Files being converted"></ul>
+
+  <div class="batch-summary" data-summary hidden>
+    <div class="stat"><div class="stat-value" data-sum-count>—</div><div class="stat-label">Files</div></div>
+    <div class="stat"><div class="stat-value" data-sum-done>—</div><div class="stat-label">Done</div></div>
+    <div class="stat"><div class="stat-value" data-sum-failed>—</div><div class="stat-label">Failed</div></div>
+    <div class="stat"><div class="stat-value" data-sum-before>—</div><div class="stat-label">Before</div></div>
+    <div class="stat"><div class="stat-value" data-sum-after>—</div><div class="stat-label">After</div></div>
+    <div class="stat"><div class="stat-value accent" data-sum-saved>—</div><div class="stat-label">Saved</div></div>
+  </div>
+
+  <div class="handoff-chip" data-handoff hidden>
+    <Icon name="spark" size={16} />
+    <span>Continue with <strong data-handoff-name></strong> from the previous tool?</span>
+    <button type="button" class="btn btn-sm btn-ghost" data-handoff-use>Use this file</button>
+    <button type="button" class="icon-btn" data-handoff-dismiss aria-label="Dismiss">✕</button>
+  </div>
+</div>
+
+<style>
+  .ftool-options {
+    margin-bottom: 22px;
+  }
+  .opt label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .opt output {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .opt-hint {
+    font-size: 0.78rem;
+    color: var(--faint);
+    margin-top: 8px;
+  }
+  .ftool-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+  .ftool-count {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .ftool-actions-btns {
+    display: flex;
+    gap: 10px;
+  }
+</style>
+
+<script>
+  import { mountFileTool } from '../../lib/fileui.js';
+  import { decodeImage, renderToBlob, renameWithExt } from '../../lib/image.js';
+  import { bindRangeFill, toast } from '../../lib/ui.js';
+  import { saveHandoff, mountHandoffChip } from '../../lib/handoff.js';
+
+  const root = document.getElementById('tool-webp-jpg');
+  if (root) {
+    const quality = root.querySelector('[data-quality]');
+    const out = root.querySelector('[data-quality-out]');
+    bindRangeFill(quality);
+    const syncOut = () => (out.textContent = `${quality.value} %`);
+    quality.addEventListener('input', syncOut);
+    syncOut();
+
+    root.querySelectorAll('.preset').forEach((p) => {
+      p.addEventListener('click', () => {
+        quality.value = p.dataset.preset;
+        root.querySelectorAll('.preset').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+        p.setAttribute('aria-pressed', 'true');
+        bindRangeFill(quality);
+        syncOut();
+        quality.dispatchEvent(new Event('change'));
+      });
+    });
+
+    const api = mountFileTool(root, {
+      acceptTypes: ['image/webp'],
+      acceptExts: ['.webp'],
+      summary: true,
+      process: async (item) => {
+        const img = await decodeImage(item.file);
+        try {
+          const blob = await renderToBlob(img.source, {
+            width: img.width,
+            height: img.height,
+            format: 'image/jpeg',
+            quality: Number(quality.value) / 100,
+          });
+          return { blob, name: renameWithExt(item.file.name, 'jpg') };
+        } finally {
+          img.close();
+        }
+      },
+      onListChange: (items) => {
+        const last = [...items].reverse().find((i) => i.status === 'done' && i.result?.blob);
+        if (last) saveHandoff({ fromTool: 'webp-to-jpg', name: last.result.name, type: last.result.blob.type, blob: last.result.blob });
+      },
+    });
+
+    quality.addEventListener('change', async () => {
+      if (!api.items.length) return;
+      for (const item of api.items) await api.processItem(item);
+      toast(`Conversion re-run at ${quality.value} % quality.`, 'success');
+    });
+
+    mountHandoffChip(root, api, 'image/');
+  }
+</script>

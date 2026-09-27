@@ -1,0 +1,84 @@
+---
+/** One static page per tool, generated from the registry. */
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import { tools } from '../../data/tools.js';
+
+import JpgWebp from '../../tools/ui/JpgWebp.astro';
+import PngWebp from '../../tools/ui/PngWebp.astro';
+import WebpJpg from '../../tools/ui/WebpJpg.astro';
+import JpgPng from '../../tools/ui/JpgPng.astro';
+import CompressImage from '../../tools/ui/CompressImage.astro';
+import ResizeImage from '../../tools/ui/ResizeImage.astro';
+import RotateImage from '../../tools/ui/RotateImage.astro';
+import CropImage from '../../tools/ui/CropImage.astro';
+import FaviconGenerator from '../../tools/ui/FaviconGenerator.astro';
+import ImageToPdf from '../../tools/ui/ImageToPdf.astro';
+import MergePdf from '../../tools/ui/MergePdf.astro';
+import SplitPdf from '../../tools/ui/SplitPdf.astro';
+import CompressPdf from '../../tools/ui/CompressPdf.astro';
+import RotatePdf from '../../tools/ui/RotatePdf.astro';
+import PdfToImage from '../../tools/ui/PdfToImage.astro';
+import WordCountTool from '../../tools/ui/WordCountTool.astro';
+import CaseConverter from '../../tools/ui/CaseConverter.astro';
+import SortLines from '../../tools/ui/SortLines.astro';
+import DedupeLines from '../../tools/ui/DedupeLines.astro';
+import JsonFormatter from '../../tools/ui/JsonFormatter.astro';
+import Base64Tool from '../../tools/ui/Base64Tool.astro';
+import UrlTool from '../../tools/ui/UrlTool.astro';
+import UuidGenerator from '../../tools/ui/UuidGenerator.astro';
+import TimestampConverter from '../../tools/ui/TimestampConverter.astro';
+import RegexTester from '../../tools/ui/RegexTester.astro';
+import PercentTool from '../../tools/ui/PercentTool.astro';
+import UnitConverter from '../../tools/ui/UnitConverter.astro';
+import DateCalculator from '../../tools/ui/DateCalculator.astro';
+import QrTool from '../../tools/ui/QrTool.astro';
+import PasswordTool from '../../tools/ui/PasswordTool.astro';
+
+const UI_MAP = {
+  'image-compressor': CompressImage,
+  'image-resizer': ResizeImage,
+  'image-rotator': RotateImage,
+  'image-cropper': CropImage,
+  'favicon-generator': FaviconGenerator,
+  'jpg-to-webp': JpgWebp,
+  'png-to-webp': PngWebp,
+  'webp-to-jpg': WebpJpg,
+  'jpg-to-png': JpgPng,
+  'image-to-pdf': ImageToPdf,
+  'merge-pdf': MergePdf,
+  'split-pdf': SplitPdf,
+  'compress-pdf': CompressPdf,
+  'rotate-pdf': RotatePdf,
+  'pdf-to-image': PdfToImage,
+  'word-counter': WordCountTool,
+  'case-converter': CaseConverter,
+  'sort-lines': SortLines,
+  'remove-duplicate-lines': DedupeLines,
+  'json-formatter': JsonFormatter,
+  'base64-encode-decode': Base64Tool,
+  'url-encode-decode': UrlTool,
+  'uuid-generator': UuidGenerator,
+  'timestamp-converter': TimestampConverter,
+  'regex-tester': RegexTester,
+  'percentage-calculator': PercentTool,
+  'unit-converter': UnitConverter,
+  'date-calculator': DateCalculator,
+  'qr-code-generator': QrTool,
+  'password-generator': PasswordTool,
+};
+
+export function getStaticPaths() {
+  return tools.map((tool) => ({ params: { slug: tool.slug }, props: { tool } }));
+}
+
+const { tool } = Astro.props;
+const UI = UI_MAP[tool.slug];
+
+if (!UI) {
+  throw new Error(`Tool without an interface: ${tool.slug}`);
+}
+---
+
+<ToolLayout tool={tool}>
+  <UI />
+</ToolLayout>

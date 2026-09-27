@@ -37,7 +37,8 @@ function resolveInternal(href) {
 }
 
 for (const file of htmlFiles) {
-  const html = readFileSync(file, 'utf8');
+  // Code/pre blocks may contain escaped example markup — not real links.
+  const html = readFileSync(file, 'utf8').replace(/<(pre|code)[\s\S]*?<\/\1>/g, '');
   const rel = file.replace(DIST, '');
 
   // --- liens + assets ---

@@ -1,9 +1,10 @@
 /**
- * Moteur partagé des outils à fichiers :
- * dropzone accessible, validation, liste, statuts, suppression, réorganisation, ZIP.
+ * Shared engine for file-based tools:
+ * accessible dropzone, validation, list, statuses, removal, reordering, ZIP.
  *
- * Usage : mountFileTool(rootEl, config)
- * config.process(file) → { blob, name, meta }  (ou lève une Error au message utilisateur)
+ * Usage: mountFileTool(rootEl, config)
+ * config.process(file|item) → { blob, name, meta }  (or throws an Error with a user-facing message)
+ * config.summary === true → the engine maintains a batch summary in [data-summary]
  */
 import { validateFile, MAX_FILE_BYTES } from './files.js';
 import { formatBytes } from './format.js';
@@ -21,8 +22,10 @@ export function mountFileTool(root, config = {}) {
     reorderable = false,
     process = null,
     autoProcess = true,
-    itemMeta = null, // fn(item) → html meta additionnel (ex. nb de pages)
+    itemMeta = null, // fn(item) → extra meta html (e.g. page count)
     onListChange = () => {},
+    summary = false,
+    onHandoff = null, // fn(item) called when an item is done
   } = config;
 
   const input = root.querySelector('[data-file-input]');
@@ -32,6 +35,7 @@ export function mountFileTool(root, config = {}) {
   const clearBtn = root.querySelector('[data-clear-all]');
   const zipBtn = root.querySelector('[data-download-all]');
   const countEl = root.querySelector('[data-count]');
+  const summaryEl = summary ? root.querySelector('[data-summary]') : null;
 
   if (input && (acceptTypes.length || acceptExts.length)) {
     const accept = [...acceptTypes, ...acceptExts].join(',');
@@ -40,7 +44,7 @@ export function mountFileTool(root, config = {}) {
 
   const state = { items: [] };
 
-  /* ---------- Notifications inline ---------- */
+  /* ---------- Inline notices ---------- */
   function showNotice(message, type = 'error') {
     if (!noticeEl) return;
     noticeEl.innerHTML = '';
@@ -56,7 +60,7 @@ export function mountFileTool(root, config = {}) {
     noticeEl.appendChild(div);
   }
 
-  /* ---------- Ajout de fichiers ---------- */
+  /* ---------- Adding files ---------- */
   function addFiles(fileList) {
     const files = Array.from(fileList || []);
     if (!files.length) return;
@@ -65,7 +69,7 @@ export function mountFileTool(root, config = {}) {
 
     for (const file of files) {
       if (state.items.length >= maxFiles) {
-        rejected.push(`Limite de ${maxFiles} fichiers atteinte — « ${file.name} » n'a pas été ajouté.`);
+        rejected.push(`Limit of ${maxFiles} files reached — “${file.name}” was not added.`);
         continue;
       }
       const check = validateFile(file, { acceptTypes, acceptExts, maxBytes: MAX_FILE_BYTES });
@@ -81,7 +85,7 @@ export function mountFileTool(root, config = {}) {
     }
 
     if (rejected.length) {
-      showNotice(rejected[0] + (rejected.length > 1 ? ` (+ ${rejected.length - 1} autre(s) fichier(s) refusé(s))` : ''), 'error');
+      showNotice(rejected[0] + (rejected.length > 1 ? ` (+${rejected.length - 1} more file(s) rejected)` : ''), 'error');
       toast(rejected[0], 'error');
     } else {
       showNotice('');
@@ -100,12 +104,12 @@ export function mountFileTool(root, config = {}) {
     };
   }
 
-  /* ---------- Rendu d'un item ---------- */
+  /* ---------- Item rendering ---------- */
   function renderItem(item) {
     const el = document.createElement('li');
     el.className = 'file-item';
     el.dataset.id = item.id;
-    if (reorderable) el.draggable = false; // le drag passe par la poignée
+    if (reorderable) el.draggable = false; // reordering goes through the buttons
 
     const isImage = item.file.type.startsWith('image/');
     const thumbHtml = withThumb && isImage
@@ -145,8 +149,8 @@ export function mountFileTool(root, config = {}) {
         sync();
       };
       actions.insertAdjacentHTML('afterbegin', `
-        <button type="button" class="icon-btn" data-mv-up aria-label="Monter dans la liste" title="Monter">↑</button>
-        <button type="button" class="icon-btn" data-mv-down aria-label="Descendre dans la liste" title="Descendre">↓</button>`);
+        <button type="button" class="icon-btn" data-mv-up aria-label="Move up" title="Move up">↑</button>
+        <button type="button" class="icon-btn" data-mv-down aria-label="Move down" title="Move down">↓</button>`);
       el.querySelector('[data-mv-up]').addEventListener('click', () => mv(-1));
       el.querySelector('[data-mv-down]').addEventListener('click', () => mv(1));
     }
@@ -154,8 +158,8 @@ export function mountFileTool(root, config = {}) {
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.className = 'icon-btn';
-    removeBtn.setAttribute('aria-label', `Retirer ${item.file.name}`);
-    removeBtn.title = 'Retirer';
+    removeBtn.setAttribute('aria-label', `Remove ${item.file.name}`);
+    removeBtn.title = 'Remove';
     removeBtn.innerHTML = '✕';
     removeBtn.addEventListener('click', () => removeItem(item));
     actions.appendChild(removeBtn);
@@ -198,28 +202,28 @@ export function mountFileTool(root, config = {}) {
     actions.querySelector('[data-download]')?.remove();
 
     if (item.status === 'working') {
-      status.textContent = 'Traitement…';
+      status.textContent = 'Processing…';
       status.className = 'fi-status';
     } else if (item.status === 'done') {
       el.classList.add('is-done');
-      status.textContent = 'Prêt';
+      status.textContent = 'Done';
       status.className = 'fi-status ok';
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'btn btn-sm btn-ghost';
       btn.dataset.download = '';
-      btn.textContent = 'Télécharger';
+      btn.textContent = 'Download';
       btn.addEventListener('click', () => {
         if (item.result?.blob) {
           downloadBlob(item.result.blob, item.result.name);
-          btn.textContent = 'Téléchargé ✓';
-          setTimeout(() => (btn.textContent = 'Télécharger'), 2200);
+          btn.textContent = 'Downloaded ✓';
+          setTimeout(() => (btn.textContent = 'Download'), 2200);
         }
       });
       actions.insertBefore(btn, actions.querySelector('.icon-btn'));
     } else if (item.status === 'error') {
       el.classList.add('is-error');
-      status.textContent = 'Erreur';
+      status.textContent = 'Failed';
       status.className = 'fi-status err';
     } else {
       status.textContent = '';
@@ -228,7 +232,7 @@ export function mountFileTool(root, config = {}) {
     updateMeta(item);
   }
 
-  /* ---------- Traitement ---------- */
+  /* ---------- Processing ---------- */
   async function processItem(item) {
     if (!process) return;
     item.status = 'working';
@@ -236,23 +240,26 @@ export function mountFileTool(root, config = {}) {
     updateStatus(item);
     try {
       const result = await process(item);
-      if (!result?.blob) throw new Error('Le traitement n’a produit aucun résultat.');
+      if (!result?.blob) throw new Error('Processing produced no result.');
       item.result = result;
       item.status = 'done';
+      if (onHandoff) {
+        try { onHandoff(item); } catch { /* handoff must never break the flow */ }
+      }
     } catch (err) {
       item.status = 'error';
-      item.error = err?.message || 'Erreur inattendue pendant le traitement.';
+      item.error = err?.message || 'Something unexpected happened while processing this file.';
     }
     updateStatus(item);
     sync();
   }
 
-  /** Relance le traitement de TOUS les fichiers (nécessaire quand les options changent). */
+  /** Re-run processing for ALL files (needed when options change). */
   async function processAll() {
     await Promise.all(state.items.map((i) => processItem(i)));
   }
 
-  /* ---------- Suppression / réinit ---------- */
+  /* ---------- Removal / reset ---------- */
   function removeItem(item) {
     const i = state.items.indexOf(item);
     if (i >= 0) state.items.splice(i, 1);
@@ -279,17 +286,41 @@ export function mountFileTool(root, config = {}) {
     }
   }
 
+  /* ---------- Batch summary ---------- */
+  function refreshSummary() {
+    if (!summaryEl) return;
+    const items = state.items;
+    const done = items.filter((i) => i.status === 'done' && i.result?.blob);
+    const failed = items.filter((i) => i.status === 'error');
+    const set = (sel, val) => {
+      const el = summaryEl.querySelector(sel);
+      if (el) el.textContent = val;
+    };
+    const show = done.length > 0;
+    summaryEl.hidden = !show;
+    if (!show) return;
+    const before = items.reduce((s, i) => s + i.file.size, 0);
+    const after = done.reduce((s, i) => s + i.result.blob.size, 0);
+    const saved = before - after;
+    set('[data-sum-count]', String(items.length));
+    set('[data-sum-done]', String(done.length));
+    set('[data-sum-failed]', String(failed.length));
+    set('[data-sum-before]', formatBytes(before));
+    set('[data-sum-after]', formatBytes(after));
+    set('[data-sum-saved]', saved >= 0 ? `−${Math.round((saved / Math.max(1, before)) * 100)} %` : '—');
+  }
+
   /* ---------- ZIP ---------- */
   async function downloadAllZip() {
     const done = state.items.filter((i) => i.status === 'done' && i.result?.blob);
     if (!done.length) {
-      toast('Aucun fichier prêt à télécharger.', 'error');
+      toast('No files ready to download yet.', 'error');
       return;
     }
     try {
       zipBtn.disabled = true;
-      zipBtn.textContent = 'Préparation du ZIP…';
-      const { zipSync, strToU8 } = await import('fflate');
+      zipBtn.textContent = 'Preparing ZIP…';
+      const { zipSync } = await import('fflate');
       const entries = {};
       const usedNames = new Set();
       for (const item of done) {
@@ -303,27 +334,28 @@ export function mountFileTool(root, config = {}) {
       }
       const zipped = zipSync(entries);
       downloadBlob(new Blob([zipped], { type: 'application/zip' }), 'quicktools-export.zip');
-      toast(`${done.length} fichier(s) téléchargé(s) en ZIP.`, 'success');
+      toast(`${done.length} file(s) downloaded as a ZIP.`, 'success');
     } catch {
-      toast('La création du ZIP a échoué. Téléchargez les fichiers un par un.', 'error');
+      toast('Creating the ZIP failed — please download the files one by one.', 'error');
     } finally {
       zipBtn.disabled = false;
-      zipBtn.textContent = zipBtn.dataset.label || 'Tout télécharger (ZIP)';
+      zipBtn.textContent = zipBtn.dataset.label || 'Download all (ZIP)';
     }
   }
 
   function sync() {
     const n = state.items.length;
-    if (countEl) countEl.textContent = n ? `${n} fichier${n > 1 ? 's' : ''}` : '';
+    if (countEl) countEl.textContent = n ? `${n} file${n > 1 ? 's' : ''}` : '';
     const hasDone = state.items.some((i) => i.status === 'done');
     if (clearBtn) clearBtn.hidden = n === 0;
     if (zipBtn) zipBtn.hidden = !hasDone || n < 1;
     if (dz) dz.hidden = n > 0 && !multiple;
     dz?.classList.toggle('compact', n > 0);
+    refreshSummary();
     onListChange(state.items);
   }
 
-  /* ---------- Câblage dropzone / input ---------- */
+  /* ---------- Dropzone / input wiring ---------- */
   if (dz && input) {
     dz.setAttribute('role', 'button');
     dz.setAttribute('tabindex', '0');
@@ -351,11 +383,11 @@ export function mountFileTool(root, config = {}) {
     });
     input.addEventListener('change', () => {
       addFiles(input.files);
-      input.value = ''; // permet de re-sélectionner le même fichier (annulation → re-choix)
+      input.value = ''; // allows re-selecting the same file
     });
   }
 
-  // Empêche le navigateur d'ouvrir le fichier si l'utilisateur le dépose à côté de la zone
+  // Prevent the browser from opening a file dropped outside the zone
   ['dragover', 'drop'].forEach((evt) =>
     window.addEventListener(evt, (e) => {
       if (e.target !== input) e.preventDefault();

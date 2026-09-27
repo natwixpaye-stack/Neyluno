@@ -1,0 +1,71 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../data/site.js';
+---
+
+<BaseLayout
+  title="Privacy"
+  description="How QuickTools handles your data: files never leave your device, no account required, no invasive tracking."
+  path="/privacy/"
+>
+  <div class="container prose-page">
+    <span class="eyebrow">Privacy</span>
+    <h1>Your files never leave your device</h1>
+
+    <div class="prose">
+      <p>
+        This page explains — precisely, and in a way that is technically verifiable — how {site.name} handles
+        your data. The short version: <strong>files are processed on your device, in your browser, and are
+        never transmitted to any server.</strong>
+      </p>
+
+      <h2>1. Your files</h2>
+      <p>
+        Every conversion, compression or generation runs in your browser using standard web technologies
+        (Canvas, Web Crypto, pdf-lib, fflate, PDF.js). No file is uploaded: you can verify it yourself —
+        open your browser's developer tools, watch the Network tab while using any tool, and you will see no
+        request carrying your file.
+      </p>
+
+      <h2>2. What stays on your device</h2>
+      <p>
+        A few conveniences are stored <em>locally</em> (localStorage / IndexedDB), never on our side:
+      </p>
+      <ul>
+        <li>your display theme preference (light / dark / system);</li>
+        <li>recently used tools and favorites;</li>
+        <li>saved workflows;</li>
+        <li>a short-lived handoff of the last processed file (10 minutes), so a next tool can continue where you left off.</li>
+      </ul>
+      <p>You can erase all of it at any time by clearing your browser's site data.</p>
+
+      <h2>3. What we collect</h2>
+      <p>
+        Nothing by default. There is no account system and no analytics script loaded. If aggregated,
+        non-identifying analytics are ever added, this page will say so first.
+      </p>
+
+      <h2>4. Third parties</h2>
+      <p>
+        The site makes no call to advertising networks or tracking platforms. The hosting provider receives
+        only ordinary web-server logs (IP address, requested page) as any static host does; those logs are
+        not used to profile visitors.
+      </p>
+
+      <h2>5. Contact</h2>
+      <p>Questions about this page? Reach the maintainer at <strong>natwixpaye@gmail.com</strong>.</p>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .prose-page {
+    padding-top: clamp(40px, 7vw, 72px);
+    padding-bottom: 50px;
+    max-width: 780px;
+  }
+  h1 {
+    font-size: clamp(2rem, 4.6vw, 3rem);
+    margin-bottom: 26px;
+  }
+</style>

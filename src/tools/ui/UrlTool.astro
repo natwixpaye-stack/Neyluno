@@ -1,0 +1,120 @@
+---
+---
+
+<div class="stool" id="tool-url">
+  <div class="stool-grid">
+    <div class="field">
+      <label for="ur-in">Input</label>
+      <textarea class="textarea input" id="ur-in" data-input spellcheck="false" placeholder="Plain text or an encoded URL…"></textarea>
+    </div>
+    <div class="field">
+      <div class="field-label-row">
+        <label for="ur-out">Output</label>
+        <button type="button" class="btn btn-ghost btn-sm" data-copy>Copy</button>
+      </div>
+      <textarea class="textarea input" id="ur-out" data-output readonly spellcheck="false" placeholder="Result appears here"></textarea>
+    </div>
+  </div>
+
+  <div class="stool-toolbar">
+    <div class="seg" role="radiogroup" aria-label="Encoding mode">
+      <button type="button" class="seg-btn is-active" data-mode="component" aria-pressed="true">Component</button>
+      <button type="button" class="seg-btn" data-mode="full" aria-pressed="false">Full URL</button>
+    </div>
+    <button type="button" class="btn btn-accent btn-sm" data-encode>Encode</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-decode>Decode</button>
+  </div>
+  <p class="stool-status" data-status aria-live="polite"></p>
+  <p class="url-hint">Component mode encodes everything (for query-string values). Full URL mode keeps structural characters like : / ? &amp; = intact.</p>
+</div>
+
+<style>
+  .field-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .field-label-row label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .seg {
+    display: inline-flex;
+    padding: 4px;
+    gap: 4px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel);
+  }
+  .seg-btn {
+    padding: 7px 14px;
+    border-radius: 9px;
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: var(--muted);
+    transition: all 0.18s var(--ease);
+  }
+  .seg-btn.is-active {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-fg);
+  }
+  .url-hint {
+    font-size: 0.78rem;
+    color: var(--faint);
+  }
+</style>
+
+<script>
+  import { copyText, toast } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-url');
+  if (root) {
+    const input = root.querySelector('[data-input]');
+    const output = root.querySelector('[data-output]');
+    const status = root.querySelector('[data-status]');
+    let mode = 'component';
+
+    root.querySelectorAll('[data-mode]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        mode = btn.dataset.mode;
+        root.querySelectorAll('[data-mode]').forEach((b) => {
+          b.classList.toggle('is-active', b === btn);
+          b.setAttribute('aria-pressed', String(b === btn));
+        });
+      });
+    });
+
+    function run(kind) {
+      if (!input.value) {
+        status.textContent = 'Paste something to convert first.';
+        status.className = 'stool-status err';
+        return;
+      }
+      try {
+        if (kind === 'encode') {
+          output.value = mode === 'component' ? encodeURIComponent(input.value) : encodeURI(input.value);
+          status.textContent = mode === 'component' ? 'Encoded as a URL component.' : 'Encoded as a full URL.';
+        } else {
+          output.value = decodeURIComponent(input.value);
+          status.textContent = 'Decoded successfully.';
+        }
+        status.className = 'stool-status ok';
+      } catch {
+        output.value = '';
+        status.textContent = 'Decoding failed — the input contains malformed percent-escapes like “%ZZ” or a lone “%”.';
+        status.className = 'stool-status err';
+      }
+    }
+
+    root.querySelector('[data-encode]').addEventListener('click', () => run('encode'));
+    root.querySelector('[data-decode]').addEventListener('click', () => run('decode'));
+
+    root.querySelector('[data-copy]').addEventListener('click', async () => {
+      if (!output.value) return;
+      const ok = await copyText(output.value);
+      toast(ok ? 'Copied to clipboard.' : 'Could not copy automatically.', ok ? 'success' : 'error');
+    });
+  }
+</script>

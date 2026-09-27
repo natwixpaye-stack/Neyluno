@@ -1,8 +1,8 @@
-/** Décodage et conversion d'images côté navigateur (Canvas API). */
+/** Image decoding and conversion in the browser (Canvas API). */
 
 /**
- * Décode un fichier image en bitmap.
- * Retourne { source, width, height, close } — toujours appeler close() après usage.
+ * Decode an image file into a drawable source.
+ * Returns { source, width, height, close } — always call close() when done.
  */
 export async function decodeImage(file) {
   let objectUrl = null;
@@ -12,7 +12,7 @@ export async function decodeImage(file) {
         const bmp = await createImageBitmap(file);
         return { source: bmp, width: bmp.width, height: bmp.height, close: () => bmp.close?.() };
       } catch {
-        // Certains formats (ex. SVG selon les navigateurs) échouent via createImageBitmap → fallback <img>
+        // Some formats (e.g. SVG in some browsers) fail via createImageBitmap → <img> fallback
       }
     }
     objectUrl = URL.createObjectURL(file);
@@ -32,16 +32,14 @@ export async function decodeImage(file) {
     };
   } catch (err) {
     if (objectUrl) URL.revokeObjectURL(objectUrl);
-    throw new Error(
-      `Impossible de lire cette image. Vérifiez qu'il s'agit bien d'un fichier image valide et non corrompu.`
-    );
+    throw new Error('This image could not be read. Make sure the file is a valid, non-corrupted image.');
   }
 }
 
-const MAX_DIMENSION = 8192; // garde-fou mémoire (notamment mobile)
+const MAX_DIMENSION = 8192; // memory guard (especially mobile)
 
 /**
- * Redessine la source dans un canvas et exporte en Blob.
+ * Redraw the source into a canvas and export as a Blob.
  * @param {ImageBitmap|HTMLImageElement} source
  * @param {{width:number, height:number, format?:string, quality?:number}} opts
  */
@@ -49,14 +47,14 @@ export async function renderToBlob(source, { width, height, format = 'image/webp
   const w = Math.max(1, Math.round(width));
   const h = Math.max(1, Math.round(height));
   if (w > MAX_DIMENSION || h > MAX_DIMENSION) {
-    throw new Error(`Dimensions trop grandes (${w} × ${h} px). La limite est de ${MAX_DIMENSION} px par côté.`);
+    throw new Error(`Image too large (${w} × ${h} px). The limit is ${MAX_DIMENSION} px per side.`);
   }
   const canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Votre navigateur ne permet pas le traitement d’images (Canvas indisponible).');
-  // Fond blanc pour les formats sans transparence
+  if (!ctx) throw new Error('Your browser cannot process images (Canvas unavailable).');
+  // White background for formats without transparency
   if (format === 'image/jpeg') {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, w, h);
@@ -67,34 +65,31 @@ export async function renderToBlob(source, { width, height, format = 'image/webp
 
   const blob = await new Promise((resolve, reject) => {
     canvas.toBlob(
-      (b) => (b ? resolve(b) : reject(new Error(`La conversion au format demandé a échoué. Essayez un autre format de sortie.`))),
+      (b) => (b ? resolve(b) : reject(new Error('Converting to the requested format failed. Try a different output format.'))),
       format,
       quality
     );
   });
-  // Garde-fou : certains navigateurs (vieux Safari) ré-encodent silencieusement
-  // dans un autre format. On transforme ce cas en erreur explicite.
+  // Guard: some browsers (older Safari) silently re-encode to another format.
   if (blob.type && blob.type !== format) {
-    throw new Error(
-      `Votre navigateur ne sait pas encoder le format demandé. Mettez-le à jour ou choisissez un autre format de sortie.`
-    );
+    throw new Error('Your browser cannot encode the requested format. Update your browser or pick another format.');
   }
   return blob;
 }
 
-/** Change l'extension d'un nom de fichier. */
+/** Replace a file name's extension. */
 export function renameWithExt(fileName, newExt) {
   const base = fileName.replace(/\.[^.]+$/, '') || 'image';
   return `${base}.${newExt}`;
 }
 
-/** Dimensions cibles selon un pourcentage. */
+/** Target dimensions for a percentage scale. */
 export function scaleDimensions(width, height, percent) {
   const p = Math.max(1, Math.min(500, percent)) / 100;
   return { width: Math.max(1, Math.round(width * p)), height: Math.max(1, Math.round(height * p)) };
 }
 
-/** Dimensions cibles avec ratio optionnellement verrouillé. */
+/** Target dimensions with an optionally locked aspect ratio. */
 export function fitDimensions({ width, height, targetWidth, targetHeight, keepRatio }) {
   if (keepRatio) {
     if (targetWidth) {

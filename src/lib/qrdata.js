@@ -14,7 +14,7 @@ export function buildQrPayload(type, fields = {}) {
   switch (type) {
     case 'url': {
       let url = String(fields.url || '').trim();
-      if (!url) return { error: 'Saisissez une adresse web.' };
+      if (!url) return { error: 'Enter a web address.' };
       if (!/^[a-z][a-z0-9+.-]*:/i.test(url)) url = `https://${url}`;
       if (!/^https?:\/\/.+\..+/.test(url) && !url.startsWith('https://localhost')) {
         return { error: 'Cette adresse ne semble pas valide (ex. https://exemple.fr).' };
@@ -23,13 +23,13 @@ export function buildQrPayload(type, fields = {}) {
     }
     case 'text': {
       const text = String(fields.text || '').trim();
-      if (!text) return { error: 'Saisissez un texte.' };
+      if (!text) return { error: 'Enter some text.' };
       if (text.length > 2000) return { error: 'Texte trop long pour un QR code (maximum 2000 caractères).' };
       return { value: text };
     }
     case 'email': {
       const to = String(fields.to || '').trim();
-      if (!to) return { error: 'Saisissez une adresse e-mail.' };
+      if (!to) return { error: 'Enter an email address.' };
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(to)) return { error: 'Adresse e-mail invalide.' };
       const params = new URLSearchParams();
       if (fields.subject) params.set('subject', fields.subject);
@@ -40,24 +40,24 @@ export function buildQrPayload(type, fields = {}) {
     case 'phone': {
       const raw = String(fields.phone || '').trim();
       const cleaned = raw.replace(/[\s.-]/g, '');
-      if (!cleaned) return { error: 'Saisissez un numéro de téléphone.' };
+      if (!cleaned) return { error: 'Enter a phone number.' };
       if (!/^\+?[0-9]{6,15}$/.test(cleaned)) return { error: 'Numéro de téléphone invalide (6 à 15 chiffres).' };
       return { value: `tel:${cleaned}` };
     }
     case 'sms': {
       const raw = String(fields.phone || '').trim().replace(/[\s.-]/g, '');
-      if (!raw) return { error: 'Saisissez un numéro de téléphone.' };
+      if (!raw) return { error: 'Enter a phone number.' };
       if (!/^\+?[0-9]{6,15}$/.test(raw)) return { error: 'Numéro de téléphone invalide (6 à 15 chiffres).' };
       const msg = String(fields.message || '').trim();
       return { value: msg ? `smsto:${raw}:${msg}` : `smsto:${raw}` };
     }
     case 'wifi': {
       const ssid = String(fields.ssid || '').trim();
-      if (!ssid) return { error: 'Saisissez le nom du réseau (SSID).' };
+      if (!ssid) return { error: 'Enter the network name (SSID).' };
       const security = fields.security || 'WPA';
       if (security === 'nopass') return { value: `WIFI:T:nopass;S:${escapeWifiValue(ssid)};;` };
       const pass = String(fields.password || '');
-      if (!pass) return { error: 'Saisissez le mot de passe du réseau.' };
+      if (!pass) return { error: 'Enter the network password.' };
       return { value: `WIFI:T:${security};S:${escapeWifiValue(ssid)};P:${escapeWifiValue(pass)};;` };
     }
     default:

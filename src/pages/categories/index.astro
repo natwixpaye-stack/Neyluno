@@ -6,14 +6,14 @@ import { tools } from '../../data/tools.js';
 ---
 
 <BaseLayout
-  title="Catégories d'outils"
-  description="Explorez les outils QuickTools par catégorie : Images, PDF, Texte, Calcul, Sécurité et Utilitaires."
+  title="Tool categories"
+  description="Browse QuickTools by category: Images, PDF, Text, Developer, Calculators, Security and Utilities."
   path="/categories/"
 >
   <div class="container page-top">
-    <span class="eyebrow">Explorer</span>
-    <h1>Catégories</h1>
-    <p class="page-sub">Chaque catégorie regroupe des outils qui traitent vos fichiers localement, sans serveur.</p>
+    <span class="eyebrow">Explore</span>
+    <h1>Categories</h1>
+    <p class="page-sub">Every category groups tools that process your files locally — no servers involved.</p>
 
     <div class="cat-grid">
       {categories.map((c) => {
@@ -26,7 +26,7 @@ import { tools } from '../../data/tools.js';
             <h2>{c.name}</h2>
             <p>{c.description}</p>
             <span class="cat-meta">
-              {catTools.length} outil{catTools.length > 1 ? 's' : ''} →
+              {catTools.length} tool{catTools.length > 1 ? 's' : ''} →
             </span>
           </a>
         );

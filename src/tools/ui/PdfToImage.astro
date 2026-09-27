@@ -1,0 +1,351 @@
+---
+import Icon from '../../components/Icon.astro';
+---
+
+<div class="ftool" id="tool-pdf-img">
+  <div data-notice hidden></div>
+
+  <div class="dropzone" data-dropzone>
+    <input type="file" data-file-input hidden />
+    <span class="dz-icon" aria-hidden="true"><Icon name="upload" size={24} /></span>
+    <h3>Drag & drop your PDF here</h3>
+    <p>or click to browse · PDF only · up to 50 MB</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choose a PDF</span>
+  </div>
+
+  <div class="cp-panel" data-pi-panel hidden>
+    <div class="sp-file">
+      <span class="sp-file-icon" aria-hidden="true"><Icon name="pdf" size={20} /></span>
+      <div>
+        <p class="sp-file-name" data-pi-name></p>
+        <p class="sp-file-meta" data-pi-meta></p>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="field-label">Resolution</span>
+      <div class="seg" role="radiogroup" aria-label="Rendering resolution">
+        <button type="button" class="seg-btn" data-scale="1.333" aria-pressed="false">Screen (96 DPI)</button>
+        <button type="button" class="seg-btn is-active" data-scale="2.667" aria-pressed="true">High (192 DPI)</button>
+      </div>
+    </div>
+
+    <div class="crop-actions">
+      <button type="button" class="btn btn-ghost btn-sm" data-pi-reset>Start over</button>
+      <button type="button" class="btn btn-accent btn-sm" data-pi-go>Convert to images</button>
+    </div>
+
+    <p class="pi-progress" data-pi-progress role="status" aria-live="polite" hidden></p>
+
+    <div class="pi-results" data-pi-results hidden>
+      <div class="pi-actions-row">
+        <h3>Pages rendered</h3>
+        <button type="button" class="btn btn-primary btn-sm" data-pi-zip>Download all (ZIP)</button>
+      </div>
+      <ul class="pi-pages" role="list"></ul>
+    </div>
+  </div>
+</div>
+
+<style>
+  .cp-panel {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .sp-file {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel);
+  }
+
+  .sp-file-icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    color: #ff6e59;
+    background: color-mix(in srgb, #ff6e59 12%, transparent);
+    flex: none;
+  }
+
+  .sp-file-name {
+    font-weight: 600;
+    font-size: 0.92rem;
+    word-break: break-all;
+  }
+
+  .sp-file-meta {
+    color: var(--muted);
+    font-size: 0.82rem;
+    margin-top: 2px;
+  }
+
+  .seg {
+    display: inline-flex;
+    padding: 4px;
+    gap: 4px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel);
+    flex-wrap: wrap;
+  }
+  .seg-btn {
+    padding: 8px 16px;
+    border-radius: 9px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    transition: all 0.18s var(--ease);
+  }
+  .seg-btn.is-active {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-fg);
+  }
+
+  .crop-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .pi-progress {
+    font-size: 0.88rem;
+    color: var(--muted);
+  }
+
+  .pi-results {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .pi-actions-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .pi-actions-row h3 {
+    font-size: 1rem;
+  }
+
+  .pi-pages {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+
+  .pi-page {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel);
+    align-items: center;
+  }
+
+  .pi-page img {
+    width: 100%;
+    border-radius: 6px;
+    background: #fff;
+  }
+
+  .pi-page .pi-page-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+</style>
+
+<script>
+  import { toast, downloadBlob } from '../../lib/ui.js';
+  import { validateFile, MAX_FILE_BYTES } from '../../lib/files.js';
+  import { formatBytes } from '../../lib/format.js';
+
+  const root = document.getElementById('tool-pdf-img');
+  if (root) {
+    const dz = root.querySelector('[data-dropzone]');
+    const input = root.querySelector('[data-file-input]');
+    const panel = root.querySelector('[data-pi-panel]');
+    const nameEl = root.querySelector('[data-pi-name]');
+    const metaEl = root.querySelector('[data-pi-meta]');
+    const goBtn = root.querySelector('[data-pi-go]');
+    const progress = root.querySelector('[data-pi-progress]');
+    const results = root.querySelector('[data-pi-results]');
+    const pagesList = root.querySelector('.pi-pages');
+    const zipBtn = root.querySelector('[data-pi-zip]');
+
+    let file = null;
+    let pageCount = 0;
+    let scale = 2.667;
+    let pages = []; // {name, blob}
+
+    dz.setAttribute('role', 'button');
+    dz.setAttribute('tabindex', '0');
+    dz.addEventListener('click', () => input.click());
+    dz.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        input.click();
+      }
+    });
+    dz.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (e.dataTransfer?.files?.length) loadFile(e.dataTransfer.files[0]);
+    });
+    input.addEventListener('change', () => {
+      if (input.files?.length) loadFile(input.files[0]);
+      input.value = '';
+    });
+
+    root.querySelectorAll('[data-scale]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        scale = Number(btn.dataset.scale);
+        root.querySelectorAll('[data-scale]').forEach((b) => {
+          b.classList.toggle('is-active', b === btn);
+          b.setAttribute('aria-pressed', String(b === btn));
+        });
+      });
+    });
+
+    async function loadFile(f) {
+      const check = validateFile(f, { acceptTypes: ['application/pdf'], acceptExts: ['.pdf'], maxBytes: MAX_FILE_BYTES });
+      if (!check.ok) {
+        toast(check.error, 'error');
+        return;
+      }
+      try {
+        const { PDFDocument } = await import('pdf-lib');
+        const doc = await PDFDocument.load(await f.arrayBuffer(), { ignoreEncryption: true, updateMetadata: false });
+        if (doc.isEncrypted) throw new Error('protected');
+        pageCount = doc.getPageCount();
+      } catch (err) {
+        toast(
+          err?.message === 'protected'
+            ? 'This PDF is password-protected and cannot be rendered.'
+            : 'This PDF could not be read — it may be corrupted.',
+          'error'
+        );
+        return;
+      }
+      file = f;
+      pages = [];
+      results.hidden = true;
+      nameEl.textContent = f.name;
+      metaEl.textContent = `${pageCount} page${pageCount > 1 ? 's' : ''} · ${formatBytes(f.size)}`;
+      dz.hidden = true;
+      panel.hidden = false;
+    }
+
+    root.querySelector('[data-pi-reset]').addEventListener('click', () => {
+      file = null;
+      pages = [];
+      panel.hidden = true;
+      dz.hidden = false;
+    });
+
+    let pdfjs = null;
+    async function getPdfjs() {
+      if (!pdfjs) {
+        const [{ default: lib }, { default: workerUrl }] = await Promise.all([
+          import('pdfjs-dist'),
+          import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
+        ]);
+        lib.GlobalWorkerOptions.workerSrc = workerUrl;
+        pdfjs = lib;
+      }
+      return pdfjs;
+    }
+
+    goBtn.addEventListener('click', async () => {
+      if (!file) return;
+      goBtn.disabled = true;
+      progress.hidden = false;
+      results.hidden = true;
+      pagesList.innerHTML = '';
+      pages = [];
+      const label = goBtn.textContent;
+      goBtn.textContent = 'Rendering…';
+      try {
+        const lib = await getPdfjs();
+        const data = await file.arrayBuffer();
+        const doc = await lib.getDocument({ data }).promise;
+        const base = file.name.replace(/\.pdf$/i, '');
+
+        for (let i = 1; i <= doc.numPages; i++) {
+          progress.textContent = `Rendering page ${i} of ${doc.numPages}…`;
+          const page = await doc.getPage(i);
+          const viewport = page.getViewport({ scale });
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.floor(viewport.width);
+          canvas.height = Math.floor(viewport.height);
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+          const blob = await new Promise((resolve, reject) => {
+            canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Rendering failed.'))), 'image/png');
+          });
+          const name = `${base}-page-${i}.png`;
+          pages.push({ name, blob });
+
+          const li = document.createElement('li');
+          li.className = 'pi-page';
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(blob);
+          img.alt = `Page ${i} rendered as PNG`;
+          const labelEl = document.createElement('span');
+          labelEl.className = 'pi-page-label';
+          labelEl.textContent = `Page ${i} · ${canvas.width} × ${canvas.height} px`;
+          const dl = document.createElement('button');
+          dl.type = 'button';
+          dl.className = 'btn btn-ghost btn-sm';
+          dl.textContent = 'Download';
+          dl.addEventListener('click', () => downloadBlob(blob, name));
+          li.append(img, labelEl, dl);
+          pagesList.appendChild(li);
+        }
+
+        progress.hidden = true;
+        results.hidden = false;
+        toast(`Rendered ${doc.numPages} page${doc.numPages > 1 ? 's' : ''} as PNG.`, 'success');
+      } catch (err) {
+        progress.hidden = true;
+        toast(err?.message?.includes('password')
+          ? 'This PDF is password-protected and cannot be rendered.'
+          : 'This PDF could not be rendered. It may be corrupted.', 'error');
+      } finally {
+        goBtn.disabled = false;
+        goBtn.textContent = label;
+      }
+    });
+
+    zipBtn.addEventListener('click', async () => {
+      if (!pages.length) return;
+      try {
+        zipBtn.disabled = true;
+        zipBtn.textContent = 'Preparing ZIP…';
+        const { zipSync } = await import('fflate');
+        const entries = {};
+        for (const p of pages) entries[p.name] = new Uint8Array(await p.blob.arrayBuffer());
+        downloadBlob(new Blob([zipSync(entries)], { type: 'application/zip' }), 'quicktools-pages.zip');
+      } catch {
+        toast('Creating the ZIP failed — download the pages one by one.', 'error');
+      } finally {
+        zipBtn.disabled = false;
+        zipBtn.textContent = 'Download all (ZIP)';
+      }
+    });
+  }
+</script>

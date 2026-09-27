@@ -13,13 +13,13 @@ test('fichier valide accepté', () => {
 test('fichier vide (0 octet) refusé avec message', () => {
   const r = validateFile(fakeFile({ size: 0 }), { acceptTypes: ['image/jpeg'] });
   assert.equal(r.ok, false);
-  assert.match(r.error, /vide/);
+  assert.match(r.error, /empty/);
 });
 
 test('fichier trop gros refusé', () => {
   const r = validateFile(fakeFile({ size: MAX_FILE_BYTES + 1 }), { acceptTypes: ['image/jpeg'] });
   assert.equal(r.ok, false);
-  assert.match(r.error, /limite/);
+  assert.match(r.error, /larger than the 50 MB limit/);
 });
 
 test('mauvais format refusé, formats acceptés listés', () => {
@@ -28,7 +28,7 @@ test('mauvais format refusé, formats acceptés listés', () => {
     acceptExts: ['.jpg'],
   });
   assert.equal(r.ok, false);
-  assert.match(r.error, /Format non pris en charge/);
+  assert.match(r.error, /Unsupported format/);
   assert.match(r.error, /\.jpg/);
 });
 

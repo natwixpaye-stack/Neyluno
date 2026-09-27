@@ -1,5 +1,5 @@
 ---
-/** Fil d'Ariane — items: [{label, href?}] */
+/** Breadcrumb — items: [{label, href?}] */
 const { items = [] } = Astro.props;
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -13,7 +13,7 @@ const jsonLd = {
 };
 ---
 
-<nav class="breadcrumb" aria-label="Fil d'Ariane">
+<nav class="breadcrumb" aria-label="Breadcrumb">
   <ol role="list">
     {items.map((item, i) => (
       <li>

@@ -1,12 +1,12 @@
 ---
-/** "Comment ça fonctionne ?" — 3 étapes. */
+/** “How it works” — three steps. */
 const { steps = [] } = Astro.props;
 ---
 
 {
   steps.length > 0 && (
     <section class="hiw" aria-labelledby="hiw-title">
-      <h2 id="hiw-title">Comment ça fonctionne&nbsp;?</h2>
+      <h2 id="hiw-title">How it works</h2>
       <ol class="hiw-steps" role="list">
         {steps.map((step, i) => (
           <li class="hiw-step">

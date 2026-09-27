@@ -77,9 +77,9 @@ export function passwordStrength(length, options) {
   const { pool } = buildCharset(options);
   const bits = pool.length > 0 ? length * Math.log2(pool.length) : 0;
   let label, level;
-  if (bits < 40) [label, level] = ['Faible', 1];
-  else if (bits < 60) [label, level] = ['Moyen', 2];
-  else if (bits < 90) [label, level] = ['Fort', 3];
-  else [label, level] = ['Très fort', 4];
+  if (bits < 40) [label, level] = ['Weak', 1];
+  else if (bits < 60) [label, level] = ['Medium', 2];
+  else if (bits < 90) [label, level] = ['Strong', 3];
+  else [label, level] = ['Very strong', 4];
   return { bits: Math.round(bits), label, level };
 }

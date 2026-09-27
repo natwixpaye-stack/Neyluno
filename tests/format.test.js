@@ -18,8 +18,8 @@ test('formatBytes : entrées invalides', () => {
 
 test('formatNumber : décimales inutiles supprimées', () => {
   assert.equal(formatNumber(30), '30');
-  assert.equal(formatNumber(33.33333333), '33,3333');
-  assert.equal(formatNumber(1e9), '1\u202f000\u202f000\u202f000');
+  assert.equal(formatNumber(33.33333333), '33.3333');
+  assert.equal(formatNumber(1e9), '1,000,000,000');
 });
 
 test('formatNumber : infini → —', () => {
@@ -28,5 +28,5 @@ test('formatNumber : infini → —', () => {
 
 test('formatPercent', () => {
   assert.equal(formatPercent(69), '69 %');
-  assert.equal(formatPercent(33.333333), '33,33 %');
+  assert.equal(formatPercent(33.333333), '33.33 %');
 });

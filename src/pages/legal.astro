@@ -1,0 +1,62 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../data/site.js';
+---
+
+<BaseLayout
+  title="Legal notice"
+  description="Legal notice and terms of use for QuickTools."
+  path="/legal/"
+>
+  <div class="container prose-page">
+    <span class="eyebrow">Legal</span>
+    <h1>Legal notice</h1>
+
+    <div class="prose">
+      <h2>Publisher</h2>
+      <p>
+        {site.name} is published by an individual developer.<br />
+        Contact: <strong>natwixpaye@gmail.com</strong>
+      </p>
+
+      <h2>Hosting</h2>
+      <p>
+        Render, Inc. — 525 Brannan Street, Suite 300, San Francisco, CA 94107, USA
+        (<a href="https://render.com" rel="noopener">render.com</a>).
+      </p>
+
+      <h2>Terms of use</h2>
+      <p>
+        The tools are provided free of charge, “as is”, without warranty of any kind. They are designed to
+        process common file formats locally in modern browsers; results depend on your device and browser.
+        You remain responsible for the files you process and for complying with applicable law, including
+        copyright, when using the results.
+      </p>
+
+      <h2>Liability</h2>
+      <p>
+        Because all processing happens on your device, {site.name} neither stores nor has access to your
+        files. In the unlikely event of data loss on your side during processing, no liability can be
+        accepted — always keep a copy of important originals.
+      </p>
+
+      <h2>Intellectual property</h2>
+      <p>
+        The site's design, text and source code are protected. Files you process remain entirely yours:
+        nothing is transmitted, so nothing can be claimed over them.
+      </p>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .prose-page {
+    padding-top: clamp(40px, 7vw, 72px);
+    padding-bottom: 50px;
+    max-width: 780px;
+  }
+  h1 {
+    font-size: clamp(2rem, 4.6vw, 3rem);
+    margin-bottom: 26px;
+  }
+</style>

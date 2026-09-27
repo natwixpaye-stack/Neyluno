@@ -23,7 +23,7 @@ const ldBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 ---
 
 <!doctype html>
-<html lang="fr">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -52,25 +52,32 @@ const ldBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
 
-    <!-- Thème avant rendu : évite tout flash -->
+    <!-- Theme before paint: light / dark / system, no flash -->
     <script is:inline>
       (function () {
+        var pref = null;
         try {
-          var t = localStorage.getItem('qt-theme');
-          if (t !== 'dark' && t !== 'light') {
-            t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+          pref = localStorage.getItem('qt-theme');
+        } catch (e) {}
+        var effective;
+        if (pref === 'dark' || pref === 'light') {
+          effective = pref;
+        } else {
+          try {
+            effective = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+          } catch (e) {
+            effective = 'dark';
           }
-          document.documentElement.dataset.theme = t;
-        } catch (e) {
-          document.documentElement.dataset.theme = 'dark';
         }
+        document.documentElement.dataset.theme = effective;
+        document.documentElement.dataset.themePref = pref === 'dark' || pref === 'light' ? pref : 'system';
       })();
     </script>
 
     {ldBlocks.map((block) => <script type="application/ld+json" set:html={JSON.stringify(block)} />)}
   </head>
   <body>
-    <a href="#main" class="skip-link">Aller au contenu</a>
+    <a href="#main" class="skip-link">Skip to content</a>
     <Header />
     <main id="main">
       <slot />
@@ -80,9 +87,34 @@ const ldBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 
     <script>
       import { initReveal, initSpotlight, initThemeToggle } from '../lib/ui.js';
+      import { getFavorites, toggleFavorite } from '../lib/local.js';
+      import { getTool } from '../data/tools.js';
       initThemeToggle();
       initReveal();
       initSpotlight();
+
+      // Favorite buttons (cards + tool pages) — state kept in localStorage only
+      function syncFavButtons() {
+        const favs = getFavorites();
+        document.querySelectorAll('[data-fav]').forEach((btn) => {
+          const slug = btn.getAttribute('data-fav');
+          const on = favs.includes(slug);
+          btn.setAttribute('aria-pressed', String(on));
+          const tool = getTool(slug);
+          const label = tool ? tool.name : slug;
+          btn.setAttribute('aria-label', `${on ? 'Remove' : 'Add'} ${label} ${on ? 'from' : 'to'} favorites`);
+          if (btn.title) btn.title = on ? 'Remove from favorites' : 'Add to favorites';
+        });
+      }
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-fav]');
+        if (!btn) return;
+        e.preventDefault(); // cards are <a> links — the star must not navigate
+        e.stopPropagation();
+        toggleFavorite(btn.getAttribute('data-fav'));
+        syncFavButtons();
+      }, true);
+      syncFavButtons();
     </script>
   </body>
 </html>

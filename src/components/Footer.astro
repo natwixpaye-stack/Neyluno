@@ -4,6 +4,8 @@ import { site, categories } from '../data/site.js';
 import { tools } from '../data/tools.js';
 
 const year = new Date().getFullYear();
+const popular = tools.slice(0, 7);
+const more = tools.slice(7, 14);
 ---
 
 <footer class="site-footer">
@@ -16,49 +18,51 @@ const year = new Date().getFullYear();
         </a>
         <p>{site.tagline}</p>
         <div class="footer-badges">
-          <span class="badge"><span class="dot"></span>100 % navigateur</span>
-          <span class="badge"><Icon name="lock" size={13} />Sans compte</span>
+          <span class="badge"><span class="dot"></span>Runs 100% in your browser</span>
+          <span class="badge"><Icon name="lock" size={13} />No account needed</span>
         </div>
       </div>
 
-      <nav aria-label="Outils">
-        <h3>Outils</h3>
+      <nav aria-label="Popular tools">
+        <h3>Popular tools</h3>
         <ul role="list">
-          {tools.slice(0, 6).map((t) => (
-            <li><a href={`/outils/${t.slug}/`}>{t.name}</a></li>
+          {popular.map((t) => (
+            <li><a href={`/tools/${t.slug}/`}>{t.name}</a></li>
           ))}
         </ul>
       </nav>
 
-      <nav aria-label="Autres outils">
-        <h3>&nbsp;</h3>
+      <nav aria-label="More tools">
+        <h3>More tools</h3>
         <ul role="list">
-          {tools.slice(6).map((t) => (
-            <li><a href={`/outils/${t.slug}/`}>{t.name}</a></li>
+          {more.map((t) => (
+            <li><a href={`/tools/${t.slug}/`}>{t.name}</a></li>
           ))}
-          <li><a href="/outils/">Tous les outils →</a></li>
+          <li><a href="/tools/">All {tools.length} tools →</a></li>
         </ul>
       </nav>
 
-      <nav aria-label="Catégories et informations">
-        <h3>Catégories</h3>
+      <nav aria-label="Categories and information">
+        <h3>Categories</h3>
         <ul role="list">
           {categories.map((c) => (
             <li><a href={`/categories/${c.slug}/`}>{c.name}</a></li>
           ))}
         </ul>
-        <h3 style="margin-top:22px">Informations</h3>
+        <h3 style="margin-top:22px">Resources</h3>
         <ul role="list">
-          <li><a href="/a-propos/">À propos</a></li>
-          <li><a href="/confidentialite/">Confidentialité</a></li>
-          <li><a href="/mentions-legales/">Mentions légales</a></li>
+          <li><a href="/workflows/">Workflows</a></li>
+          <li><a href="/guides/">Guides</a></li>
+          <li><a href="/about/">About</a></li>
+          <li><a href="/privacy/">Privacy</a></li>
+          <li><a href="/legal/">Legal</a></li>
         </ul>
       </nav>
     </div>
 
     <div class="footer-bottom">
-      <p>© {year} {site.name} — Vos fichiers ne quittent jamais votre appareil.</p>
-      <a href="/a-propos/" class="footer-about-link">Fait pour être utile, pas pour vous pister.</a>
+      <p>© {year} {site.name} — your files never leave your device.</p>
+      <a href="/about/" class="footer-about-link">Built to be useful, not to track you.</a>
     </div>
   </div>
 </footer>

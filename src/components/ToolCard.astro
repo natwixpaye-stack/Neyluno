@@ -6,17 +6,29 @@ const { tool, compact = false } = Astro.props;
 const cat = getCategory(tool.category);
 ---
 
-<a href={`/outils/${tool.slug}/`} class="card tool-card" data-spotlight>
+<a href={`/tools/${tool.slug}/`} class="card tool-card" data-spotlight>
   <div class="tc-top">
     <span class="tc-icon" style={`--hue:${cat.hue}`} aria-hidden="true">
       <Icon name={tool.icon} size={compact ? 20 : 23} />
     </span>
-    <span class="tc-cat">{cat.name}</span>
+    <span class="tc-top-right">
+      <button
+        type="button"
+        class="fav-btn"
+        data-fav={tool.slug}
+        aria-label={`Add ${tool.name} to favorites`}
+        aria-pressed="false"
+        title="Add to favorites"
+      >
+        <Icon name="star" size={16} />
+      </button>
+      <span class="tc-cat">{cat.name}</span>
+    </span>
   </div>
   <h3 class="tc-name">{tool.name}</h3>
   <p class="tc-desc">{tool.shortDesc}</p>
   <span class="tc-cta" aria-hidden="true">
-    Ouvrir l’outil <Icon name="arrow-right" size={15} />
+    Open tool <Icon name="arrow-right" size={15} />
   </span>
 </a>
 
@@ -29,9 +41,38 @@ const cat = getCategory(tool.category);
 
   .tc-top {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     margin-bottom: 6px;
+  }
+
+  .tc-top-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .fav-btn {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    color: var(--faint);
+    transition: color 0.18s, background 0.18s;
+  }
+
+  .fav-btn:hover {
+    color: var(--text);
+    background: var(--panel-strong);
+  }
+
+  .fav-btn[aria-pressed='true'] {
+    color: var(--accent);
+  }
+
+  .fav-btn[aria-pressed='true'] :global(svg) {
+    fill: currentColor;
   }
 
   .tc-icon {
