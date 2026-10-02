@@ -138,6 +138,7 @@ Commits : `f934453`, `8cd27a0` · Rapport : `AUDIT_REPORT_V3.md`
 - Baseline V3 re-validée en début de session (build 65, unitaires 99/99, e2e 45/45) avant toute modification.
 - Final : build 77 pages · unitaires **124/124** · e2e **55/55** (45 V3 conservés/adaptés + 10 parcours V4) · harness d'audit 0 erreur console sur toutes les routes.
 - Rapport détaillé : `AUDIT_REPORT_V4.md`.
+- Commit : `c72cd88` · déployé automatiquement sur Render (push → live en ~1 min).
 
 ### Limites assumées (honnêteté > feature)
 - Encodage canvas limité à JPG/PNG/WebP (FAQ explicite) ; GIF/BMP/AVIF en décodage seulement.
