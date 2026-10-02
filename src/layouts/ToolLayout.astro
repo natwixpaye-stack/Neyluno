@@ -73,7 +73,9 @@ const jsonLd = [
     </header>
 
     <section class="tool-panel panel" aria-label={`${tool.name} main tool area`}>
-      <slot />
+      <div data-tool-slot>
+        <slot />
+      </div>
 
       {
         next.length > 0 && (
@@ -104,6 +106,33 @@ const jsonLd = [
       <div class="prose" set:html={tool.seo} />
     </section>
   </div>
+
+  <script is:inline>
+    /* V4 error boundary — inline on purpose: runs before any module script.
+       If a tool crashes while loading, replace its UI with an honest
+       Cause / Action / Retry panel instead of a silent, dead interface. */
+    (function () {
+      var failed = false;
+      function showFallback() {
+        if (failed) return;
+        var slot = document.querySelector('[data-tool-slot]');
+        if (!slot) return;
+        failed = true;
+        slot.innerHTML =
+          '<div class="notice notice-error" style="padding:26px;border-radius:14px;line-height:1.7">' +
+          '<strong style="font-size:1.02rem">This tool hit an unexpected error while loading.</strong><br>' +
+          '<span style="color:var(--muted)">Cause: a script failed on your device — your files were not touched and nothing was uploaded.<br>' +
+          'Action: reload the tool. If it fails again, try another browser or check for updates.</span><br><br>' +
+          '<button type="button" class="btn btn-primary btn-sm" onclick="location.reload()">Reload the tool</button>' +
+          '</div>';
+      }
+      window.addEventListener('error', function (e) {
+        // ignore resource-load errors (images, favicons…) — only script failures
+        if (e.target && e.target !== window) return;
+        showFallback();
+      }, true);
+    })();
+  </script>
 
   <script>
     import { pushRecent } from '../lib/local.js';

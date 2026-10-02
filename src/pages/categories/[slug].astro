@@ -1,10 +1,14 @@
 ---
+/**
+ * V4 — Category pages are Studios: grouped discovery with local search,
+ * a Popular strip and a full filterable grid. URLs are preserved.
+ */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ToolCard from '../../components/ToolCard.astro';
 import Icon from '../../components/Icon.astro';
 import Breadcrumb from '../../components/Breadcrumb.astro';
 import { categories, getCategory } from '../../data/site.js';
-import { tools, getToolsByCategory } from '../../data/tools.js';
+import { tools, getToolsByCategory, popularActions } from '../../data/tools.js';
 
 export function getStaticPaths() {
   return categories
@@ -14,68 +18,188 @@ export function getStaticPaths() {
 
 const cat = getCategory(Astro.params.slug);
 const catTools = getToolsByCategory(cat.slug);
+const popularSlugs = new Set(popularActions.filter((a) => catTools.some((t) => t.slug === a.slug)).map((a) => a.slug));
+const popularTools = catTools.filter((t) => popularSlugs.has(t.slug)).slice(0, 4);
+const allTools = catTools.filter((t) => !popularSlugs.has(t.slug) || catTools.length <= 4);
 ---
 
 <BaseLayout
-  title={`${cat.name} tools — free and local`}
+  title={`${cat.name} Studio — free and local tools`}
   description={cat.description}
   path={`/categories/${cat.slug}/`}
 >
   <div class="container page-top">
     <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Categories', href: '/categories/' }, { label: cat.name }]} />
 
-    <header class="cat-head">
-      <span class="cat-icon" style={`--hue:${cat.hue}`} aria-hidden="true">
+    <header class="studio-head">
+      <span class="studio-icon" style={`--hue:${cat.hue}`} aria-hidden="true">
         <Icon name={cat.icon} size={26} />
       </span>
-      <h1>{cat.name}</h1>
-      <p>{cat.description}</p>
+      <div class="studio-title">
+        <h1>{cat.name} <span class="studio-badge">Studio</span></h1>
+        <p>{cat.description} · {catTools.length} tools · 100% local</p>
+      </div>
+      <div class="studio-search">
+        <Icon name="search" size={16} />
+        <input type="search" data-studio-search placeholder={`Search in ${cat.name}…`} aria-label={`Search ${cat.name} tools`} />
+      </div>
     </header>
 
-    <div class="tools-grid">
-      {catTools.map((tool) => <ToolCard tool={tool} />)}
-    </div>
+    {popularTools.length > 0 && (
+      <section class="studio-section">
+        <h2 class="studio-h">Popular in this Studio</h2>
+        <div class="tools-grid" data-popular>
+          {popularTools.map((tool) => <ToolCard tool={tool} />)}
+        </div>
+      </section>
+    )}
+
+    <section class="studio-section">
+      <h2 class="studio-h">{popularTools.length ? 'All tools' : 'Tools'}</h2>
+      <div class="tools-grid" data-grid>
+        {allTools.map((tool) => <ToolCard tool={tool} />)}
+      </div>
+      <p class="studio-empty" data-empty hidden>
+        No tool matches “<span data-empty-q></span>” in this studio.
+        <button type="button" class="btn btn-ghost btn-sm" data-empty-clear>Show all tools</button>
+      </p>
+    </section>
   </div>
 </BaseLayout>
+
+<script>
+  const search = document.querySelector('[data-studio-search]');
+  if (search) {
+    const grid = document.querySelector('[data-grid]');
+    const popular = document.querySelector('[data-popular]');
+    const empty = document.querySelector('[data-empty]');
+    const emptyQ = document.querySelector('[data-empty-q]');
+    const cards = [...(grid ? grid.children : []), ...(popular ? popular.children : [])];
+
+    function applyFilter() {
+      const q = search.value.trim().toLowerCase();
+      let shown = 0;
+      for (const card of cards) {
+        const txt = card.textContent.toLowerCase();
+        const match = !q || txt.includes(q) || (card.dataset.kw || '').includes(q);
+        card.toggleAttribute('hidden', !match);
+        if (match) shown++;
+      }
+      empty.hidden = shown !== 0;
+      if (!shown) emptyQ.textContent = search.value.trim();
+    }
+    search.addEventListener('input', applyFilter);
+    document.querySelector('[data-empty-clear]').addEventListener('click', () => {
+      search.value = '';
+      applyFilter();
+      search.focus();
+    });
+  }
+</script>
 
 <style>
   .page-top {
     padding-top: 26px;
-    padding-bottom: 40px;
+    padding-bottom: 48px;
     display: flex;
     flex-direction: column;
-    gap: 26px;
+    gap: 30px;
   }
 
-  .cat-head {
-    max-width: 640px;
+  .studio-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    flex-wrap: wrap;
   }
 
-  .cat-icon {
+  .studio-icon {
     display: grid;
     place-items: center;
     width: 56px;
     height: 56px;
+    flex: 0 0 56px;
     border-radius: 17px;
     color: var(--hue);
     background: color-mix(in srgb, var(--hue) 12%, transparent);
     border: 1px solid color-mix(in srgb, var(--hue) 25%, transparent);
-    margin-bottom: 18px;
   }
+
+  .studio-title { flex: 1; min-width: 240px; }
 
   h1 {
-    font-size: clamp(2rem, 4.6vw, 3rem);
-    margin-bottom: 10px;
+    font-size: clamp(1.9rem, 4.4vw, 2.8rem);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
   }
 
-  .cat-head p {
-    color: var(--muted);
-    font-size: 1.02rem;
+  .studio-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    padding: 4px 10px;
+    border-radius: 999px;
+    position: relative;
+    top: -2px;
+  }
+
+  .studio-title p { color: var(--muted); font-size: 0.98rem; }
+
+  .studio-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel);
+    color: var(--faint);
+    min-width: min(320px, 100%);
+    transition: border-color 0.15s;
+  }
+  .studio-search:focus-within { border-color: var(--accent); }
+  .studio-search input {
+    border: none;
+    background: none;
+    color: var(--text);
+    font: inherit;
+    font-size: 0.9rem;
+    width: 100%;
+    outline: none;
+  }
+
+  .studio-h {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 14px;
   }
 
   .tools-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
     gap: 16px;
+  }
+
+  .studio-empty {
+    border: 1px dashed var(--border-strong);
+    border-radius: 14px;
+    padding: 28px;
+    text-align: center;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
   }
 </style>

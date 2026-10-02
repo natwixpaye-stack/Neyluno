@@ -9,6 +9,7 @@
 import { validateFile, MAX_FILE_BYTES } from './files.js';
 import { formatBytes } from './format.js';
 import { toast, downloadBlob } from './ui.js';
+import { applyPattern, validPattern } from './naming.js';
 
 let uid = 0;
 
@@ -26,6 +27,7 @@ export function mountFileTool(root, config = {}) {
     onListChange = () => {},
     summary = false,
     onHandoff = null, // fn(item) called when an item is done
+    naming = false, // V4: expose a {name}/{n}/{width}x{height} naming pattern UI
   } = config;
 
   const input = root.querySelector('[data-file-input]');
@@ -97,10 +99,11 @@ export function mountFileTool(root, config = {}) {
     return {
       id: ++uid,
       file,
-      status: 'pending', // pending | working | done | error
+      status: 'pending', // pending | working | done | error | cancelled
       error: null,
       result: null,
       el: null,
+      cancelled: false, // V4: set true to drop the result once processing returns
     };
   }
 
@@ -201,10 +204,22 @@ export function mountFileTool(root, config = {}) {
     const actions = el.querySelector('.fi-actions');
     actions.querySelector('[data-download]')?.remove();
     actions.querySelector('[data-retry]')?.remove();
+    actions.querySelector('[data-cancel]')?.remove();
 
     if (item.status === 'working') {
       status.textContent = 'Processing…';
       status.className = 'fi-status';
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.className = 'btn btn-sm btn-ghost';
+      cancel.dataset.cancel = '';
+      cancel.textContent = 'Cancel';
+      cancel.addEventListener('click', () => {
+        item.cancelled = true;
+        cancel.disabled = true;
+        cancel.textContent = 'Stopping…';
+      });
+      actions.insertBefore(cancel, actions.querySelector('.icon-btn'));
     } else if (item.status === 'done') {
       el.classList.add('is-done');
       status.textContent = 'Done';
@@ -216,15 +231,15 @@ export function mountFileTool(root, config = {}) {
       btn.textContent = 'Download';
       btn.addEventListener('click', () => {
         if (item.result?.blob) {
-          downloadBlob(item.result.blob, item.result.name);
+          downloadBlob(item.result.blob, finalName(item));
           btn.textContent = 'Downloaded ✓';
           setTimeout(() => (btn.textContent = 'Download'), 2200);
         }
       });
       actions.insertBefore(btn, actions.querySelector('.icon-btn'));
-    } else if (item.status === 'error') {
+    } else if (item.status === 'error' || item.status === 'cancelled') {
       el.classList.add('is-error');
-      status.textContent = 'Failed';
+      status.textContent = item.status === 'cancelled' ? 'Cancelled' : 'Failed';
       status.className = 'fi-status err';
       const retry = document.createElement('button');
       retry.type = 'button';
@@ -245,9 +260,17 @@ export function mountFileTool(root, config = {}) {
     if (!process) return;
     item.status = 'working';
     item.error = null;
+    item.cancelled = false;
     updateStatus(item);
     try {
       const result = await process(item);
+      if (item.cancelled) {
+        item.status = 'cancelled';
+        item.result = null;
+        updateStatus(item);
+        sync();
+        return;
+      }
       if (!result?.blob) throw new Error('Processing produced no result.');
       item.result = result;
       item.status = 'done';
@@ -318,6 +341,48 @@ export function mountFileTool(root, config = {}) {
     set('[data-sum-saved]', saved >= 0 ? `−${Math.round((saved / Math.max(1, before)) * 100)} %` : '—');
   }
 
+  /* ---------- V4 naming pattern ---------- */
+  let patternInput = null;
+  let patternPreview = null;
+  let patternHint = null;
+
+  function finalName(item) {
+    const base = item.result?.name || item.file.name;
+    const pattern = patternInput?.value.trim();
+    if (!pattern || !validPattern(pattern)) return base;
+    const idx = Math.max(1, state.items.indexOf(item) + 1);
+    const dot = base.lastIndexOf('.');
+    const ext = dot > 0 ? base.slice(dot + 1) : '';
+    return applyPattern(pattern, {
+      name: item.file.name,
+      n: idx,
+      width: item.result?.meta?.width,
+      height: item.result?.meta?.height,
+      ext,
+    });
+  }
+
+  function refreshPatternPreview() {
+    if (!patternInput || !patternPreview) return;
+    const pattern = patternInput.value.trim();
+    if (!pattern) {
+      patternPreview.textContent = '';
+      if (patternHint) patternHint.textContent = 'Tokens: {name} original name · {n} number · {ext} extension · {width}x{height} dimensions';
+      return;
+    }
+    if (!validPattern(pattern)) {
+      patternPreview.textContent = '';
+      if (patternHint) patternHint.textContent = 'Pattern too long — 80 characters max.';
+      return;
+    }
+    const sample = state.items[0];
+    const example = sample
+      ? finalName(sample)
+      : applyPattern(pattern, { name: 'photo.jpg', n: 1, ext: 'jpg' });
+    patternPreview.textContent = `e.g. ${example}`;
+    if (patternHint) patternHint.textContent = 'Tokens: {name} original name · {n} number · {ext} extension · {width}x{height} dimensions';
+  }
+
   /* ---------- ZIP ---------- */
   async function downloadAllZip() {
     const done = state.items.filter((i) => i.status === 'done' && i.result?.blob);
@@ -332,7 +397,7 @@ export function mountFileTool(root, config = {}) {
       const entries = {};
       const usedNames = new Set();
       for (const item of done) {
-        let name = item.result.name;
+        let name = finalName(item);
         if (usedNames.has(name)) {
           const dot = name.lastIndexOf('.');
           name = dot > 0 ? `${name.slice(0, dot)}-${item.id}${name.slice(dot)}` : `${name}-${item.id}`;
@@ -360,6 +425,7 @@ export function mountFileTool(root, config = {}) {
     if (dz) dz.hidden = n > 0 && !multiple;
     dz?.classList.toggle('compact', n > 0);
     refreshSummary();
+    refreshPatternPreview();
     onListChange(state.items);
   }
 
@@ -405,6 +471,29 @@ export function mountFileTool(root, config = {}) {
   clearBtn?.addEventListener('click', clear);
   zipBtn?.addEventListener('click', downloadAllZip);
   if (zipBtn) zipBtn.dataset.label = zipBtn.textContent.trim();
+
+  /* ---------- V4 naming UI ---------- */
+  if (naming) {
+    const wrap = document.createElement('div');
+    wrap.className = 'naming-row';
+    wrap.innerHTML = `
+      <label class="naming-label" for="naming-${root.id || 'tool'}">Rename files</label>
+      <div class="naming-field">
+        <input id="naming-${root.id || 'tool'}" class="input naming-input" type="text"
+          placeholder="e.g. {name}-{n}" autocomplete="off" spellcheck="false" />
+        <span class="naming-preview" aria-live="polite"></span>
+      </div>`;
+    const anchor = root.querySelector('.ftool-actions') || root.querySelector('.ftool-options');
+    (anchor ? anchor.insertAdjacentElement('afterend', wrap) : root.prepend(wrap));
+    patternInput = wrap.querySelector('input');
+    patternPreview = wrap.querySelector('.naming-preview');
+    patternHint = null;
+    patternInput.addEventListener('input', () => {
+      refreshPatternPreview();
+      // re-render done items so their download names update
+      state.items.filter((i) => i.status === 'done').forEach((i) => updateStatus(i));
+    });
+  }
 
   sync();
 

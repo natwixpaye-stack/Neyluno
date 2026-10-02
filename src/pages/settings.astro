@@ -1,0 +1,285 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
+import Icon from '../components/Icon.astro';
+import { site } from '../data/site.js';
+import { tools } from '../data/tools.js';
+
+const path = '/settings/';
+const version = '4.0';
+---
+
+<BaseLayout
+  title="Settings"
+  description="Appearance, privacy, keyboard shortcuts and local data — everything stays on your device."
+  path={path}
+>
+  <div class="container settings-page">
+    <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Settings' }]} />
+
+    <header class="settings-head">
+      <h1>Settings</h1>
+      <p>Everything here is stored <strong>locally in your browser</strong>. Nothing is sent anywhere.</p>
+    </header>
+
+    <!-- ============ APPEARANCE ============ -->
+    <section class="panel settings-section" aria-labelledby="s-appearance">
+      <h2 id="s-appearance"><Icon name="sun" size={17} /> Appearance</h2>
+      <div class="settings-row">
+        <span class="settings-label">Theme</span>
+        <div class="seg" role="radiogroup" aria-label="Theme">
+          <button type="button" class="seg-btn" role="radio" aria-checked="false" data-theme-opt="dark">Dark</button>
+          <button type="button" class="seg-btn" role="radio" aria-checked="false" data-theme-opt="light">Light</button>
+          <button type="button" class="seg-btn" role="radio" aria-checked="false" data-theme-opt="system">System</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ LANGUAGE ============ -->
+    <section class="panel settings-section" aria-labelledby="s-lang">
+      <h2 id="s-lang"><Icon name="globe" size={17} /> Language</h2>
+      <div class="settings-row">
+        <span class="settings-label">Interface</span>
+        <span class="settings-value">English</span>
+      </div>
+      <p class="settings-hint">
+        The interface is English-first. The architecture is dictionary-driven and ready for more languages —
+        French tool detection is already built into Flow.
+      </p>
+    </section>
+
+    <!-- ============ PRIVACY & LOCAL DATA ============ -->
+    <section class="panel settings-section" aria-labelledby="s-privacy">
+      <h2 id="s-privacy"><Icon name="shield" size={17} /> Privacy & local data</h2>
+      <p class="settings-hint">
+        Files are processed on your device and never uploaded. The only things stored locally are small
+        convenience preferences, listed below. You can erase them at any time.
+      </p>
+
+      <div class="settings-data" data-data-list>
+        <div class="settings-data-row">
+          <span class="settings-label">Recent tools <span class="settings-count" data-count-recents>0</span></span>
+          <button type="button" class="btn btn-ghost btn-sm" data-clear-recents>Clear</button>
+        </div>
+        <div class="settings-data-row">
+          <span class="settings-label">Favorites <span class="settings-count" data-count-favs>0</span></span>
+          <button type="button" class="btn btn-ghost btn-sm" data-clear-favs>Clear</button>
+        </div>
+        <div class="settings-data-row">
+          <span class="settings-label">Saved workflows <span class="settings-count" data-count-wf>0</span></span>
+          <button type="button" class="btn btn-ghost btn-sm" data-clear-wf>Clear</button>
+        </div>
+      </div>
+
+      <div class="settings-row settings-danger">
+        <span class="settings-label">Erase everything QuickTools stored in this browser</span>
+        <button type="button" class="btn btn-sm" data-clear-all style="border-color: color-mix(in srgb, #e5484d 50%, transparent); color: #e5484d;">
+          Clear all local data
+        </button>
+      </div>
+    </section>
+
+    <!-- ============ SHORTCUTS ============ -->
+    <section class="panel settings-section" aria-labelledby="s-shortcuts">
+      <h2 id="s-shortcuts"><Icon name="bolt" size={17} /> Keyboard shortcuts</h2>
+      <ul class="shortcut-list">
+        <li><span>Open the search palette</span><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>K</kbd> &nbsp;or&nbsp; <kbd>/</kbd></span></li>
+        <li><span>Run the current action (calculator, find &amp; replace…)</span><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd></span></li>
+        <li><span>Close dialogs and menus</span><span><kbd>Esc</kbd></span></li>
+        <li><span>Undo / redo (image editor)</span><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Z</kbd> / <kbd>⇧</kbd><kbd>Ctrl</kbd> + <kbd>Z</kbd></span></li>
+      </ul>
+    </section>
+
+    <!-- ============ ABOUT ============ -->
+    <section class="panel settings-section" aria-labelledby="s-about">
+      <h2 id="s-about"><Icon name="spark" size={17} /> About</h2>
+      <div class="settings-row">
+        <span class="settings-label">{site.name}</span>
+        <span class="settings-value">version {version} · {tools.length} tools · 100% local</span>
+      </div>
+      <p class="settings-hint">
+        Free, private, no account. Read the <a href="/privacy/">Privacy Center</a> for exactly what happens
+        with your files, or browse the <a href="/guides/">guides</a>.
+      </p>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .settings-page {
+    padding-top: 26px;
+    padding-bottom: 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    max-width: 760px;
+  }
+
+  .settings-head h1 {
+    font-size: clamp(1.9rem, 4.4vw, 2.7rem);
+    margin-bottom: 8px;
+  }
+
+  .settings-head p {
+    color: var(--muted);
+  }
+
+  .settings-section {
+    padding: clamp(18px, 2.6vw, 26px);
+  }
+
+  .settings-section h2 {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 1.08rem;
+    margin-bottom: 16px;
+  }
+
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 8px 0;
+  }
+
+  .settings-label {
+    font-weight: 600;
+    font-size: 0.92rem;
+  }
+
+  .settings-value {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .settings-hint {
+    color: var(--faint);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin-top: 8px;
+  }
+
+  .settings-count {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
+
+  .settings-data {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .settings-data-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+  }
+
+  .settings-danger {
+    border-top: 1px dashed var(--border-strong);
+    margin-top: 12px;
+    padding-top: 16px;
+  }
+
+  .shortcut-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .shortcut-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  kbd {
+    border: 1px solid var(--border-strong);
+    border-bottom-width: 2px;
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-size: 0.78rem;
+    background: var(--panel-strong);
+    color: var(--text);
+  }
+</style>
+
+<script>
+  import { applyTheme } from '../lib/ui.js';
+  import { getRecents, getFavorites, getSavedWorkflows } from '../lib/local.js';
+  import { site } from '../data/site.js';
+  import { toast } from '../lib/ui.js';
+
+  /* ---------- Appearance ---------- */
+  const themeBtns = document.querySelectorAll('[data-theme-opt]');
+  function syncThemeUI() {
+    const pref = document.documentElement.dataset.themePref || 'system';
+    themeBtns.forEach((b) => {
+      const active = b.dataset.themeOpt === pref;
+      b.classList.toggle('is-active', active);
+      b.setAttribute('aria-checked', String(active));
+    });
+  }
+  themeBtns.forEach((b) =>
+    b.addEventListener('click', () => {
+      applyTheme(b.dataset.themeOpt);
+      syncThemeUI();
+    })
+  );
+  syncThemeUI();
+
+  /* ---------- Local data counts & clearing ---------- */
+  const countRecents = document.querySelector('[data-count-recents]');
+  const countFavs = document.querySelector('[data-count-favs]');
+  const countWf = document.querySelector('[data-count-wf]');
+
+  function refreshCounts() {
+    countRecents.textContent = String(getRecents().length);
+    countFavs.textContent = String(getFavorites().length);
+    countWf.textContent = String(getSavedWorkflows().length);
+  }
+
+  function clearKey(key, label) {
+    try {
+      localStorage.removeItem(key);
+      toast(`${label} cleared.`, 'success');
+    } catch {
+      toast('Could not clear — storage unavailable.', 'error');
+    }
+    refreshCounts();
+  }
+
+  document.querySelector('[data-clear-recents]').addEventListener('click', () => clearKey(site.storageKeys.recents, 'Recent tools'));
+  document.querySelector('[data-clear-favs]').addEventListener('click', () => clearKey(site.storageKeys.favorites, 'Favorites'));
+  document.querySelector('[data-clear-wf]').addEventListener('click', () => clearKey(site.storageKeys.workflows, 'Saved workflows'));
+
+  document.querySelector('[data-clear-all]').addEventListener('click', () => {
+    if (!confirm('Erase everything QuickTools stored in this browser (theme, favorites, recents, workflows)?')) return;
+    try {
+      Object.values(site.storageKeys).forEach((k) => localStorage.removeItem(k));
+      toast('All local data cleared.', 'success');
+    } catch {
+      toast('Could not clear — storage unavailable.', 'error');
+    }
+    refreshCounts();
+  });
+
+  refreshCounts();
+</script>

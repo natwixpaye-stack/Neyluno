@@ -11,7 +11,7 @@ export const tools = [
     name: 'Image Compressor',
     icon: 'compress',
     category: 'images',
-    shortDesc: 'Reduce the file size of JPG, PNG and WebP images with a before/after comparison.',
+    group: 'Images',    shortDesc: 'Reduce the file size of JPG, PNG and WebP images with a before/after comparison.',
     description:
       'Compress JPG, PNG and WebP images with a quality slider, live before/after comparison, and per-file savings. Batch-friendly: drop up to 40 files at once.',
     keywords: ['compress', 'image', 'reduce', 'size', 'optimize', 'jpg', 'png', 'webp', 'smaller'],
@@ -29,7 +29,7 @@ export const tools = [
     name: 'Image Resizer',
     icon: 'resize',
     category: 'images',
-    shortDesc: 'Resize images by exact pixels or percentage, with the aspect ratio locked or free.',
+    group: 'Images',    shortDesc: 'Resize images by exact pixels or percentage, with the aspect ratio locked or free.',
     description:
       'Resize an image to exact width × height or by percentage. Aspect ratio locking, output format choice (JPG, PNG, WebP) and instant preview of the target dimensions.',
     keywords: ['resize', 'image', 'scale', 'dimensions', 'pixels', 'percentage', 'resizer'],
@@ -47,7 +47,7 @@ export const tools = [
     name: 'JPG to WebP',
     icon: 'img-convert',
     category: 'images',
-    shortDesc: 'Convert JPG images to WebP and cut their weight by up to 80%.',
+    group: 'Images',    shortDesc: 'Convert JPG images to WebP and cut their weight by up to 80%.',
     description:
       'Convert one or many JPG/JPEG images to WebP, right in your browser. Quality control, per-file before/after sizes, individual or ZIP download.',
     keywords: ['jpg', 'jpeg', 'webp', 'convert', 'conversion', 'image'],
@@ -65,7 +65,7 @@ export const tools = [
     name: 'PNG to WebP',
     icon: 'img-convert',
     category: 'images',
-    shortDesc: 'Convert PNG images to WebP while keeping transparency.',
+    group: 'Images',    shortDesc: 'Convert PNG images to WebP while keeping transparency.',
     description:
       'Convert PNG images to WebP with full transparency (alpha channel) support. Local processing, quality control, batch ZIP download.',
     keywords: ['png', 'webp', 'convert', 'transparency', 'alpha'],
@@ -83,7 +83,7 @@ export const tools = [
     name: 'WebP to JPG',
     icon: 'img-convert',
     category: 'images',
-    shortDesc: 'Convert WebP images to JPG for maximum compatibility.',
+    group: 'Images',    shortDesc: 'Convert WebP images to JPG for maximum compatibility.',
     description:
       'Convert WebP images to JPG universally supported format. Batch conversion, quality control, ZIP download — all local.',
     keywords: ['webp', 'jpg', 'jpeg', 'convert', 'compatibility'],
@@ -101,7 +101,7 @@ export const tools = [
     name: 'JPG to PNG',
     icon: 'img-convert',
     category: 'images',
-    shortDesc: 'Convert JPG images to lossless PNG.',
+    group: 'Images',    shortDesc: 'Convert JPG images to lossless PNG.',
     description:
       'Convert JPG/JPEG images to PNG, the lossless format with transparency support. Batch-friendly, fully local.',
     keywords: ['jpg', 'jpeg', 'png', 'convert', 'lossless'],
@@ -119,7 +119,7 @@ export const tools = [
     name: 'Image Rotator',
     icon: 'rotate',
     category: 'images',
-    shortDesc: 'Rotate images by 90° steps and flip them horizontally or vertically.',
+    group: 'Images',    shortDesc: 'Rotate images by 90° steps and flip them horizontally or vertically.',
     description:
       'Rotate any image by 90°, 180° or 270°, flip it horizontally or vertically, and export as JPG, PNG or WebP. Batch-friendly.',
     keywords: ['rotate', 'image', 'flip', '90 degrees', 'orientation', 'photo'],
@@ -137,7 +137,7 @@ export const tools = [
     name: 'Image Cropper',
     icon: 'crop',
     category: 'images',
-    shortDesc: 'Crop images to any ratio — square, 16:9, 4:3 — or a free selection.',
+    group: 'Images',    shortDesc: 'Crop images to any ratio — square, 16:9, 4:3 — or a free selection.',
     description:
       'Crop images interactively: drag the selection, pick a preset ratio (square, 16:9, 4:3…) or free crop, then export to JPG, PNG or WebP.',
     keywords: ['crop', 'image', 'cut', 'ratio', 'square', 'avatar', 'photo'],
@@ -155,7 +155,7 @@ export const tools = [
     name: 'Favicon Generator',
     icon: 'favicon',
     category: 'images',
-    shortDesc: 'Turn one image into a complete favicon set, including a multi-size .ico.',
+    group: 'Images',    shortDesc: 'Turn one image into a complete favicon set, including a multi-size .ico.',
     description:
       'Upload a logo and get a ready-to-use favicon kit: 16, 32, 48 px inside a real favicon.ico, plus 180 (Apple), 192 and 512 px PNGs, and the HTML snippet.',
     keywords: ['favicon', 'ico', 'generator', 'icon', 'website', 'logo'],
@@ -175,7 +175,7 @@ export const tools = [
     name: 'Merge PDF',
     icon: 'merge',
     category: 'pdf',
-    shortDesc: 'Combine several PDF files into one document, in the order you choose.',
+    group: 'PDF & Documents',    shortDesc: 'Combine several PDF files into one document, in the order you choose.',
     description:
       'Merge multiple PDFs into a single file: drag-free reordering with buttons, page counts per document, per-file removal. Local processing with pdf-lib.',
     keywords: ['pdf', 'merge', 'combine', 'join', 'assemble'],
@@ -193,7 +193,7 @@ export const tools = [
     name: 'Split PDF',
     icon: 'split',
     category: 'pdf',
-    shortDesc: 'Extract pages from a PDF or burst every page into separate files.',
+    group: 'PDF & Documents',    shortDesc: 'Extract pages from a PDF or burst every page into separate files.',
     description:
       'Split a PDF two ways: extract a page range (e.g. 1-3, 5, 8-10) into a new PDF, or export every page as its own file in a ZIP.',
     keywords: ['pdf', 'split', 'extract', 'pages', 'separate', 'burst'],
@@ -211,7 +211,7 @@ export const tools = [
     name: 'Compress PDF',
     icon: 'pdf-compress',
     category: 'pdf',
-    shortDesc: 'Reduce PDF file size — with an honest result, no fake compression.',
+    group: 'PDF & Documents',    shortDesc: 'Reduce PDF file size — with an honest result, no fake compression.',
     description:
       'Compress a PDF by rebuilding it with optimized object streams and stripped metadata. If the file is already optimal, the tool tells you instead of pretending.',
     keywords: ['pdf', 'compress', 'reduce', 'size', 'optimize', 'shrink'],
@@ -229,7 +229,7 @@ export const tools = [
     name: 'Rotate PDF',
     icon: 'rotate',
     category: 'pdf',
-    shortDesc: 'Rotate every page of a PDF by 90°, 180° or 270°.',
+    group: 'PDF & Documents',    shortDesc: 'Rotate every page of a PDF by 90°, 180° or 270°.',
     description:
       'Fix a scanned document that ended up sideways: rotate all pages of a PDF by 90°, 180° or 270° and download the corrected file.',
     keywords: ['pdf', 'rotate', 'orientation', 'pages', 'landscape', 'portrait'],
@@ -247,7 +247,7 @@ export const tools = [
     name: 'Image to PDF',
     icon: 'img-pdf',
     category: 'pdf',
-    shortDesc: 'Turn one or more images into a single PDF document.',
+    group: 'PDF & Documents',    shortDesc: 'Turn one or more images into a single PDF document.',
     description:
       'Create a PDF from JPG, PNG or WebP images: reorder pages, choose orientation, page size and margins. Generated 100% locally with pdf-lib.',
     keywords: ['pdf', 'image', 'jpg', 'png', 'convert', 'document'],
@@ -265,7 +265,7 @@ export const tools = [
     name: 'PDF to Image',
     icon: 'pdf-img',
     category: 'pdf',
-    shortDesc: 'Render PDF pages as high-quality PNG images.',
+    group: 'PDF & Documents',    shortDesc: 'Render PDF pages as high-quality PNG images.',
     description:
       'Convert each page of a PDF into a crisp PNG image, at 1× or 2× resolution. Download pages individually or as a ZIP.',
     keywords: ['pdf', 'image', 'png', 'convert', 'render', 'jpg'],
@@ -285,7 +285,7 @@ export const tools = [
     name: 'Word Counter',
     icon: 'counter',
     category: 'text',
-    shortDesc: 'Count words, characters, sentences, paragraphs and reading time in real time.',
+    group: 'Text',    shortDesc: 'Count words, characters, sentences, paragraphs and reading time in real time.',
     description:
       'Paste or type your text and get live stats: words, characters, characters without spaces, sentences, paragraphs, lines and estimated reading time.',
     keywords: ['words', 'characters', 'count', 'text', 'sentences', 'paragraphs', 'reading time'],
@@ -303,7 +303,7 @@ export const tools = [
     name: 'Case Converter',
     icon: 'case',
     category: 'text',
-    shortDesc: 'UPPERCASE, lowercase, Title Case, camelCase, snake_case and more.',
+    group: 'Text',    shortDesc: 'UPPERCASE, lowercase, Title Case, camelCase, snake_case and more.',
     description:
       'Convert text between cases instantly: UPPERCASE, lowercase, Title Case, Sentence case, camelCase, PascalCase, snake_case, kebab-case.',
     keywords: ['case', 'uppercase', 'lowercase', 'title case', 'camelcase', 'capitalize'],
@@ -320,7 +320,7 @@ export const tools = [
     name: 'Sort Lines',
     icon: 'sort',
     category: 'text',
-    shortDesc: 'Sort lines alphabetically, reverse, or numerically — with one click.',
+    group: 'Text',    shortDesc: 'Sort lines alphabetically, reverse, or numerically — with one click.',
     description:
       'Sort the lines of any text: A→Z, Z→A, or numeric. Optional case-insensitive mode and trimming of extra spaces.',
     keywords: ['sort', 'lines', 'alphabetical', 'order', 'list'],
@@ -337,7 +337,7 @@ export const tools = [
     name: 'Remove Duplicate Lines',
     icon: 'dedupe',
     category: 'text',
-    shortDesc: 'Delete duplicate lines from any text, keeping the first occurrence.',
+    group: 'Text',    shortDesc: 'Delete duplicate lines from any text, keeping the first occurrence.',
     description:
       'Clean a list by removing duplicate lines. Optional case-insensitive matching, trim, and blank-line removal — with a live count of removed duplicates.',
     keywords: ['duplicates', 'remove', 'unique', 'lines', 'dedupe', 'list'],
@@ -357,7 +357,7 @@ export const tools = [
     name: 'JSON Formatter',
     icon: 'json',
     category: 'developer',
-    shortDesc: 'Format, validate and minify JSON with precise error messages.',
+    group: 'Developer',    shortDesc: 'Format, validate and minify JSON with precise error messages.',
     description:
       'Beautify JSON with 2 or 4 spaces, minify it, and get line-accurate validation errors when the input is broken.',
     keywords: ['json', 'formatter', 'validator', 'beautify', 'minify', 'pretty print'],
@@ -375,7 +375,7 @@ export const tools = [
     name: 'Base64 Encoder / Decoder',
     icon: 'base64',
     category: 'developer',
-    shortDesc: 'Encode text to Base64 and decode it back — UTF-8 safe.',
+    group: 'Developer',    shortDesc: 'Encode text to Base64 and decode it back — UTF-8 safe.',
     description:
       'Two-way Base64 conversion with full Unicode support, URL-safe output option and instant error detection on invalid input.',
     keywords: ['base64', 'encode', 'decode', 'converter', 'utf-8'],
@@ -393,7 +393,7 @@ export const tools = [
     name: 'URL Encoder / Decoder',
     icon: 'url',
     category: 'developer',
-    shortDesc: 'Percent-encode or decode URLs and query strings safely.',
+    group: 'Developer',    shortDesc: 'Percent-encode or decode URLs and query strings safely.',
     description:
       'Encode any text for safe use in URLs (percent-encoding), or decode a percent-encoded string back. Component and full-URL modes.',
     keywords: ['url', 'encode', 'decode', 'percent encoding', 'query string', 'uri'],
@@ -410,7 +410,7 @@ export const tools = [
     name: 'UUID Generator',
     icon: 'uuid',
     category: 'developer',
-    shortDesc: 'Generate v4 UUIDs with the browser cryptographic RNG — one or a thousand.',
+    group: 'Developer',    shortDesc: 'Generate v4 UUIDs with the browser cryptographic RNG — one or a thousand.',
     description:
       'Generate RFC 4122 version-4 UUIDs using crypto.randomUUID(). Single or batch mode (up to 1000), uppercase/hyphen options, copy all.',
     keywords: ['uuid', 'guid', 'generator', 'random', 'v4', 'unique id'],
@@ -428,7 +428,7 @@ export const tools = [
     name: 'Timestamp Converter',
     icon: 'clock',
     category: 'developer',
-    shortDesc: 'Unix timestamp to human date and back — seconds and milliseconds.',
+    group: 'Developer',    shortDesc: 'Unix timestamp to human date and back — seconds and milliseconds.',
     description:
       'Convert Unix timestamps to readable dates (local + UTC) and dates to timestamps. Auto-detects seconds vs milliseconds, shows “now” live.',
     keywords: ['timestamp', 'unix', 'epoch', 'converter', 'date', 'time'],
@@ -445,7 +445,7 @@ export const tools = [
     name: 'Regex Tester',
     icon: 'regex',
     category: 'developer',
-    shortDesc: 'Test regular expressions live, with highlighted matches and capture groups.',
+    group: 'Developer',    shortDesc: 'Test regular expressions live, with highlighted matches and capture groups.',
     description:
       'Live regex testing: matches highlighted in the subject text, match list with indices, capture-group breakdown, and friendly syntax-error messages.',
     keywords: ['regex', 'regular expression', 'test', 'match', 'pattern', 'groups'],
@@ -465,7 +465,7 @@ export const tools = [
     name: 'Percentage Calculator',
     icon: 'percent',
     category: 'calculators',
-    shortDesc: 'Five modes: X% of Y, proportion, change, discount, increase.',
+    group: 'Calculators',    shortDesc: 'Five modes: X% of Y, proportion, change, discount, increase.',
     description:
       'Calculate instantly: X% of Y, what percent X is of Y, percentage change, or apply a discount/increase. Result as you type, formula shown.',
     keywords: ['percentage', 'calculator', 'percent', 'discount', 'increase', 'proportion'],
@@ -483,7 +483,7 @@ export const tools = [
     name: 'Unit Converter',
     icon: 'unit',
     category: 'calculators',
-    shortDesc: 'Length, weight, temperature, data, volume and speed — converted live.',
+    group: 'Calculators',    shortDesc: 'Length, weight, temperature, data, volume and speed — converted live.',
     description:
       'Convert between metric and imperial units across six categories: length, weight, temperature, data storage, volume and speed. Live, bidirectional.',
     keywords: ['unit', 'converter', 'metric', 'imperial', 'length', 'weight', 'temperature', 'km to miles'],
@@ -501,7 +501,7 @@ export const tools = [
     name: 'Date Calculator',
     icon: 'calendar',
     category: 'calculators',
-    shortDesc: 'Difference between two dates, or add/subtract days, months and years.',
+    group: 'Calculators',    shortDesc: 'Difference between two dates, or add/subtract days, months and years.',
     description:
       'Two calculators in one: the exact difference between two dates (days, weeks, months, years), and date arithmetic — add or subtract days, months, years.',
     keywords: ['date', 'calculator', 'difference', 'days between', 'add days', 'duration'],
@@ -521,7 +521,7 @@ export const tools = [
     name: 'QR Code Generator',
     icon: 'qr',
     category: 'utilities',
-    shortDesc: 'Live QR codes for links, text, email, phone and Wi-Fi — PNG or SVG export.',
+    group: 'Utilities',    shortDesc: 'Live QR codes for links, text, email, phone and Wi-Fi — PNG or SVG export.',
     description:
       'Generate a customized QR code in real time: URL, text, email, phone, SMS or Wi-Fi. Colors, size, margin and error-correction level. Export PNG or SVG.',
     keywords: ['qr', 'qrcode', 'qr code', 'generator', 'make qr'],
@@ -539,7 +539,7 @@ export const tools = [
     name: 'Password Generator',
     icon: 'password',
     category: 'security',
-    shortDesc: 'Strong random passwords with crypto.getRandomValues() — never sent anywhere.',
+    group: 'Utilities',    shortDesc: 'Strong random passwords with crypto.getRandomValues() — never sent anywhere.',
     description:
       'Generate strong, random passwords: adjustable length, uppercase, digits, symbols, ambiguous-character exclusion. Entropy meter and one-click copy. 100% local.',
     keywords: ['password', 'generator', 'random', 'strong', 'secure'],
@@ -551,6 +551,252 @@ export const tools = [
       { q: 'How long should my password be?', a: 'At least 12 characters for regular accounts, 16+ for sensitive ones. A 16-character password mixing all sets exceeds 90 bits of entropy — out of brute-force reach.' },
     ],
     seo: `<p>Short, reused passwords are the number one cause of account takeovers. The fix: <strong>long, random, unique passwords</strong> for every service — exactly what this generator produces.</p><p>Generation relies on <strong>crypto.getRandomValues()</strong>, the browser cryptographic RNG, and each draw guarantees at least one character from every selected set. The <strong>entropy meter</strong> shows the real strength in bits. Everything stays local: the password is neither transmitted nor stored.</p>`,
+  },
+  /* ============================== V4 — NEW TOOLS ============================== */
+  {
+    slug: 'image-converter',
+    name: 'Image Converter',
+    icon: 'img-convert',
+    category: 'images',
+    group: 'Images',
+    shortDesc: 'Convert images between JPG, PNG, WebP and more — one tool, every direction.',
+    description:
+      'The unified image converter: choose a target format (JPG, PNG, WebP…) and drop as many images as you like. Handles transparency, background color for flat formats, quality control and batch ZIP download. Everything runs in your browser.',
+    keywords: ['convert', 'image', 'jpg', 'png', 'webp', 'converter', 'format', 'batch'],
+    intents: [
+      'convert image', 'convert photo', 'change image format', 'image to png', 'image to jpg', 'image to webp',
+      'webp to png', 'png to jpg', 'jpg to png', 'convert many images', 'batch convert images', 'transformer image',
+      'convertir image', 'convertir photo', 'changer format image', 'image en png', 'image en jpg', 'image en webp',
+    ],
+    steps: ['Pick the target format', 'Drop one or more images', 'Download individually or as a ZIP'],
+    faq: [
+      { q: 'Which formats can I convert to?', a: 'JPG, PNG and WebP — the three formats browsers can encode natively, with the best quality-to-size ratio. Decoding supports everything your browser can open (GIF, BMP, AVIF…).' },
+      { q: 'What happens to transparency when converting to JPG?', a: 'JPG has no transparency channel. Pick a background color in the options (white by default) — or keep PNG/WebP to preserve transparency.' },
+      { q: 'Are my images uploaded?', a: 'No. Conversion uses the Canvas API locally. Files never leave your device.' },
+    ],
+    seo: `<p>This <strong>universal image converter</strong> replaces a dozen single-purpose pages: pick a target format — <strong>JPG, PNG or WebP</strong> — drop your files, done. JPG for photos, PNG for graphics and transparency, WebP for the web.</p><p>Batch-friendly: drop up to 40 images at once, control quality, choose the background color for flat formats, and download everything as a <strong>ZIP</strong>. All conversions happen in your browser — nothing is uploaded anywhere.</p>`,
+  },
+  {
+    slug: 'image-editor',
+    name: 'Image Editor',
+    icon: 'edit',
+    category: 'images',
+    group: 'Images',
+    shortDesc: 'Adjust brightness, contrast, saturation and more — with undo/redo, no install.',
+    description:
+      'A focused image editor: brightness, contrast, saturation, grayscale, sepia, blur and invert — plus rotation and mirroring. Undo/redo history, reset, format and quality choice on export. Fully local.',
+    keywords: ['edit', 'image', 'adjust', 'brightness', 'contrast', 'saturation', 'filter', 'editor'],
+    intents: [
+      'edit image', 'adjust image', 'brighten image', 'increase contrast', 'make photo brighter', 'photo too dark',
+      'black and white image', 'grayscale', 'sepia photo', 'modifier image', 'améliorer photo', 'photo trop sombre',
+      'augmenter contraste', 'noir et blanc',
+    ],
+    steps: ['Drop your image', 'Adjust with live preview', 'Export in JPG, PNG or WebP'],
+    faq: [
+      { q: 'Is this a full photo editor?', a: 'No — it focuses on adjustments (exposure, contrast, color, blur) and transforms (rotation, mirror) that cover most quick fixes. No layers, no cropping; that keeps it fast and simple.' },
+      { q: 'Can I undo a change?', a: 'Yes, every adjustment is recorded: use Undo/Redo buttons or Ctrl/Cmd+Z, and Reset to return to the original.' },
+      { q: 'Is quality lost when exporting?', a: 'Only if you pick JPG/WebP at low quality. PNG export is lossless.' },
+    ],
+    seo: `<p>Quick fixes should not require heavy software. This <strong>online image editor</strong> adjusts <strong>brightness, contrast, saturation, hue, blur</strong>, applies grayscale or sepia, rotates and mirrors — with a live preview and full <strong>undo/redo</strong>.</p><p>When the result looks right, export in JPG, PNG or WebP at the quality you want. Processing is 100% local: your photo never leaves your browser.</p>`,
+  },
+  {
+    slug: 'watermark',
+    name: 'Watermark',
+    icon: 'watermark',
+    category: 'images',
+    group: 'Images',
+    shortDesc: 'Stamp text over images — position, opacity, size, tiling and batch mode.',
+    description:
+      'Add a text watermark to one or many images: choose the message, position (or full tiling), opacity, size and rotation. Batch-friendly with ZIP download. Ideal for protecting photos before publishing.',
+    keywords: ['watermark', 'image', 'photo', 'text', 'logo', 'protect', 'stamp', 'tile'],
+    intents: [
+      'watermark image', 'add watermark', 'add text to image', 'protect photo', 'stamp image', 'filigrane image',
+      'ajouter filigrane', 'texte sur image', 'tampon image', 'protéger photo',
+    ],
+    steps: ['Drop your images', 'Write the watermark text and tune it', 'Download, one by one or as ZIP'],
+    faq: [
+      { q: 'Can I use my logo image as a watermark?', a: 'Text watermarking is supported for now — it is faster and scales cleanly. Image watermarking is on the roadmap.' },
+      { q: 'What is tiling?', a: 'Tiling repeats the watermark across the whole image diagonally, which makes it much harder to crop out.' },
+      { q: 'Is my photo uploaded?', a: 'No. The watermark is drawn locally with the Canvas API and never leaves your device.' },
+    ],
+    seo: `<p>Before publishing photos online, a <strong>watermark</strong> discourages reuse without credit. This tool stamps any text on your images — pick the <strong>position or full tiling</strong>, opacity, size and rotation, then process an entire batch at once.</p><p>Everything is rendered locally in your browser; your images are never uploaded. Download each result or the whole batch as a ZIP.</p>`,
+  },
+  {
+    slug: 'image-analyzer',
+    name: 'Image Analyzer',
+    icon: 'analyze',
+    category: 'images',
+    group: 'Images',
+    shortDesc: 'Instant facts about any image: dimensions, format, weight, transparency — plus what to do next.',
+    description:
+      'Drop an image and get the full picture: exact dimensions, megapixels, aspect ratio, file weight, format and whether it uses transparency. The analyzer then suggests the right QuickTools action (compress, convert, resize).',
+    keywords: ['analyze', 'image', 'metadata', 'dimensions', 'size', 'check', 'properties', 'inspect'],
+    intents: [
+      'analyze image', 'image info', 'image properties', 'check image size', 'image dimensions', 'is image transparent',
+      'image metadata', 'analyser image', 'infos image', 'taille image', 'dimensions image',
+    ],
+    steps: ['Drop your image', 'Read the report', 'Use the suggested actions'],
+    faq: [
+      { q: 'Does reading my image upload it?', a: 'No. Analysis happens in your browser — dimensions are decoded locally, file weight is read from the file itself.' },
+      { q: 'What are megapixels for?', a: 'Megapixels (width × height ÷ 1,000,000) indicate the true detail level of a photo — more useful than file size for judging quality.' },
+      { q: 'Which formats can I analyze?', a: 'Any format your browser can open: JPG, PNG, WebP, GIF, BMP, AVIF and more.' },
+    ],
+    seo: `<p>Before optimizing or uploading an image, know exactly what you have. This <strong>image analyzer</strong> reports <strong>dimensions, megapixels, aspect ratio, file weight and format</strong>, and detects transparency by sampling pixels.</p><p>It then points you to the right next step — compress a heavy file, convert a format, or resize oversized dimensions — all without leaving QuickTools.</p>`,
+  },
+  {
+    slug: 'text-cleaner',
+    name: 'Text Cleaner',
+    icon: 'spark',
+    category: 'text',
+    group: 'Text',
+    shortDesc: 'Clean messy text: trim lines, collapse spaces, remove duplicates and empty lines.',
+    description:
+      'Paste messy text and get it back clean: trimmed lines, collapsed spaces, normalized line breaks, empty lines removed, optional duplicate removal. Live output with copy and download.',
+    keywords: ['clean', 'text', 'trim', 'spaces', 'duplicates', 'lines', 'format', 'cleanup'],
+    intents: [
+      'clean text', 'remove extra spaces', 'remove empty lines', 'trim text', 'fix formatting', 'tidy up text',
+      'nettoyer texte', 'enlever espaces', 'supprimer lignes vides', 'texte sale', 'formater texte',
+    ],
+    steps: ['Paste your text', 'Pick the cleanups to apply', 'Copy or download the result'],
+    faq: [
+      { q: 'Does it change my wording?', a: 'No — only whitespace and line structure are touched. Words are never modified or reordered.' },
+      { q: 'Is the cleaning live?', a: 'Yes, the output updates as you type; toggle any option to see the effect instantly.' },
+      { q: 'Can it remove duplicate lines?', a: 'Enable “Remove duplicates” — first occurrence wins, order is preserved.' },
+    ],
+    seo: `<p>Text copied from emails, PDFs or spreadsheets is often riddled with extra spaces, broken line breaks and empty lines. This <strong>text cleaner</strong> trims lines, <strong>collapses repeated spaces</strong>, removes empty lines and optional duplicates — instantly, as you type.</p><p>The result is ready to paste anywhere clean: documents, databases, code. Copy it or download a .txt file.</p>`,
+  },
+  {
+    slug: 'find-and-replace',
+    name: 'Find & Replace',
+    icon: 'search',
+    category: 'text',
+    group: 'Text',
+    shortDesc: 'Search and replace across large texts, with regex and case control.',
+    description:
+      'Replace every occurrence of a word, phrase or regular expression across any text. Case-insensitive mode, replacement count, and the result ready to copy.',
+    keywords: ['find', 'replace', 'search', 'regex', 'text', 'substitute', 'bulk'],
+    intents: [
+      'find and replace', 'replace word in text', 'replace all occurrences', 'search and replace', 'regex replace',
+      'rechercher remplacer', 'remplacer mot', 'remplacer texte', 'toutes les occurrences',
+    ],
+    steps: ['Paste your text', 'Set what to find and the replacement', 'Run Replace all'],
+    faq: [
+      { q: 'Does it support regular expressions?', a: 'Yes — enable “Regex” and use full JavaScript regex syntax. Without it, special characters are matched literally, safely.' },
+      { q: 'Is replacement instant on large texts?', a: 'Replacement runs locally and is near-instant up to several megabytes of text.' },
+      { q: 'Can I see how many replacements were made?', a: 'Yes, the counter is displayed after each run.' },
+    ],
+    seo: `<p>Renaming a product across a document, normalizing dates, fixing a typo repeated a hundred times — this <strong>find &amp; replace</strong> tool does it in one click, with optional <strong>regular expressions</strong> for power users.</p><p>Case-insensitive matching, a replacement counter and copy-ready output. No upload: everything happens in your browser.</p>`,
+  },
+  {
+    slug: 'text-diff',
+    name: 'Text Diff',
+    icon: 'diff',
+    category: 'text',
+    group: 'Text',
+    shortDesc: 'Compare two texts line by line and see exactly what changed.',
+    description:
+      'Paste two versions of a text and get a clear line-by-line diff: additions in green, deletions in red. Copy just the changes for a report or a ticket.',
+    keywords: ['diff', 'compare', 'text', 'changes', 'versions', 'merge'],
+    intents: [
+      'compare texts', 'diff two texts', 'what changed', 'text differences', 'compare versions',
+      'comparer textes', 'différence entre textes', 'voir changements',
+    ],
+    steps: ['Paste the original', 'Paste the modified version', 'Read the highlighted changes'],
+    faq: [
+      { q: 'How does the comparison work?', a: 'A longest-common-subsequence algorithm compares line by line — the same approach as developer diff tools.' },
+      { q: 'Can it compare very long texts?', a: 'Yes for everyday sizes. Extremely long inputs (tens of thousands of lines) are capped to keep the browser responsive.' },
+      { q: 'Can I copy only the changes?', a: 'Yes — “Copy changes” exports just the added and removed lines with +/− markers.' },
+    ],
+    seo: `<p>Which version of this paragraph is the right one? This <strong>text diff</strong> tool compares two texts <strong>line by line</strong> and highlights additions and deletions, like the diffs developers use for code.</p><p>Perfect for contracts, essays, changelogs or meeting notes. Copy the full change list in one click.</p>`,
+  },
+  {
+    slug: 'text-extractor',
+    name: 'Text Extractor',
+    icon: 'extract',
+    category: 'text',
+    group: 'Text',
+    shortDesc: 'Pull out every email, URL, number, hashtag or mention from any text.',
+    description:
+      'Paste any text and extract what matters: email addresses, URLs, numbers, hashtags, mentions. Deduplicated list, live count, copy or download.',
+    keywords: ['extract', 'emails', 'urls', 'numbers', 'hashtags', 'mentions', 'find', 'list'],
+    intents: [
+      'extract emails', 'get emails from text', 'extract urls', 'extract numbers', 'list hashtags', 'find mentions',
+      'extraire emails', 'extraire liens', 'trouver emails dans texte', 'lister hashtags',
+    ],
+    steps: ['Pick what to extract', 'Paste your text', 'Copy the deduplicated list'],
+    faq: [
+      { q: 'Are duplicates removed?', a: 'Yes — each item appears once, in order of first appearance.' },
+      { q: 'Which number formats are detected?', a: 'Integers and decimals with , or . separators, including negatives and percentage-style values.' },
+      { q: 'Is my text sent anywhere?', a: 'No. Extraction is pure client-side pattern matching.' },
+    ],
+    seo: `<p>Need every email address hidden in a report, every link in a paste, every number in a table? This <strong>text extractor</strong> scans your text and returns a clean, <strong>deduplicated list</strong> of emails, URLs, numbers, hashtags or mentions.</p><p>One click to copy or download the list — processed locally, nothing uploaded.</p>`,
+  },
+  {
+    slug: 'calculator',
+    name: 'Calculator',
+    icon: 'calc',
+    category: 'calculators',
+    group: 'Calculators',
+    shortDesc: 'One calculator, five modes: basic, scientific, percentage, finance and everyday.',
+    description:
+      'A single calculator covering daily needs: classic keypad, scientific functions (sqrt, sin, cos, log…), percentage changes, VAT/discount/compound interest, and everyday helpers (average, rule of three, age, speed).',
+    keywords: ['calculator', 'calculate', 'scientific', 'percentage', 'vat', 'compound', 'average', 'formula'],
+    intents: [
+      'calculate', 'calculator', 'scientific calculator', 'what is percent of', 'vat calculation', 'tva',
+      'compound interest', 'average calculator', 'rule of three', 'calculatrice', 'calculer', 'produit en croix',
+      'calcul moyenne', 'calcul âge',
+    ],
+    steps: ['Pick a mode', 'Type or tap your expression', 'Read the result — copy it if needed'],
+    faq: [
+      { q: 'Can I type expressions directly?', a: 'Yes — full expressions with parentheses, %, functions like sqrt(144) or sin(30), evaluated with a real parser (no fragile eval).' },
+      { q: 'How does percentage change work?', a: '“From 80 to 100” shows +25 %: (final − initial) ÷ initial × 100.' },
+      { q: 'Is the VAT calculator configurable?', a: 'Yes, set any rate — French 20 %, 10 %, 5.5 % or anything else — and get TTC from HT instantly.' },
+    ],
+    seo: `<p>Stop juggling four calculators. This <strong>online calculator</strong> groups five modes on one page: <strong>basic</strong> keypad, <strong>scientific</strong> functions, <strong>percentage</strong> (% of, change), <strong>finance</strong> (VAT, discounts, compound interest) and <strong>everyday</strong> helpers like averages, rule of three, age and speed.</p><p>Type expressions naturally — <code>(120 + 80) * 1.2</code> or <code>sqrt(144) + 5%</code> — and get exact results, computed locally.</p>`,
+  },
+  {
+    slug: 'color-studio',
+    name: 'Color Studio',
+    icon: 'palette',
+    category: 'developer',
+    group: 'Developer',
+    shortDesc: 'Pick colors, convert HEX/RGB/HSL, build palettes and check WCAG contrast.',
+    description:
+      'A color workspace: visual picker, instant HEX/RGB/HSL conversion, palette generators (tints, shades, complementary, analogous) and a WCAG 2.2 contrast checker with AA/AAA badges.',
+    keywords: ['color', 'hex', 'rgb', 'hsl', 'palette', 'contrast', 'wcag', 'picker', 'design'],
+    intents: [
+      'pick a color', 'hex to rgb', 'rgb to hex', 'color palette', 'generate palette', 'contrast checker',
+      'wcag contrast', 'color picker', 'choisir couleur', 'palette couleurs', 'contraste wcag', 'hex vers rgb',
+    ],
+    steps: ['Pick or paste a color', 'Explore palettes and formats', 'Check contrast against your background'],
+    faq: [
+      { q: 'Which formats are converted?', a: 'HEX, RGB and HSL — all three update live and copy in one click.' },
+      { q: 'What do the contrast badges mean?', a: 'WCAG 2.2 requires a 4.5:1 ratio for normal text (AA), 3:1 for large text, 7:1 for AAA. The checker computes the exact ratio against white or dark backgrounds.' },
+      { q: 'Are palettes random?', a: 'No — tints and shades vary lightness of your color; complementary rotates hue by 180°; analogous steps by 30°. Deterministic and harmonious.' },
+    ],
+    seo: `<p>Everything color, in one place: a <strong>color picker</strong>, instant <strong>HEX ↔ RGB ↔ HSL</strong> conversion, and palette generators based on real color theory — tints, shades, complementary and analogous schemes.</p><p>The built-in <strong>WCAG 2.2 contrast checker</strong> computes the exact luminance ratio and shows AA/AAA badges, so your designs are readable for everyone.</p>`,
+  },
+  {
+    slug: 'encoding-lab',
+    name: 'Encoding Lab',
+    icon: 'flask',
+    category: 'developer',
+    group: 'Developer',
+    shortDesc: 'Encode and decode Base64, URL, HTML entities and Unicode escapes in one place.',
+    description:
+      'Four encodings, one tool: Base64, URL percent-encoding, HTML entities and Unicode \\uXXXX escapes. Encode or decode with clear error messages when the input is malformed.',
+    keywords: ['base64', 'url encode', 'percent encoding', 'html entities', 'unicode', 'escape', 'decode'],
+    intents: [
+      'encode base64', 'decode base64', 'url encode', 'percent encode', 'html entities', 'encode for url',
+      'unicode escape', 'encoder base64', 'décoder base64', 'encoder url', 'entités html',
+    ],
+    steps: ['Pick the encoding format', 'Type or paste your text', 'Encode → or ← Decode'],
+    faq: [
+      { q: 'Does Base64 handle accents and emoji?', a: 'Yes — text is converted through UTF-8 first, so é, 你好 and 👍 all survive a Base64 round-trip.' },
+      { q: 'What if I paste invalid Base64?', a: 'You get a clear explanation of the cause and what to check — never a cryptic error.' },
+      { q: 'Is this encryption?', a: 'No. Encoding transforms formats; it is fully reversible by anyone. Never use it to hide secrets.' },
+    ],
+    seo: `<p>Base64 for data URIs, percent-encoding for URLs, HTML entities for markup, Unicode escapes for JavaScript strings — this <strong>encoding lab</strong> groups all four in one tool with instant switching.</p><p>UTF-8 aware (accents and emoji survive Base64), with honest error messages when input is malformed. Runs entirely in your browser.</p>`,
   },
 ];
 
@@ -642,4 +888,46 @@ export const nextSteps = {
     { slug: 'merge-pdf', label: 'Merge PDFs' },
   ],
   'favicon-generator': [{ slug: 'image-resizer', label: 'Resize another icon' }],
+  'image-converter': [
+    { slug: 'image-compressor', label: 'Compress the result' },
+    { slug: 'image-resizer', label: 'Resize it' },
+  ],
+  'image-editor': [
+    { slug: 'image-compressor', label: 'Compress it' },
+    { slug: 'watermark', label: 'Watermark it' },
+  ],
+  watermark: [
+    { slug: 'image-converter', label: 'Convert the result' },
+    { slug: 'image-compressor', label: 'Compress it' },
+  ],
+  'image-analyzer': [
+    { slug: 'image-compressor', label: 'Compress it' },
+    { slug: 'image-resizer', label: 'Resize it' },
+  ],
+  'text-cleaner': [
+    { slug: 'find-and-replace', label: 'Find & replace' },
+    { slug: 'text-extractor', label: 'Extract data' },
+  ],
+  'find-and-replace': [
+    { slug: 'text-diff', label: 'Compare versions' },
+    { slug: 'text-cleaner', label: 'Clean the text' },
+  ],
+  'text-diff': [
+    { slug: 'find-and-replace', label: 'Find & replace' },
+  ],
+  'text-extractor': [
+    { slug: 'text-cleaner', label: 'Clean the text' },
+  ],
+  calculator: [
+    { slug: 'unit-converter', label: 'Convert units' },
+    { slug: 'percentage-calculator', label: 'Percentage helper' },
+  ],
+  'color-studio': [
+    { slug: 'favicon-generator', label: 'Make a favicon' },
+    { slug: 'watermark', label: 'Watermark an image' },
+  ],
+  'encoding-lab': [
+    { slug: 'json-formatter', label: 'Format JSON' },
+    { slug: 'uuid-generator', label: 'Generate a UUID' },
+  ],
 };

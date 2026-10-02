@@ -6,7 +6,7 @@ const { tool, compact = false } = Astro.props;
 const cat = getCategory(tool.category);
 ---
 
-<a href={`/tools/${tool.slug}/`} class="card tool-card" data-spotlight>
+<a href={`/tools/${tool.slug}/`} class="card tool-card" data-spotlight data-kw={(tool.keywords || []).join(' ') + ' ' + (tool.intents || []).join(' ')}>
   <div class="tc-top">
     <span class="tc-icon" style={`--hue:${cat.hue}`} aria-hidden="true">
       <Icon name={tool.icon} size={compact ? 20 : 23} />

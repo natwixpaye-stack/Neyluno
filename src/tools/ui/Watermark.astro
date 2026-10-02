@@ -1,0 +1,172 @@
+---
+import Icon from '../../components/Icon.astro';
+---
+
+<div class="ftool wm" id="tool-watermark">
+  <div class="ftool-options">
+    <div class="wm-row">
+      <div class="field wm-text">
+        <label for="wm-text">Watermark text</label>
+        <input id="wm-text" class="input" data-text value="© QuickTools" maxlength="80" />
+      </div>
+      <div class="field wm-pos">
+        <label for="wm-pos">Position</label>
+        <select id="wm-pos" class="select" data-pos>
+          <option value="center">Center</option>
+          <option value="br" selected>Bottom right</option>
+          <option value="bl">Bottom left</option>
+          <option value="tr">Top right</option>
+          <option value="tl">Top left</option>
+          <option value="tile">Tiled (repeat)</option>
+        </select>
+      </div>
+    </div>
+    <div class="wm-row">
+      <div class="opt wm-half">
+        <label for="wm-opacity">Opacity <output data-op-out>30 %</output></label>
+        <input id="wm-opacity" type="range" min="5" max="100" value="30" data-opacity />
+      </div>
+      <div class="opt wm-half">
+        <label for="wm-size">Size <output data-size-out>6 %</output></label>
+        <input id="wm-size" type="range" min="2" max="20" value="6" data-size />
+      </div>
+      <div class="opt wm-half">
+        <label for="wm-rot">Rotation <output data-rot-out>-30°</output></label>
+        <input id="wm-rot" type="range" min="-90" max="90" value="-30" data-rot />
+      </div>
+    </div>
+  </div>
+
+  <div data-notice hidden></div>
+
+  <div class="dropzone" data-dropzone>
+    <input type="file" data-file-input multiple hidden />
+    <span class="dz-icon" aria-hidden="true"><Icon name="watermark" size={24} /></span>
+    <h3>Drag & drop your images here</h3>
+    <p>or click to browse · JPG, PNG, WebP · the mark is applied locally, in one pass</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choose images</span>
+  </div>
+
+  <div class="ftool-actions">
+    <span class="ftool-count" data-count aria-live="polite"></span>
+    <span class="ftool-actions-btns">
+      <button type="button" class="btn btn-ghost btn-sm" data-clear-all hidden>Start over</button>
+      <button type="button" class="btn btn-accent btn-sm" data-download-all hidden>Download all (ZIP)</button>
+    </span>
+  </div>
+
+  <ul class="file-list" data-file-list role="list" aria-label="Images being watermarked"></ul>
+
+  <div class="batch-summary" data-summary hidden>
+    <div class="stat"><div class="stat-value" data-sum-count>—</div><div class="stat-label">Files</div></div>
+    <div class="stat"><div class="stat-value" data-sum-done>—</div><div class="stat-label">Done</div></div>
+    <div class="stat"><div class="stat-value" data-sum-failed>—</div><div class="stat-label">Failed</div></div>
+  </div>
+</div>
+
+<style>
+  .ftool-options { margin-bottom: 22px; display: flex; flex-direction: column; gap: 14px; }
+  .wm-row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .wm-text { flex: 2; min-width: 200px; }
+  .wm-pos { flex: 1; min-width: 150px; }
+  .wm-half { flex: 1; min-width: 150px; }
+  .opt label { display: flex; justify-content: space-between; font-size: 0.88rem; font-weight: 600; color: var(--muted); margin-bottom: 10px; }
+  .opt output { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .ftool-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+  .ftool-count { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+  .ftool-actions-btns { display: flex; gap: 10px; }
+</style>
+
+<script>
+  import { mountFileTool } from '../../lib/fileui.js';
+  import { decodeImage, renameWithExt } from '../../lib/image.js';
+  import { bindRangeFill } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-watermark');
+  if (root) {
+    const textIn = root.querySelector('[data-text]');
+    const posSel = root.querySelector('[data-pos]');
+    const opR = root.querySelector('[data-opacity]');
+    const sizeR = root.querySelector('[data-size]');
+    const rotR = root.querySelector('[data-rot]');
+    [opR, sizeR, rotR].forEach(bindRangeFill);
+    const syncOuts = () => {
+      root.querySelector('[data-op-out]').textContent = `${opR.value} %`;
+      root.querySelector('[data-size-out]').textContent = `${sizeR.value} %`;
+      root.querySelector('[data-rot-out]').textContent = `${rotR.value}°`;
+    };
+    [textIn, posSel].forEach((el) => el.addEventListener('input', rerun));
+    [opR, sizeR, rotR].forEach((el) => {
+      el.addEventListener('input', syncOuts);
+      el.addEventListener('change', rerun);
+    });
+    syncOuts();
+
+    function rerun() {
+      if (api?.items.length) api.items.forEach((i) => api.processItem(i));
+    }
+
+    function drawWatermark(ctx, w, h) {
+      const text = textIn.value || '©';
+      const px = Math.max(10, Math.round((w * Number(sizeR.value)) / 100));
+      ctx.save();
+      ctx.globalAlpha = Number(opR.value) / 100;
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+      ctx.lineWidth = Math.max(1, px / 14);
+      ctx.font = `600 ${px}px system-ui, sans-serif`;
+      ctx.textBaseline = 'middle';
+      const rot = (Number(rotR.value) * Math.PI) / 180;
+      const margin = px;
+      const tw = ctx.measureText(text).width;
+      const pos = posSel.value;
+      const place = (x, y) => {
+        ctx.translate(x, y);
+        ctx.rotate(rot);
+        ctx.strokeText(text, 0, 0);
+        ctx.fillText(text, 0, 0);
+      };
+      if (pos === 'tile') {
+        const stepX = tw + margin * 4;
+        const stepY = px * 5;
+        for (let y = -h * 0.2; y < h * 1.2; y += stepY) {
+          for (let x = -w * 0.2; x < w * 1.2; x += stepX) {
+            ctx.save();
+            place(x, y);
+            ctx.restore();
+          }
+        }
+      } else {
+        const x = pos.includes('l') ? margin : pos === 'center' ? w / 2 - tw / 2 : w - tw - margin;
+        const y = pos.startsWith('t') ? margin + px / 2 : pos === 'center' ? h / 2 : h - margin - px / 2;
+        place(x, y);
+      }
+      ctx.restore();
+    }
+
+    const api = mountFileTool(root, {
+      acceptTypes: ['image/jpeg', 'image/png', 'image/webp'],
+      acceptExts: ['.jpg', '.jpeg', '.png', '.webp'],
+      summary: true,
+      naming: true,
+      process: async (item) => {
+        const img = await decodeImage(item.file);
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img.source, 0, 0);
+          drawWatermark(ctx, img.width, img.height);
+          const isPng = item.file.type === 'image/png';
+          const blob = await new Promise((res, rej) =>
+            canvas.toBlob((b) => (b ? res(b) : rej(new Error('Watermark export failed.'))), isPng ? 'image/png' : 'image/jpeg', 0.92)
+          );
+          return { blob, name: renameWithExt(item.file.name, isPng ? 'png' : 'jpg'), meta: { width: img.width, height: img.height } };
+        } finally {
+          img.close();
+        }
+      },
+    });
+  }
+</script>

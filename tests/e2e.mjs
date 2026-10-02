@@ -56,9 +56,9 @@ await ok('popular quick actions link to real tools', async () => {
   if (res.status() !== 200) throw new Error(`status ${res.status()}`);
 });
 
-await ok('tools grid renders 30 cards', async () => {
+await ok('tools grid renders 41 cards', async () => {
   const n = await page.locator('.tools-grid .tool-card').count();
-  if (n !== 30) throw new Error(`found ${n}`);
+  if (n !== 41) throw new Error(`found ${n}`);
 });
 
 await ok('category filter narrows the grid', async () => {
@@ -200,19 +200,25 @@ await ok('JSON formatter reports line+column on invalid JSON', async () => {
   if (!/line 3/.test(status)) throw new Error(status);
 });
 
+// V4: legacy base64 page redirects client-side to the unified Encoding Lab
 await page.goto(BASE + '/tools/base64-encode-decode/');
+await ok('legacy base64 page redirects to Encoding Lab', async () => {
+  await page.waitForURL(/\/tools\/encoding-lab/, { timeout: 6000 });
+  await page.waitForSelector('[data-encode]');
+});
+
 await ok('base64 round-trip with unicode', async () => {
   await page.fill('[data-input]', 'Héllo wörld 🙂');
   await page.click('[data-encode]');
   const enc = await page.inputValue('[data-output]');
-  await page.fill('[data-input]', enc);
+  if (!enc) throw new Error('no encoded output');
   await page.click('[data-decode]');
-  const dec = await page.inputValue('[data-output]');
+  const dec = await page.inputValue('[data-input]');
   if (dec !== 'Héllo wörld 🙂') throw new Error(dec);
 });
 
 await ok('base64 decode rejects garbage with friendly error', async () => {
-  await page.fill('[data-input]', '%%%not-base64%%%');
+  await page.fill('[data-output]', '%%%not-base64%%%');
   await page.click('[data-decode]');
   const status = await page.locator('[data-status]').innerText();
   if (!/not valid Base64/.test(status)) throw new Error(status);
@@ -342,6 +348,12 @@ await ok('workflow run over a batch produces stats + ZIP button', async () => {
   await page.waitForSelector('.file-list .file-item');
   await page.click('[data-run]');
   await page.waitForSelector('[data-summary]:not([hidden])', { timeout: 20000 });
+  // wait for the run to fully finish (summary updates progressively)
+  await page.waitForFunction(
+    () => /Finished|Stopped/.test(document.querySelector('[data-progress-label]')?.textContent || ''),
+    null,
+    { timeout: 20000 }
+  );
   const done = await page.locator('[data-sum-done]').innerText();
   if (done !== '2') throw new Error(`done=${done}`);
   if (await page.locator('[data-download-all]').isHidden()) throw new Error('ZIP button hidden');
@@ -410,16 +422,13 @@ await ok('wrong format rejected with friendly message', async () => {
 
 /* ================= SEO / ROUTES ================= */
 console.log('Routes & SEO');
-await ok('all 30 tool pages return 200', async () => {
-  const slugs = await page.evaluate(() =>
-    [...document.querySelectorAll('a[href^="/tools/"]')].map((a) => a.getAttribute('href'))
-  );
+await ok('all 41 tool pages return 200', async () => {
   // collect from /tools/ page instead (home may paginate)
   await page.goto(BASE + '/tools/');
   const links = await page.evaluate(() =>
     [...new Set([...document.querySelectorAll('.tool-card')].map((a) => a.getAttribute('href')))]
   );
-  if (links.length !== 30) throw new Error(`found ${links.length} tool cards`);
+  if (links.length !== 41) throw new Error(`found ${links.length} tool cards`);
   for (const href of links) {
     const res = await page.request.get(BASE + href);
     if (res.status() !== 200) throw new Error(`${href} → ${res.status()}`);
@@ -483,6 +492,99 @@ await ok('mobile nav opens and closes', async () => {
   // and it must be truly invisible now (the [hidden] attribute wins over display:flex)
   if (await mobile.locator('#mobile-nav').isVisible()) throw new Error('mobile nav still visible');
   await mobile.close();
+});
+
+/* ================= V4 ================= */
+console.log('V4');
+
+await ok('V4: Flow suggests a tool plan in the palette', async () => {
+  await page.goto(BASE + '/');
+  await page.keyboard.press('Control+k');
+  await page.waitForSelector('[data-search-overlay]:not([hidden])');
+  await page.fill('[data-search-input]', 'convert my images to webp');
+  await page.waitForSelector('[data-flow-result]');
+  const href = await page.getAttribute('[data-flow-result]', 'href');
+  if (!href.includes('/tools/image-converter/?to=image%2Fwebp')) throw new Error(href);
+  // the first keyboard-selectable result is still the tool grid, Flow is a bonus row
+  const firstTool = await page.locator('.sm-item').first().locator('.sm-item-name').innerText();
+  if (!firstTool) throw new Error('no tool results under the Flow row');
+});
+
+await ok('V4: Flow suggests a workflow plan and pre-fills the builder', async () => {
+  // modal is still open from the previous test
+  await page.fill('[data-search-input]', 'compress my photos for email');
+  await page.waitForSelector('[data-flow-result]');
+  const href = await page.getAttribute('[data-flow-result]', 'href');
+  if (!href.startsWith('/workflows/?plan=')) throw new Error(href);
+  await page.click('[data-flow-result]');
+  await page.waitForSelector('.wf-step');
+  const n = await page.locator('.wf-step').count();
+  if (n < 2) throw new Error(`steps ${n}`);
+});
+
+await ok('V4: legacy converter page redirects to unified Image Converter', async () => {
+  await page.goto(BASE + '/tools/jpg-to-webp/');
+  await page.waitForURL(/\/tools\/image-converter\/\?to=image(%2F|\/)webp/, { timeout: 6000 });
+  await page.waitForSelector('#tool-image-converter');
+  const to = await page.inputValue('[data-to]');
+  if (to !== 'image/webp') throw new Error(to);
+});
+
+await ok('V4: calculator evaluates (120 + 80) * 1.2 = 240', async () => {
+  await page.goto(BASE + '/tools/calculator/');
+  await page.fill('[data-expr]', '(120 + 80) * 1.2');
+  await page.click('[data-eval]');
+  const res = await page.locator('[data-res]').innerText();
+  if (!res.includes('240')) throw new Error(res);
+});
+
+await ok('V4: encoding lab URL tab percent-encodes', async () => {
+  await page.goto(BASE + '/tools/encoding-lab/');
+  await page.click('.el-tab[data-tab="url"]');
+  await page.fill('[data-input]', 'a b&c');
+  await page.click('[data-encode]');
+  const out = await page.inputValue('[data-output]');
+  if (out !== 'a%20b%26c') throw new Error(out);
+});
+
+await ok('V4: text diff counts additions and deletions', async () => {
+  await page.goto(BASE + '/tools/text-diff/');
+  await page.fill('[data-a]', 'one\ntwo\nthree');
+  await page.fill('[data-b]', 'one\n2\nthree\nfour');
+  await page.click('[data-run]');
+  const status = await page.locator('#tool-text-diff [data-status]').innerText();
+  if (!/\+2/.test(status) || !/−1/.test(status)) throw new Error(status);
+});
+
+await ok('V4: studio local search filters cards', async () => {
+  await page.goto(BASE + '/categories/images/');
+  await page.fill('[data-studio-search]', 'watermark');
+  await page.waitForTimeout(200);
+  const visible = await page.evaluate(() =>
+    [...document.querySelectorAll('.tool-card')].filter((c) => !c.hidden).length
+  );
+  if (visible !== 1) throw new Error(`visible ${visible}`);
+});
+
+await ok('V4: workflow duplicate step button works', async () => {
+  await page.goto(BASE + '/workflows/');
+  const before = await page.locator('.wf-step').count();
+  await page.click('.wf-step [data-dup]');
+  const after = await page.locator('.wf-step').count();
+  if (after !== before + 1) throw new Error(`${before} → ${after}`);
+});
+
+await ok('V4: workflow import rejects foreign JSON', async () => {
+  await page.evaluate(() => {
+    const input = document.querySelector('[data-wf-import-input]');
+    const dt = new DataTransfer();
+    dt.items.add(new File(['{"hello":1}'], 'wf.json', { type: 'application/json' }));
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  await page.waitForSelector('.toast', { timeout: 6000 });
+  const txt = await page.locator('.toast').first().innerText();
+  if (!/not exported by QuickTools/.test(txt)) throw new Error(txt);
 });
 
 await browser.close();

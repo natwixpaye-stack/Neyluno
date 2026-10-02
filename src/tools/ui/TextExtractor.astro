@@ -1,0 +1,78 @@
+<div class="stool" id="tool-text-extractor">
+  <div class="stool-toolbar" role="group" aria-label="What to extract">
+    <button type="button" class="preset" data-kind="emails" aria-pressed="true">Emails</button>
+    <button type="button" class="preset" data-kind="urls" aria-pressed="false">URLs</button>
+    <button type="button" class="preset" data-kind="numbers" aria-pressed="false">Numbers</button>
+    <button type="button" class="preset" data-kind="hashtags" aria-pressed="false">Hashtags</button>
+    <button type="button" class="preset" data-kind="mentions" aria-pressed="false">Mentions</button>
+  </div>
+  <div class="field">
+    <label for="te-in">Source text</label>
+    <textarea id="te-in" class="input" data-input placeholder="Paste any text — the matches appear below."></textarea>
+  </div>
+  <div class="stool-toolbar">
+    <span class="stool-status" data-status role="status"></span>
+    <button type="button" class="btn btn-ghost btn-sm" data-copy>Copy list</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-download>Download .txt</button>
+  </div>
+  <div class="field">
+    <label for="te-out">Extracted <span class="muted" data-count></span></label>
+    <textarea id="te-out" class="input" data-output readonly placeholder="Nothing extracted yet."></textarea>
+  </div>
+</div>
+
+<style>
+  .stool .preset {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .stool .preset[aria-pressed='true'] {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+</style>
+
+<script>
+  import { extract } from '../../lib/textops.js';
+  import { copyText, debounce, downloadBlob, toast } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-text-extractor');
+  if (root) {
+    const input = root.querySelector('[data-input]');
+    const output = root.querySelector('[data-output]');
+    const status = root.querySelector('[data-status]');
+    const count = root.querySelector('[data-count]');
+    let kind = 'emails';
+
+    function run() {
+      const items = extract(input.value, kind);
+      output.value = items.join('\n');
+      count.textContent = input.value ? `· ${items.length} found` : '';
+      status.textContent = '';
+    }
+    const runDeb = debounce(run, 150);
+    input.addEventListener('input', runDeb);
+    root.querySelectorAll('[data-kind]').forEach((btn) =>
+      btn.addEventListener('click', () => {
+        kind = btn.dataset.kind;
+        root.querySelectorAll('[data-kind]').forEach((x) => x.setAttribute('aria-pressed', String(x === btn)));
+        run();
+      })
+    );
+    root.querySelector('[data-copy]').addEventListener('click', async () => {
+      if (await copyText(output.value)) toast('List copied.', 'success');
+    });
+    root.querySelector('[data-download]').addEventListener('click', () => {
+      downloadBlob(new Blob([output.value], { type: 'text/plain' }), `extracted-${kind}.txt`);
+    });
+  }
+</script>

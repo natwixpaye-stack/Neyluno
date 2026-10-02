@@ -1,0 +1,64 @@
+<div class="stool" id="tool-text-cleaner">
+  <div class="stool-toolbar" role="group" aria-label="Cleaning options">
+    <label class="pill-check"><input type="checkbox" data-opt="trimLines" checked /><span class="dot"></span>Trim lines</label>
+    <label class="pill-check"><input type="checkbox" data-opt="collapseSpaces" checked /><span class="dot"></span>Collapse spaces</label>
+    <label class="pill-check"><input type="checkbox" data-opt="normalizeBreaks" checked /><span class="dot"></span>Normalize line breaks</label>
+    <label class="pill-check"><input type="checkbox" data-opt="removeEmptyLines" checked /><span class="dot"></span>Remove empty lines</label>
+    <label class="pill-check"><input type="checkbox" data-opt="dedupeLines" /><span class="dot"></span>Remove duplicates</label>
+  </div>
+  <div class="stool-grid">
+    <div class="field">
+      <label for="tc-in">Messy text</label>
+      <textarea id="tc-in" class="input" data-input placeholder="Paste the text to clean up…"></textarea>
+    </div>
+    <div class="field">
+      <label for="tc-out">Cleaned <span class="muted" data-stats></span></label>
+      <textarea id="tc-out" class="input" data-output readonly placeholder="Result appears here as you type."></textarea>
+    </div>
+  </div>
+  <div class="stool-toolbar">
+    <button type="button" class="btn btn-ghost btn-sm" data-copy>Copy result</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-download>Download .txt</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-clear>Clear</button>
+  </div>
+  <p class="stool-status" data-status role="status"></p>
+</div>
+
+<script>
+  import { cleanText } from '../../lib/textops.js';
+  import { copyText, debounce, downloadBlob, toast } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-text-cleaner');
+  if (root) {
+    const input = root.querySelector('[data-input]');
+    const output = root.querySelector('[data-output]');
+    const stats = root.querySelector('[data-stats]');
+    const status = root.querySelector('[data-status]');
+
+    function run() {
+      const opts = {};
+      root.querySelectorAll('[data-opt]').forEach((c) => (opts[c.dataset.opt] = c.checked));
+      const out = cleanText(input.value, opts);
+      output.value = out;
+      const before = input.value.split('\n').length;
+      const after = out ? out.split('\n').length : 0;
+      stats.textContent = input.value ? `· ${before} → ${after} lines` : '';
+      status.textContent = '';
+    }
+    const runDeb = debounce(run, 150);
+    input.addEventListener('input', runDeb);
+    root.querySelectorAll('[data-opt]').forEach((c) => c.addEventListener('change', run));
+    root.querySelector('[data-copy]').addEventListener('click', async () => {
+      if (await copyText(output.value)) toast('Copied to clipboard.', 'success');
+      else toast('Copy failed — select the text manually.', 'error');
+    });
+    root.querySelector('[data-download]').addEventListener('click', () => {
+      downloadBlob(new Blob([output.value], { type: 'text/plain' }), 'cleaned-text.txt');
+    });
+    root.querySelector('[data-clear]').addEventListener('click', () => {
+      input.value = '';
+      run();
+      input.focus();
+    });
+  }
+</script>

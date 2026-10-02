@@ -1,0 +1,79 @@
+<div class="stool" id="tool-text-diff">
+  <div class="stool-grid">
+    <div class="field">
+      <label for="td-a">Original</label>
+      <textarea id="td-a" class="input" data-a placeholder="First version…"></textarea>
+    </div>
+    <div class="field">
+      <label for="td-b">Modified</label>
+      <textarea id="td-b" class="input" data-b placeholder="Second version…"></textarea>
+    </div>
+  </div>
+  <div class="stool-toolbar">
+    <button type="button" class="btn btn-primary btn-sm" data-run>Compare</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-copy>Copy changes</button>
+    <span class="stool-status" data-status role="status"></span>
+  </div>
+  <div class="td-out" data-out hidden>
+    <h3>Changes</h3>
+    <ul class="td-list" data-list role="list"></ul>
+  </div>
+</div>
+
+<style>
+  .td-out { border-top: 1px solid var(--border); padding-top: 16px; }
+  .td-out h3 { font-size: 0.95rem; color: var(--muted); margin-bottom: 10px; }
+  .td-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 2px; font-family: var(--font-mono, monospace); font-size: 0.8rem; max-height: 420px; overflow: auto; }
+  .td-list li { padding: 3px 10px; border-radius: 6px; white-space: pre-wrap; word-break: break-word; }
+  .td-add { background: color-mix(in srgb, #4ade9e 12%, transparent); color: color-mix(in srgb, #4ade9e 75%, var(--text)); }
+  .td-del { background: color-mix(in srgb, #ff5470 12%, transparent); color: color-mix(in srgb, #ff5470 78%, var(--text)); text-decoration: line-through; }
+  .td-same { color: var(--faint); }
+  .td-add::before { content: '+ '; font-weight: 700; }
+  .td-del::before { content: '− '; font-weight: 700; }
+</style>
+
+<script>
+  import { diffLines } from '../../lib/textops.js';
+  import { copyText, toast } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-text-diff');
+  if (root) {
+    const a = root.querySelector('[data-a]');
+    const b = root.querySelector('[data-b]');
+    const out = root.querySelector('[data-out]');
+    const list = root.querySelector('[data-list]');
+    const status = root.querySelector('[data-status]');
+    let lastOps = [];
+
+    root.querySelector('[data-run]').addEventListener('click', () => {
+      if (!a.value && !b.value) {
+        status.textContent = 'Paste two texts to compare.';
+        status.className = 'stool-status err';
+        return;
+      }
+      lastOps = diffLines(a.value, b.value);
+      const adds = lastOps.filter((o) => o.type === 'add').length;
+      const dels = lastOps.filter((o) => o.type === 'del').length;
+      list.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      for (const op of lastOps) {
+        const li = document.createElement('li');
+        li.className = `td-${op.type}`;
+        li.textContent = op.text;
+        frag.appendChild(li);
+      }
+      list.appendChild(frag);
+      out.hidden = false;
+      status.textContent = `+${adds} additions · −${dels} deletions`;
+      status.className = 'stool-status ok';
+    });
+
+    root.querySelector('[data-copy]').addEventListener('click', async () => {
+      const txt = lastOps
+        .filter((o) => o.type !== 'same')
+        .map((o) => `${o.type === 'add' ? '+' : '-'} ${o.text}`)
+        .join('\n');
+      if (await copyText(txt || '')) toast('Changes copied.', 'success');
+    });
+  }
+</script>

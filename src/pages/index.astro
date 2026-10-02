@@ -66,6 +66,14 @@ const guides = [
         <button type="button" class="btn btn-primary" data-search-open>Search</button>
       </div>
 
+      <div class="hero-flow reveal" data-flow-card>
+        <span class="hero-flow-icon" aria-hidden="true"><Icon name="bolt" size={15} /></span>
+        <span class="hero-flow-text"><strong>Flow</strong> — describe the job in plain words, get the right plan:</span>
+        <button type="button" class="hero-flow-chip" data-flow-example="Compress 20 photos for email">Compress 20 photos for email</button>
+        <button type="button" class="hero-flow-chip" data-flow-example="Convert my images to webp">Convert my images to webp</button>
+        <button type="button" class="hero-flow-chip" data-flow-example="Nettoyer un texte collé">Nettoyer un texte collé</button>
+      </div>
+
       <div class="hero-chips reveal" aria-label="Popular quick actions">
         <span class="hero-chips-label">Popular:</span>
         {popularActions.map((a) => (
@@ -317,6 +325,52 @@ const guides = [
 
   .hero-search input::placeholder {
     color: var(--faint);
+  }
+
+  .hero-flow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
+    background: color-mix(in srgb, var(--accent) 7%, transparent);
+    font-size: 0.85rem;
+  }
+
+  .hero-flow-icon {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border-radius: 9px;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+
+  .hero-flow-text {
+    color: var(--muted);
+  }
+
+  .hero-flow-text strong {
+    color: var(--text);
+  }
+
+  .hero-flow-chip {
+    padding: 6px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 0.78rem;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .hero-flow-chip:hover {
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+    color: var(--text);
   }
 
   .hero-chips {

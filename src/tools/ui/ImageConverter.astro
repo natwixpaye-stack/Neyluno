@@ -1,0 +1,144 @@
+---
+import Icon from '../../components/Icon.astro';
+---
+
+<div class="ftool" id="tool-image-converter">
+  <div class="ftool-options">
+    <div class="ic-row">
+      <div class="field ic-target">
+        <label for="ic-to">Convert to</label>
+        <select id="ic-to" class="select" data-to>
+          <option value="image/webp">WebP — smallest, modern</option>
+          <option value="image/jpeg">JPG — universal, photos</option>
+          <option value="image/png">PNG — lossless, transparency</option>
+        </select>
+      </div>
+      <div class="field ic-bg" data-bg-wrap hidden>
+        <label for="ic-bg">Background (PNG transparency → JPG)</label>
+        <select id="ic-bg" class="select" data-bg>
+          <option value="#ffffff">White</option>
+          <option value="#000000">Black</option>
+          <option value="#f6f5f2">Paper</option>
+        </select>
+      </div>
+    </div>
+    <div class="opt">
+      <label for="ic-quality">Quality <output data-quality-out>85 %</output></label>
+      <input type="range" id="ic-quality" min="10" max="100" value="85" step="1" data-quality />
+      <p class="opt-hint">Ignored for PNG (lossless). 75–85 % is invisible loss on most photos.</p>
+    </div>
+  </div>
+
+  <div data-notice hidden></div>
+
+  <div class="dropzone" data-dropzone>
+    <input type="file" data-file-input multiple hidden />
+    <span class="dz-icon" aria-hidden="true"><Icon name="img-convert" size={24} /></span>
+    <h3>Drag & drop your images here</h3>
+    <p>or click to browse · JPG, PNG, WebP, GIF, BMP, AVIF · up to 50 MB per file</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choose images</span>
+  </div>
+
+  <div class="ftool-actions">
+    <span class="ftool-count" data-count aria-live="polite"></span>
+    <span class="ftool-actions-btns">
+      <button type="button" class="btn btn-ghost btn-sm" data-clear-all hidden>Start over</button>
+      <button type="button" class="btn btn-accent btn-sm" data-download-all hidden>Download all (ZIP)</button>
+    </span>
+  </div>
+
+  <ul class="file-list" data-file-list role="list" aria-label="Files being converted"></ul>
+
+  <div class="batch-summary" data-summary hidden>
+    <div class="stat"><div class="stat-value" data-sum-count>—</div><div class="stat-label">Files</div></div>
+    <div class="stat"><div class="stat-value" data-sum-done>—</div><div class="stat-label">Done</div></div>
+    <div class="stat"><div class="stat-value" data-sum-failed>—</div><div class="stat-label">Failed</div></div>
+    <div class="stat"><div class="stat-value" data-sum-before>—</div><div class="stat-label">Before</div></div>
+    <div class="stat"><div class="stat-value" data-sum-after>—</div><div class="stat-label">After</div></div>
+    <div class="stat"><div class="stat-value accent" data-sum-saved>—</div><div class="stat-label">Saved</div></div>
+  </div>
+
+  <div class="handoff-chip" data-handoff hidden>
+    <Icon name="spark" size={16} />
+    <span>Continue with <strong data-handoff-name></strong> from the previous tool?</span>
+    <button type="button" class="btn btn-sm btn-ghost" data-handoff-use>Use this file</button>
+    <button type="button" class="icon-btn" data-handoff-dismiss aria-label="Dismiss">✕</button>
+  </div>
+</div>
+
+<style>
+  .ftool-options { margin-bottom: 22px; display: flex; flex-direction: column; gap: 16px; }
+  .ic-row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .ic-row .field { min-width: 200px; flex: 1; }
+  .opt label { display: flex; justify-content: space-between; font-size: 0.88rem; font-weight: 600; color: var(--muted); margin-bottom: 10px; }
+  .opt output { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .opt-hint { font-size: 0.78rem; color: var(--faint); margin-top: 8px; }
+  .ftool-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+  .ftool-count { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+  .ftool-actions-btns { display: flex; gap: 10px; }
+</style>
+
+<script>
+  import { mountFileTool } from '../../lib/fileui.js';
+  import { decodeImage, renderToBlob, renameWithExt } from '../../lib/image.js';
+  import { bindRangeFill } from '../../lib/ui.js';
+  import { saveHandoff, mountHandoffChip } from '../../lib/handoff.js';
+
+  const root = document.getElementById('tool-image-converter');
+  if (root) {
+    const toSel = root.querySelector('[data-to]');
+    const bgWrap = root.querySelector('[data-bg-wrap]');
+    const bgSel = root.querySelector('[data-bg]');
+    const quality = root.querySelector('[data-quality]');
+    const qOut = root.querySelector('[data-quality-out]');
+    bindRangeFill(quality);
+    const syncUI = () => {
+      qOut.textContent = `${quality.value} %`;
+      bgWrap.hidden = toSel.value !== 'image/jpeg';
+      quality.parentElement.style.opacity = toSel.value === 'image/png' ? 0.45 : 1;
+    };
+    toSel.addEventListener('change', () => {
+      syncUI();
+      if (api?.items.length) api.items.forEach((i) => api.processItem(i));
+    });
+    quality.addEventListener('input', syncUI);
+    quality.addEventListener('change', () => {
+      if (api?.items.length) api.items.forEach((i) => api.processItem(i));
+    });
+    bgSel.addEventListener('change', () => {
+      if (api?.items.length) api.items.forEach((i) => api.processItem(i));
+    });
+
+    // Preselect target from ?to= (used by legacy converter redirects)
+    const params = new URLSearchParams(location.search);
+    const wanted = params.get('to');
+    if (wanted && ['image/webp', 'image/jpeg', 'image/png'].includes(wanted)) toSel.value = wanted;
+    syncUI();
+
+    const EXT = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png' };
+
+    const api = mountFileTool(root, {
+      acceptTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/avif', 'image/svg+xml'],
+      acceptExts: ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.avif', '.svg'],
+      summary: true,
+      naming: true,
+      process: async (item) => {
+        const img = await decodeImage(item.file);
+        try {
+          const format = toSel.value;
+          const opts = { width: img.width, height: img.height, format, quality: Number(quality.value) / 100 };
+          if (format === 'image/jpeg') opts.background = bgSel.value;
+          const blob = await renderToBlob(img.source, opts);
+          return { blob, name: renameWithExt(item.file.name, EXT[format]), meta: { width: img.width, height: img.height } };
+        } finally {
+          img.close();
+        }
+      },
+      onListChange: (items) => {
+        const last = [...items].reverse().find((i) => i.status === 'done' && i.result?.blob);
+        if (last) saveHandoff({ fromTool: 'image-converter', name: last.result.name, type: last.result.blob.type, blob: last.result.blob });
+      },
+    });
+    mountHandoffChip(root, api);
+  }
+</script>

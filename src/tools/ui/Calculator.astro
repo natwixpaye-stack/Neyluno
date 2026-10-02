@@ -1,0 +1,255 @@
+<div class="stool calc" id="tool-calculator">
+  <div class="seg" role="tablist" aria-label="Calculator modes">
+    <button type="button" class="seg-btn is-active" role="tab" aria-selected="true" data-mode="basic">Basic</button>
+    <button type="button" class="seg-btn" role="tab" aria-selected="false" data-mode="sci">Scientific</button>
+    <button type="button" class="seg-btn" role="tab" aria-selected="false" data-mode="pct">Percentage</button>
+    <button type="button" class="seg-btn" role="tab" aria-selected="false" data-mode="fin">Finance</button>
+    <button type="button" class="seg-btn" role="tab" aria-selected="false" data-mode="day">Everyday</button>
+  </div>
+
+  <!-- ============ BASIC / SCIENTIFIC ============ -->
+  <div class="calc-panel" data-panel="basic">
+    <div class="field">
+      <label for="calc-expr">Expression</label>
+      <input id="calc-expr" class="input calc-expr" data-expr placeholder="e.g. (120 + 80) * 1.2 or sqrt(144) + 5%" autocomplete="off" />
+    </div>
+    <div class="calc-keys" data-keys>
+      <!-- filled by JS -->
+    </div>
+    <div class="stool-toolbar">
+      <button type="button" class="btn btn-primary btn-sm" data-eval>= Calculate</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-copyres>Copy</button>
+      <span class="stool-status calc-res" data-res role="status"></span>
+    </div>
+  </div>
+
+  <!-- ============ PERCENTAGE ============ -->
+  <div class="calc-panel" data-panel="pct" hidden>
+    <div class="calc-row">
+      <div class="field"><label for="p1x">What is</label><input id="p1x" class="input" data-p1x type="number" value="20" /></div>
+      <span class="calc-op">% of</span>
+      <div class="field"><label for="p1y">&nbsp;</label><input id="p1y" class="input" data-p1y type="number" value="150" /></div>
+      <div class="field"><label>Result</label><output class="calc-out" data-o1>30</output></div>
+    </div>
+    <div class="calc-row">
+      <div class="field"><label for="p2a">From</label><input id="p2a" class="input" data-p2a type="number" value="80" /></div>
+      <span class="calc-op">to</span>
+      <div class="field"><label for="p2b">&nbsp;</label><input id="p2b" class="input" data-p2b type="number" value="100" /></div>
+      <div class="field"><label>Change</label><output class="calc-out" data-o2>+25 %</output></div>
+    </div>
+    <p class="opt-hint">Formula: (final − initial) ÷ initial × 100</p>
+  </div>
+
+  <!-- ============ FINANCE ============ -->
+  <div class="calc-panel" data-panel="fin" hidden>
+    <div class="calc-row">
+      <div class="field"><label for="f-ht">Price excl. tax (HT)</label><input id="f-ht" class="input" data-f-ht type="number" value="100" /></div>
+      <div class="field"><label for="f-rate">VAT rate %</label><input id="f-rate" class="input" data-f-rate type="number" value="20" /></div>
+      <div class="field"><label>Incl. tax (TTC)</label><output class="calc-out" data-f-ttc>120</output></div>
+    </div>
+    <p class="opt-hint" data-f-formula>TTC = HT × (1 + 20 ÷ 100) = 120</p>
+    <div class="calc-row">
+      <div class="field"><label for="f-price">Price</label><input id="f-price" class="input" data-f-price type="number" value="80" /></div>
+      <div class="field"><label for="f-disc">Discount %</label><input id="f-disc" class="input" data-f-disc type="number" value="15" /></div>
+      <div class="field"><label>Final</label><output class="calc-out" data-f-final>68</output></div>
+    </div>
+    <div class="calc-row">
+      <div class="field"><label for="f-cap">Capital</label><input id="f-cap" class="input" data-f-cap type="number" value="1000" /></div>
+      <div class="field"><label for="f-ir">Rate % / year</label><input id="f-ir" class="input" data-f-ir type="number" value="5" /></div>
+      <div class="field"><label for="f-y">Years</label><input id="f-y" class="input" data-f-y type="number" value="10" /></div>
+      <div class="field"><label>Compound</label><output class="calc-out" data-f-comp>1628.89</output></div>
+    </div>
+    <p class="opt-hint">Compound: capital × (1 + rate ÷ 100) ^ years</p>
+  </div>
+
+  <!-- ============ EVERYDAY ============ -->
+  <div class="calc-panel" data-panel="day" hidden>
+    <div class="calc-row">
+      <div class="field calc-grow"><label for="d-avg">Average of (comma-separated)</label><input id="d-avg" class="input" data-d-avg value="12, 14, 15, 19" /></div>
+      <div class="field"><label>Average</label><output class="calc-out" data-d-avgout>15</output></div>
+    </div>
+    <div class="calc-row">
+      <div class="field"><label for="d-a">A</label><input id="d-a" class="input" data-d-a type="number" value="3" /></div>
+      <span class="calc-op">→</span>
+      <div class="field"><label for="d-b">B</label><input id="d-b" class="input" data-d-b type="number" value="12" /></div>
+      <span class="calc-op">so</span>
+      <div class="field"><label for="d-c">C</label><input id="d-c" class="input" data-d-c type="number" value="5" /></div>
+      <span class="calc-op">→ ?</span>
+      <div class="field"><label>Rule of three</label><output class="calc-out" data-d-three>20</output></div>
+    </div>
+    <div class="calc-row">
+      <div class="field"><label for="d-birth">Birthdate</label><input id="d-birth" class="input" data-d-birth type="date" value="2000-01-01" /></div>
+      <div class="field"><label>Age</label><output class="calc-out" data-d-age>—</output></div>
+      <div class="field"><label for="d-km">Distance km</label><input id="d-km" class="input" data-d-km type="number" value="120" /></div>
+      <div class="field"><label for="d-h">Time h</label><input id="d-h" class="input" data-d-h type="number" value="1.5" step="0.1" /></div>
+      <div class="field"><label>Speed</label><output class="calc-out" data-d-speed>80 km/h</output></div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .calc-expr { font-family: var(--font-mono, monospace); }
+  .calc-keys { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 14px 0; }
+  @media (max-width: 560px) { .calc-keys { grid-template-columns: repeat(4, 1fr); } }
+  .calc-keys button {
+    padding: 12px 0;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .calc-keys button:hover { border-color: var(--border-strong); background: var(--panel-strong); }
+  .calc-keys button.op { color: var(--accent); }
+  .calc-res { font-size: 1.05rem; font-weight: 700; }
+  .calc-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
+  .calc-row .field { flex: 1; min-width: 90px; }
+  .calc-row .calc-grow { flex: 2; min-width: 200px; }
+  .calc-op { padding-bottom: 12px; color: var(--muted); font-weight: 600; }
+  .calc-out { display: inline-block; padding: 11px 14px; border-radius: 10px; background: var(--panel-strong); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent); min-width: 70px; }
+  .opt-hint { font-size: 0.78rem; color: var(--faint); }
+</style>
+
+<script>
+  import { evaluate, formatResult } from '../../lib/calc.js';
+  import { copyText, toast } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-calculator');
+  if (root) {
+    /* ---------- tabs ---------- */
+    const panels = { basic: root.querySelector('[data-panel="basic"]'), pct: root.querySelector('[data-panel="pct"]'), fin: root.querySelector('[data-panel="fin"]'), day: root.querySelector('[data-panel="day"]') };
+    root.querySelectorAll('[data-mode]').forEach((tab) =>
+      tab.addEventListener('click', () => {
+        root.querySelectorAll('[data-mode]').forEach((t) => {
+          t.classList.toggle('is-active', t === tab);
+          t.setAttribute('aria-selected', String(t === tab));
+        });
+        Object.entries(panels).forEach(([k, el]) => (el.hidden = k !== tab.dataset.mode));
+      })
+    );
+
+    /* ---------- basic / scientific ---------- */
+    const expr = root.querySelector('[data-expr]');
+    const keysEl = root.querySelector('[data-keys]');
+    const res = root.querySelector('[data-res]');
+    const BASIC = ['7', '8', '9', '÷', 'C', '4', '5', '6', '×', '⌫', '1', '2', '3', '−', '(', '0', '.', '%', '+', ')'];
+    const SCI = ['sqrt(', 'sin(', 'cos(', 'tan(', 'pi', '^', 'log(', 'ln(', 'abs(', 'e', 'max(', 'min(', 'round(', 'floor(', ''];
+    let sci = false;
+
+    function renderKeys() {
+      keysEl.innerHTML = '';
+      const list = [...BASIC];
+      if (sci) list.push(...SCI.filter(Boolean));
+      for (const k of list) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = k === 'sqrt(' ? '√' : k === 'pi' ? 'π' : k;
+        if ('÷×−+%^'.includes(k)) b.className = 'op';
+        b.addEventListener('click', () => {
+          if (k === 'C') expr.value = '';
+          else if (k === '⌫') expr.value = expr.value.slice(0, -1);
+          else expr.value += k === '÷' ? '/' : k === '×' ? '*' : k === '−' ? '-' : k;
+          expr.focus();
+          run();
+        });
+        keysEl.appendChild(b);
+      }
+    }
+    renderKeys();
+
+    function run() {
+      const text = expr.value.trim();
+      if (!text) {
+        res.textContent = '';
+        res.className = 'stool-status calc-res';
+        return;
+      }
+      try {
+        const v = evaluate(text.replace(/√/g, 'sqrt').replace(/π/g, 'pi'));
+        res.textContent = `= ${formatResult(v)}`;
+        res.className = 'stool-status calc-res ok';
+      } catch (err) {
+        res.textContent = err.message;
+        res.className = 'stool-status calc-res err';
+      }
+    }
+    expr.addEventListener('input', run);
+    expr.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') run();
+    });
+    root.querySelector('[data-eval]').addEventListener('click', run);
+    root.querySelector('[data-copyres]').addEventListener('click', async () => {
+      const m = res.textContent.replace(/^=\s*/, '');
+      if (m && (await copyText(m))) toast('Result copied.', 'success');
+    });
+    // scientific extras appear when the tab is sci
+    root.querySelectorAll('[data-mode]').forEach((tab) =>
+      tab.addEventListener('click', () => {
+        sci = tab.dataset.mode === 'sci';
+        renderKeys();
+      })
+    );
+
+    /* ---------- helpers ---------- */
+    const num = (el) => Number(el.value);
+    const fmt = (n) => (Number.isFinite(n) ? formatResult(Math.round(n * 100) / 100) : '—');
+
+    /* ---------- percentage ---------- */
+    const pctRun = () => {
+      root.querySelector('[data-o1]').textContent = fmt((num(root.querySelector('[data-p1x]')) * num(root.querySelector('[data-p1y]'))) / 100);
+      const a = num(root.querySelector('[data-p2a]'));
+      const b = num(root.querySelector('[data-p2b]'));
+      const ch = a === 0 ? NaN : ((b - a) / a) * 100;
+      root.querySelector('[data-o2]').textContent = Number.isFinite(ch) ? `${ch >= 0 ? '+' : ''}${fmt(ch)} %` : '—';
+    };
+    root.querySelectorAll('[data-panel="pct"] input').forEach((i) => i.addEventListener('input', pctRun));
+    pctRun();
+
+    /* ---------- finance ---------- */
+    const finRun = () => {
+      const ht = num(root.querySelector('[data-f-ht]'));
+      const rate = num(root.querySelector('[data-f-rate]'));
+      const ttc = ht * (1 + rate / 100);
+      root.querySelector('[data-f-ttc]').textContent = fmt(ttc);
+      root.querySelector('[data-f-formula]').textContent = `TTC = HT × (1 + ${rate} ÷ 100) = ${fmt(ttc)}`;
+      const price = num(root.querySelector('[data-f-price]'));
+      const disc = num(root.querySelector('[data-f-disc]'));
+      root.querySelector('[data-f-final]').textContent = fmt(price * (1 - disc / 100));
+      const cap = num(root.querySelector('[data-f-cap]'));
+      const ir = num(root.querySelector('[data-f-ir]'));
+      const y = num(root.querySelector('[data-f-y]'));
+      root.querySelector('[data-f-comp]').textContent = fmt(cap * (1 + ir / 100) ** y);
+    };
+    root.querySelectorAll('[data-panel="fin"] input').forEach((i) => i.addEventListener('input', finRun));
+    finRun();
+
+    /* ---------- everyday ---------- */
+    const dayRun = () => {
+      const nums = root
+        .querySelector('[data-d-avg]')
+        .value.split(/[,;\s]+/)
+        .map(Number)
+        .filter(Number.isFinite);
+      root.querySelector('[data-d-avgout]').textContent = nums.length ? fmt(nums.reduce((s, n) => s + n, 0) / nums.length) : '—';
+      const a = num(root.querySelector('[data-d-a]'));
+      const b = num(root.querySelector('[data-d-b]'));
+      const c = num(root.querySelector('[data-d-c]'));
+      root.querySelector('[data-d-three]').textContent = a === 0 ? '—' : fmt((b * c) / a);
+      const birth = root.querySelector('[data-d-birth]').valueAsDate;
+      if (birth) {
+        const now = new Date();
+        let age = now.getFullYear() - birth.getUTCFullYear();
+        const m = now.getMonth() + 1 - (birth.getUTCMonth() + 1);
+        if (m < 0 || (m === 0 && now.getDate() < birth.getUTCDate())) age--;
+        root.querySelector('[data-d-age]').textContent = age >= 0 && age < 130 ? `${age} y` : '—';
+      }
+      const km = num(root.querySelector('[data-d-km]'));
+      const h = num(root.querySelector('[data-d-h]'));
+      root.querySelector('[data-d-speed]').textContent = h > 0 ? `${fmt(km / h)} km/h` : '—';
+    };
+    root.querySelectorAll('[data-panel="day"] input').forEach((i) => i.addEventListener('input', dayRun));
+    dayRun();
+  }
+</script>

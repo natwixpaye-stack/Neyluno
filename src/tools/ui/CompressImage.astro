@@ -227,6 +227,7 @@ import Icon from '../../components/Icon.astro';
       acceptTypes: ['image/jpeg', 'image/png', 'image/webp'],
       acceptExts: ['.jpg', '.jpeg', '.png', '.webp'],
       summary: true,
+      naming: true,
       process: async (item) => {
         const img = await decodeImage(item.file);
         try {
@@ -239,7 +240,7 @@ import Icon from '../../components/Icon.astro';
           });
           const name = renameWithExt(item.file.name, extFor(format));
           if (format === 'image/png' && blob.size >= item.file.size) item._pngWarn = true;
-          return { blob, name };
+          return { blob, name, meta: { width: img.width, height: img.height } };
         } finally {
           img.close();
         }

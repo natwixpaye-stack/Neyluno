@@ -1,0 +1,152 @@
+---
+import Icon from '../../components/Icon.astro';
+---
+
+<div class="ftool ia" id="tool-image-analyzer">
+  <div class="dropzone" data-dropzone>
+    <input type="file" data-file-input hidden />
+    <span class="dz-icon" aria-hidden="true"><Icon name="analyze" size={24} /></span>
+    <h3>Drop an image to analyze</h3>
+    <p>or click to browse · dimensions, format, weight, transparency, metadata — then act</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choose an image</span>
+  </div>
+
+  <div class="ia-result" data-result hidden>
+    <div class="ia-head">
+      <img data-thumb alt="" />
+      <div class="ia-name">
+        <strong data-name></strong>
+        <span class="muted" data-mime></span>
+      </div>
+    </div>
+    <div class="stat-grid ia-stats">
+      <div class="stat"><div class="stat-value" data-dims>—</div><div class="stat-label">Dimensions</div></div>
+      <div class="stat"><div class="stat-value" data-size>—</div><div class="stat-label">Weight</div></div>
+      <div class="stat"><div class="stat-value" data-ratio>—</div><div class="stat-label">Ratio</div></div>
+      <div class="stat"><div class="stat-value" data-alpha>—</div><div class="stat-label">Transparency</div></div>
+      <div class="stat"><div class="stat-value" data-mp>—</div><div class="stat-label">Megapixels</div></div>
+    </div>
+    <div class="ia-meta" data-meta-wrap>
+      <h3>Metadata</h3>
+      <p class="muted" data-meta-note></p>
+      <button type="button" class="btn btn-ghost btn-sm" data-strip>Remove metadata (re-encode)</button>
+      <p class="opt-hint">Re-encoding redraws the pixels and produces a clean file with no embedded EXIF or profile data.</p>
+    </div>
+    <div class="what-next">
+      <h3>Next actions</h3>
+      <div class="what-next-links">
+        <a href="/tools/image-compressor/"><Icon name="compress" size={15} /> Compress</a>
+        <a href="/tools/image-resizer/"><Icon name="resize" size={15} /> Resize</a>
+        <a href="/tools/image-converter/"><Icon name="img-convert" size={15} /> Convert</a>
+      </div>
+    </div>
+  </div>
+  <div data-notice hidden></div>
+</div>
+
+<style>
+  .ia-result { margin-top: 20px; display: flex; flex-direction: column; gap: 18px; }
+  .ia-head { display: flex; align-items: center; gap: 14px; }
+  .ia-head img { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; background: var(--panel-strong); }
+  .ia-name { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .ia-name strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ia-meta h3, .what-next h3 { font-size: 0.95rem; margin-bottom: 10px; color: var(--muted); }
+  .ia-meta { border-top: 1px solid var(--border); padding-top: 16px; }
+  .opt-hint { font-size: 0.78rem; color: var(--faint); margin-top: 8px; max-width: 560px; }
+</style>
+
+<script>
+  import { decodeImage, renderToBlob, renameWithExt } from '../../lib/image.js';
+  import { formatBytes } from '../../lib/format.js';
+  import { downloadBlob, toast } from '../../lib/ui.js';
+  import { validateFile } from '../../lib/files.js';
+
+  const root = document.getElementById('tool-image-analyzer');
+  if (root) {
+    const dz = root.querySelector('[data-dropzone]');
+    const input = root.querySelector('[data-file-input]');
+    const result = root.querySelector('[data-result]');
+    const notice = root.querySelector('[data-notice]');
+    let current = null;
+
+    async function analyze(file) {
+      const check = validateFile(file, {
+        acceptTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/avif'],
+        acceptExts: ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.avif'],
+      });
+      if (!check.ok) {
+        notice.hidden = false;
+        notice.innerHTML = `<div class="notice notice-error" role="alert">${check.error}</div>`;
+        return;
+      }
+      notice.hidden = true;
+      const img = await decodeImage(file);
+      current = { file, img };
+      root.querySelector('[data-name]').textContent = file.name;
+      root.querySelector('[data-mime]').textContent = file.type || 'unknown type';
+      root.querySelector('[data-dims]').textContent = `${img.width} × ${img.height}`;
+      root.querySelector('[data-size]').textContent = formatBytes(file.size);
+      const g = (a, b) => {
+        const d = b === 0 ? 0 : a / b;
+        return d ? (Math.round(d * 100) / 100).toString() : '—';
+      };
+      root.querySelector('[data-ratio]').textContent = `${g(img.width, img.height)}:1`;
+      root.querySelector('[data-mp]').textContent = `${Math.round((img.width * img.height) / 1e5) / 10} MP`;
+      // Transparency: sample the alpha channel on a small canvas
+      let alpha = 'No';
+      try {
+        const c = document.createElement('canvas');
+        const s = 64;
+        c.width = s;
+        c.height = s;
+        const ctx = c.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(img.source, 0, 0, s, s);
+        const data = ctx.getImageData(0, 0, s, s).data;
+        let transparent = 0;
+        for (let i = 3; i < data.length; i += 4) if (data[i] < 250) transparent++;
+        alpha = transparent === 0 ? 'No' : `${Math.round((transparent / (s * s)) * 100)} %`;
+      } catch {
+        alpha = 'Unknown';
+      }
+      root.querySelector('[data-alpha]').textContent = alpha;
+      const isJpeg = file.type === 'image/jpeg';
+      root.querySelector('[data-meta-note]').textContent = isJpeg
+        ? 'JPEG files usually embed EXIF data (camera, date, sometimes GPS). Re-encode below to strip it.'
+        : 'This format carries little or no embedded metadata. Re-encoding still produces a clean file.';
+      const thumb = root.querySelector('[data-thumb]');
+      thumb.src = URL.createObjectURL(file);
+      thumb.onload = () => URL.revokeObjectURL(thumb.src);
+      result.hidden = false;
+    }
+
+    root.querySelector('[data-strip]').addEventListener('click', async () => {
+      if (!current) return;
+      try {
+        const blob = await renderToBlob(current.img.source, {
+          width: current.img.width,
+          height: current.img.height,
+          format: 'image/png',
+        });
+        downloadBlob(blob, renameWithExt(current.file.name, 'png'));
+        toast('Clean PNG downloaded — no embedded metadata.', 'success');
+      } catch (err) {
+        toast(err.message || 'Re-encoding failed.', 'error');
+      }
+    });
+
+    dz.addEventListener('click', () => input.click());
+    dz.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        input.click();
+      }
+    });
+    ['dragenter', 'dragover'].forEach((evt) => dz.addEventListener(evt, (e) => { e.preventDefault(); dz.classList.add('is-dragover'); }));
+    ['dragleave', 'drop'].forEach((evt) => dz.addEventListener(evt, (e) => { e.preventDefault(); dz.classList.remove('is-dragover'); }));
+    dz.addEventListener('drop', (e) => e.dataTransfer.files[0] && analyze(e.dataTransfer.files[0]));
+    input.addEventListener('change', () => {
+      if (input.files[0]) analyze(input.files[0]);
+      input.value = '';
+    });
+  }
+</script>

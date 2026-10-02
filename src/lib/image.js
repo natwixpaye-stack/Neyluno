@@ -41,9 +41,9 @@ const MAX_DIMENSION = 8192; // memory guard (especially mobile)
 /**
  * Redraw the source into a canvas and export as a Blob.
  * @param {ImageBitmap|HTMLImageElement} source
- * @param {{width:number, height:number, format?:string, quality?:number}} opts
+ * @param {{width:number, height:number, format?:string, quality?:number, background?:string}} opts
  */
-export async function renderToBlob(source, { width, height, format = 'image/webp', quality = 0.85 } = {}) {
+export async function renderToBlob(source, { width, height, format = 'image/webp', quality = 0.85, background = '#ffffff' } = {}) {
   const w = Math.max(1, Math.round(width));
   const h = Math.max(1, Math.round(height));
   if (w > MAX_DIMENSION || h > MAX_DIMENSION) {
@@ -54,9 +54,9 @@ export async function renderToBlob(source, { width, height, format = 'image/webp
   canvas.height = h;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Your browser cannot process images (Canvas unavailable).');
-  // White background for formats without transparency
+  // Solid background for formats without transparency
   if (format === 'image/jpeg') {
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = background;
     ctx.fillRect(0, 0, w, h);
   }
   ctx.imageSmoothingEnabled = true;

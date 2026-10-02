@@ -1,0 +1,158 @@
+<div class="stool" id="tool-encoding-lab">
+  <div class="el-tabs" role="tablist" aria-label="Encoding formats">
+    <button type="button" class="el-tab is-active" role="tab" aria-selected="true" data-tab="base64">Base64</button>
+    <button type="button" class="el-tab" role="tab" aria-selected="false" data-tab="url">URL</button>
+    <button type="button" class="el-tab" role="tab" aria-selected="false" data-tab="html">HTML entities</button>
+    <button type="button" class="el-tab" role="tab" aria-selected="false" data-tab="unicode">Unicode escapes</button>
+  </div>
+
+  <div class="field">
+    <label for="el-in" data-in-label>Plain text</label>
+    <textarea id="el-in" class="input" data-input placeholder="Type or paste text…"></textarea>
+  </div>
+
+  <div class="stool-toolbar">
+    <button type="button" class="btn btn-primary btn-sm" data-encode>Encode →</button>
+    <button type="button" class="btn btn-primary btn-sm" data-decode>← Decode</button>
+    <span class="stool-status" data-status role="status"></span>
+  </div>
+
+  <div class="field">
+    <label for="el-out" data-out-label>Encoded</label>
+    <textarea id="el-out" class="input" data-output placeholder="Result appears here."></textarea>
+  </div>
+  <div class="stool-toolbar">
+    <button type="button" class="btn btn-ghost btn-sm" data-copy>Copy result</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-swap>Use result as input</button>
+  </div>
+  <p class="opt-hint el-note" data-note></p>
+</div>
+
+<style>
+  .el-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .el-tab {
+    padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--panel); font-size: 0.8rem; font-weight: 600; color: var(--muted);
+  }
+  .el-tab.is-active { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .el-note { font-size: 0.78rem; color: var(--faint); }
+</style>
+
+<script>
+  import { copyText, toast } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-encoding-lab');
+  if (root) {
+    const input = root.querySelector('[data-input]');
+    const output = root.querySelector('[data-output]');
+    const status = root.querySelector('[data-status]');
+    const note = root.querySelector('[data-note]');
+    let tab;
+
+    const NOTES = {
+      base64: 'Base64 encodes text into ASCII — used in data URIs, email, APIs. Not encryption.',
+      url: 'Percent-encoding for URLs and query strings. Components like spaces become %20.',
+      html: 'Converts &, <, >, " and non-ASCII characters into HTML entities.',
+      unicode: 'Converts characters into \\uXXXX JavaScript-style escapes.',
+    };
+
+    function utf8ToBase64(str) {
+      const bytes = new TextEncoder().encode(str);
+      let bin = '';
+      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      return btoa(bin);
+    }
+    function base64ToUtf8(str) {
+      const bin = atob(str.replace(/\s+/g, ''));
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+    }
+    function htmlEncode(s) {
+      return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/[^\x20-\x7e]/g, (c) => `&#${c.codePointAt(0)};`);
+    }
+    function htmlDecode(s) {
+      const ta = document.createElement('textarea');
+      ta.innerHTML = s;
+      return ta.value;
+    }
+    function uniEncode(s) {
+      let out = '';
+      for (const ch of s) out += ch.codePointAt(0) > 126 ? '\\u' + ch.codePointAt(0).toString(16).padStart(4, '0') : ch;
+      return out;
+    }
+    function uniDecode(s) {
+      if (!/^((\\u[0-9a-f]{4})|[^\\]|\\[^u])*$/.test(s)) throw new Error('Text contains invalid \\uXXXX escapes.');
+      return s.replace(/\\u([0-9a-f]{4})/gi, (_, h) => String.fromCharCode(parseInt(h, 16))).replace(/\\([^u])/g, '$1');
+    }
+
+    const CODECS = {
+      base64: { encode: utf8ToBase64, decode: base64ToUtf8 },
+      url: { encode: encodeURIComponent, decode: decodeURIComponent },
+      html: { encode: htmlEncode, decode: htmlDecode },
+      unicode: { encode: uniEncode, decode: uniDecode },
+    };
+
+    function switchTab(t) {
+      tab = t;
+      root.querySelectorAll('.el-tab').forEach((el) => {
+        el.classList.toggle('is-active', el.dataset.tab === t);
+        el.setAttribute('aria-selected', String(el.dataset.tab === t));
+      });
+      note.textContent = NOTES[t];
+      status.textContent = '';
+    }
+
+    function decodeError() {
+      status.className = 'stool-status err';
+      status.textContent =
+        tab === 'base64'
+          ? 'This is not valid Base64. Cause: characters outside A–Z, a–z, 0–9, +, /, = — Action: paste the exact encoded string.'
+          : tab === 'url'
+            ? 'Invalid percent-encoding. Cause: a “%” not followed by two hex digits — Action: check the string was not double-decoded.'
+            : tab === 'unicode'
+              ? 'Invalid escapes. Cause: \\u must be followed by 4 hex digits — Action: check the input.'
+              : 'Could not decode — check that the input contains HTML entities.';
+    }
+
+    root.querySelectorAll('.el-tab').forEach((el) => el.addEventListener('click', () => switchTab(el.dataset.tab)));
+
+    root.querySelector('[data-encode]').addEventListener('click', () => {
+      try {
+        output.value = CODECS[tab].encode(input.value);
+        status.className = 'stool-status ok';
+        status.textContent = 'Encoded.';
+      } catch (err) {
+        status.className = 'stool-status err';
+        status.textContent = 'Could not encode — ' + err.message;
+      }
+    });
+    root.querySelector('[data-decode]').addEventListener('click', () => {
+      try {
+        input.value = CODECS[tab].decode(output.value || input.value);
+        output.value = '';
+        status.className = 'stool-status ok';
+        status.textContent = 'Decoded into the input box.';
+      } catch (err) {
+        decodeError();
+      }
+    });
+    root.querySelector('[data-copy]').addEventListener('click', async () => {
+      if (await copyText(output.value)) toast('Copied to clipboard.', 'success');
+    });
+    root.querySelector('[data-swap]').addEventListener('click', () => {
+      const t = input.value;
+      input.value = output.value;
+      output.value = t;
+    });
+
+    /* deep links: /tools/encoding-lab#url etc. */
+    const wanted = new URLSearchParams(location.search).get('tab') || location.hash.replace('#', '');
+    switchTab(NOTES[wanted] ? wanted : 'base64');
+  }
+</script>

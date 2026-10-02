@@ -1468,3 +1468,42 @@ input[type='range']::-moz-range-thumb {
   font-size: 0.72rem;
   color: var(--faint);
 }
+
+/* ============ V4 — batch naming pattern row ============ */
+.naming-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 14px 0 2px;
+}
+
+.naming-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.naming-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 220px;
+}
+
+.naming-input {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.82rem;
+  max-width: 260px;
+}
+
+.naming-preview {
+  font-size: 0.78rem;
+  color: var(--faint);
+  font-family: var(--font-mono, monospace);
+}
+
+/* file-item status color for cancelled */
+.file-item .fi-status.err { color: var(--danger, #e5484d); }

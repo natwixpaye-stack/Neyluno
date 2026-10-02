@@ -118,6 +118,36 @@ import Icon from './Icon.astro';
     font-size: 0.92rem;
   }
 
+  .sm-group-flow {
+    color: var(--accent);
+  }
+
+  .sm-flow-item {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 12px;
+    text-align: left;
+    color: var(--text);
+    text-decoration: none;
+    margin-bottom: 4px;
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+    transition: background 0.12s;
+  }
+
+  .sm-flow-item:hover {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+
+  .sm-flow-icon {
+    color: var(--accent) !important;
+    background: color-mix(in srgb, var(--accent) 14%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+
   .sm-foot {
     display: flex;
     gap: 18px;
@@ -148,6 +178,17 @@ import Icon from './Icon.astro';
   import { getCategory } from '../data/site.js';
   import { searchTools } from '../lib/search.js';
   import { ICON_PATHS } from '../lib/icons.js';
+  import { detectFlow, describeFlowPlan } from '../lib/flow.js';
+
+  /** Turn a Flow plan into a real, safe destination URL (never executes anything). */
+  function flowHref(flowPlan) {
+    if (flowPlan.cta.type === 'workflow') {
+      return `/workflows/?plan=${encodeURIComponent(JSON.stringify(flowPlan.cta.steps))}`;
+    }
+    const params = new URLSearchParams(flowPlan.cta.params || {});
+    const qs = params.toString();
+    return `/tools/${flowPlan.cta.slug}/${qs ? `?${qs}` : ''}`;
+  }
 
   const overlay = document.querySelector('[data-search-overlay]');
   const input = overlay?.querySelector('[data-search-input]');
@@ -161,8 +202,39 @@ import Icon from './Icon.astro';
     flat = [];
     activeIndex = -1;
 
-    if (!list.length) {
+    // V4 Flow — natural-language plan shown above the tool results.
+    // Deliberately NOT part of the keyboard `flat` list: it is a bonus
+    // suggestion, so the first tool result stays the Enter default.
+    const flowPlan = query ? detectFlow(query) : null;
+    if (flowPlan) {
+      const h = document.createElement('div');
+      h.className = 'sm-group sm-group-flow';
+      h.textContent = 'Flow — understood from your sentence';
+      resultsEl.appendChild(h);
+      const btn = document.createElement('a');
+      btn.className = 'sm-flow-item';
+      btn.href = flowHref(flowPlan);
+      btn.setAttribute('data-flow-result', '');
+      btn.innerHTML = `
+        <span class="sm-item-icon sm-flow-icon" aria-hidden="true">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS.bolt || ''}</svg>
+        </span>
+        <span style="min-width:0">
+          <span class="sm-item-name"></span><br>
+          <span class="sm-item-desc"></span>
+        </span>`;
+      btn.querySelector('.sm-item-name').textContent = flowPlan.title;
+      btn.querySelector('.sm-item-desc').textContent =
+        flowPlan.cta.type === 'workflow' ? `${describeFlowPlan(flowPlan)} — opens in the Workflow builder, nothing runs automatically` : flowPlan.detail;
+      resultsEl.appendChild(btn);
+    }
+
+    if (!list.length && !flowPlan) {
       resultsEl.innerHTML = `<div class="sm-empty">No tool found for “${escapeHtml(query)}”.<br>Try “compress”, “convert”, “pdf”, “qr”…</div>`;
+      return;
+    }
+    if (!list.length) {
+      setActive(0);
       return;
     }
 
@@ -293,6 +365,11 @@ import Icon from './Icon.astro';
 
   document.querySelectorAll('[data-search-open]').forEach((el) => {
     el.addEventListener('click', () => open());
+  });
+
+  // V4 Flow — example chips open the modal with a ready-made sentence
+  document.querySelectorAll('[data-flow-example]').forEach((el) => {
+    el.addEventListener('click', () => open(el.dataset.flowExample || ''));
   });
 
   // The hero search bar opens the modal and transfers the typed text

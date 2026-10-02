@@ -1,0 +1,76 @@
+<div class="stool" id="tool-find-replace">
+  <div class="stool-toolbar fr-find">
+    <div class="field fr-in">
+      <label for="fr-search">Find</label>
+      <input id="fr-search" class="input" data-search placeholder="Text or pattern…" />
+    </div>
+    <div class="field fr-in">
+      <label for="fr-replace">Replace with</label>
+      <input id="fr-replace" class="input" data-replace placeholder="Replacement…" />
+    </div>
+    <label class="pill-check"><input type="checkbox" data-regex /><span class="dot"></span>Regex</label>
+    <label class="pill-check"><input type="checkbox" data-ci checked /><span class="dot"></span>Ignore case</label>
+  </div>
+  <div class="field">
+    <label for="fr-text">Text</label>
+    <textarea id="fr-text" class="input" data-input placeholder="Paste your text, then run the replacement."></textarea>
+  </div>
+  <div class="stool-toolbar">
+    <button type="button" class="btn btn-primary btn-sm" data-run>Replace all</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-copy>Copy result</button>
+    <span class="stool-status" data-status role="status"></span>
+  </div>
+</div>
+
+<style>
+  .fr-find { align-items: flex-end; }
+  .fr-in { flex: 1; min-width: 160px; }
+</style>
+
+<script>
+  import { copyText, toast } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-find-replace');
+  if (root) {
+    const input = root.querySelector('[data-input]');
+    const search = root.querySelector('[data-search]');
+    const replace = root.querySelector('[data-replace]');
+    const status = root.querySelector('[data-status]');
+
+    function buildRegex() {
+      const isRegex = root.querySelector('[data-regex]').checked;
+      const ci = root.querySelector('[data-ci]').checked;
+      const pattern = isRegex ? search.value : search.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      if (!pattern) return null;
+      try {
+        return new RegExp(pattern, ci ? 'gi' : 'g');
+      } catch (err) {
+        throw new Error('Invalid regex — ' + err.message.replace(/^.*?:\s*/, ''));
+      }
+    }
+
+    root.querySelector('[data-run]').addEventListener('click', () => {
+      status.className = 'stool-status';
+      if (!search.value) {
+        status.textContent = 'Type something to find first.';
+        status.classList.add('err');
+        return;
+      }
+      try {
+        const rx = buildRegex();
+        const before = input.value;
+        const after = before.replace(rx, replace.value);
+        const count = (before.match(rx) || []).length;
+        input.value = after;
+        status.textContent = `${count} replacement${count === 1 ? '' : 's'} made.`;
+        status.classList.add(count ? 'ok' : 'err');
+      } catch (err) {
+        status.textContent = err.message;
+        status.classList.add('err');
+      }
+    });
+    root.querySelector('[data-copy]').addEventListener('click', async () => {
+      if (await copyText(input.value)) toast('Copied to clipboard.', 'success');
+    });
+  }
+</script>

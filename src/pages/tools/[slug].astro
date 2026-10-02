@@ -33,6 +33,17 @@ import UnitConverter from '../../tools/ui/UnitConverter.astro';
 import DateCalculator from '../../tools/ui/DateCalculator.astro';
 import QrTool from '../../tools/ui/QrTool.astro';
 import PasswordTool from '../../tools/ui/PasswordTool.astro';
+import ImageConverter from '../../tools/ui/ImageConverter.astro';
+import ImageEditor from '../../tools/ui/ImageEditor.astro';
+import WatermarkTool from '../../tools/ui/Watermark.astro';
+import ImageAnalyzer from '../../tools/ui/ImageAnalyzer.astro';
+import TextCleaner from '../../tools/ui/TextCleaner.astro';
+import FindReplace from '../../tools/ui/FindReplace.astro';
+import TextDiff from '../../tools/ui/TextDiff.astro';
+import TextExtractor from '../../tools/ui/TextExtractor.astro';
+import Calculator from '../../tools/ui/Calculator.astro';
+import ColorStudio from '../../tools/ui/ColorStudio.astro';
+import EncodingLab from '../../tools/ui/EncodingLab.astro';
 
 const UI_MAP = {
   'image-compressor': CompressImage,
@@ -65,20 +76,44 @@ const UI_MAP = {
   'date-calculator': DateCalculator,
   'qr-code-generator': QrTool,
   'password-generator': PasswordTool,
+  'image-converter': ImageConverter,
+  'image-editor': ImageEditor,
+  watermark: WatermarkTool,
+  'image-analyzer': ImageAnalyzer,
+  'text-cleaner': TextCleaner,
+  'find-and-replace': FindReplace,
+  'text-diff': TextDiff,
+  'text-extractor': TextExtractor,
+  calculator: Calculator,
+  'color-studio': ColorStudio,
+  'encoding-lab': EncodingLab,
 };
 
 export function getStaticPaths() {
   return tools.map((tool) => ({ params: { slug: tool.slug }, props: { tool } }));
 }
 
+import ToolRedirect from '../../tools/ui/ToolRedirect.astro';
+
+/** V4 consolidation: legacy single-purpose pages redirect to the unified tool. */
+const REDIRECTS = {
+  'jpg-to-webp': { target: '/tools/image-converter/?to=image/webp', name: 'Image Converter' },
+  'png-to-webp': { target: '/tools/image-converter/?to=image/webp', name: 'Image Converter' },
+  'webp-to-jpg': { target: '/tools/image-converter/?to=image/jpeg', name: 'Image Converter' },
+  'jpg-to-png': { target: '/tools/image-converter/?to=image/png', name: 'Image Converter' },
+  'base64-encode-decode': { target: '/tools/encoding-lab/#base64', name: 'Encoding Lab' },
+  'url-encode-decode': { target: '/tools/encoding-lab/#url', name: 'Encoding Lab' },
+};
+
 const { tool } = Astro.props;
+const redirect = REDIRECTS[tool.slug];
 const UI = UI_MAP[tool.slug];
 
-if (!UI) {
+if (!UI && !redirect) {
   throw new Error(`Tool without an interface: ${tool.slug}`);
 }
 ---
 
 <ToolLayout tool={tool}>
-  <UI />
+  {redirect ? <ToolRedirect target={redirect.target} name={redirect.name} /> : <UI />}
 </ToolLayout>

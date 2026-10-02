@@ -1,0 +1,26 @@
+---
+/**
+ * V4 — legacy pages consolidated into unified tools.
+ * Renders a short notice, then client-side redirects to the replacement.
+ */
+const { target, name } = Astro.props;
+---
+
+<div class="stool" id="tool-redirect" style="text-align: center; padding: 48px 16px;">
+  <p style="font-size: 1.05rem; margin-bottom: 6px;">
+    This tool has been upgraded and moved.
+  </p>
+  <p style="color: var(--muted); margin-bottom: 22px;">
+    You are being redirected to <strong style="color: var(--text);">{name}</strong>…
+  </p>
+  <a class="btn btn-primary" href={target} data-redirect-link>Go to {name} now</a>
+</div>
+
+<script>
+  const link = document.querySelector('[data-redirect-link]');
+  if (link) {
+    setTimeout(() => {
+      if (!document.hidden) window.location.replace(link.getAttribute('href'));
+    }, 1500);
+  }
+</script>

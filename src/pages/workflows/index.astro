@@ -59,6 +59,13 @@ const jsonLd = {
           <h3>Saved workflows</h3>
           <ul class="wf-saved-list" data-saved-list role="list"></ul>
         </div>
+
+        <div class="wf-io">
+          <button type="button" class="btn btn-ghost btn-sm" data-wf-export>Export as JSON</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-wf-import>Import JSON</button>
+          <input type="file" data-wf-import-input accept="application/json,.json" hidden />
+        </div>
+        <p class="wf-io-hint">Imported workflows are validated and saved — they never run automatically.</p>
       </section>
 
       <!-- ============ RUNNER ============ -->
@@ -81,6 +88,9 @@ const jsonLd = {
             <button type="button" class="btn btn-ghost btn-sm" data-clear hidden>Clear</button>
             <button type="button" class="btn btn-accent btn-sm" data-run hidden>
               <Icon name="bolt" size={15} /> Run workflow
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" data-stop hidden>
+              <Icon name="close" size={15} /> Stop
             </button>
           </span>
         </div>
@@ -334,6 +344,19 @@ const jsonLd = {
     color: var(--muted);
   }
 
+  .wf-io {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+
+  .wf-io-hint {
+    margin-top: 8px;
+    font-size: 0.76rem;
+    color: var(--faint);
+  }
+
   @media (max-width: 960px) {
     .wf-layout {
       grid-template-columns: 1fr;
@@ -342,7 +365,15 @@ const jsonLd = {
 </style>
 
 <script>
-  import { STEP_TYPES, WORKFLOW_PRESETS, mergeSteps, runPipeline, describeWorkflow } from '../../lib/workflow.js';
+  import {
+    STEP_TYPES,
+    WORKFLOW_PRESETS,
+    runPipeline,
+    describeWorkflow,
+    validateWorkflowSteps,
+    exportWorkflowsJSON,
+    parseWorkflowsJSON,
+  } from '../../lib/workflow.js';
   import { validateFile, MAX_FILE_BYTES } from '../../lib/files.js';
   import { formatBytes } from '../../lib/format.js';
   import { toast, downloadBlob } from '../../lib/ui.js';
@@ -355,6 +386,20 @@ const jsonLd = {
 
     const stepsEl = root.querySelector('[data-steps]');
     const emptyEl = root.querySelector('[data-empty]');
+
+    // V4 Flow — a plan proposed from the palette/home arrives as ?plan=<json>.
+    // We pre-fill the builder only; nothing runs automatically.
+    try {
+      const planParam = new URLSearchParams(location.search).get('plan');
+      if (planParam) {
+        const parsed = JSON.parse(planParam);
+        if (Array.isArray(parsed) && validateWorkflowSteps(parsed).length === 0) {
+          steps = parsed.map((s) => ({ ...s }));
+        }
+      }
+    } catch {
+      /* malformed plan → silently ignore, keep the default */
+    }
 
     const stepDefaults = {
       resize: { type: 'resize', maxSide: 1920 },
@@ -405,9 +450,10 @@ const jsonLd = {
         const move = document.createElement('span');
         move.className = 'wf-step-move';
         move.innerHTML = `
-          <button type="button" class="icon-btn" data-mv="-1" aria-label="Move step up" ${i === 0 ? 'disabled' : ''}>↑</button>
-          <button type="button" class="icon-btn" data-mv="1" aria-label="Move step down" ${i === steps.length - 1 ? 'disabled' : ''}>↓</button>
-          <button type="button" class="icon-btn" data-rm aria-label="Remove step">✕</button>`;
+          <button type="button" class="icon-btn" data-mv="-1" aria-label="Move step up" title="Move up" ${i === 0 ? 'disabled' : ''}>↑</button>
+          <button type="button" class="icon-btn" data-mv="1" aria-label="Move step down" title="Move down" ${i === steps.length - 1 ? 'disabled' : ''}>↓</button>
+          <button type="button" class="icon-btn" data-dup aria-label="Duplicate step" title="Duplicate">⧉</button>
+          <button type="button" class="icon-btn" data-rm aria-label="Remove step" title="Remove">✕</button>`;
         move.querySelectorAll('[data-mv]').forEach((btn) =>
           btn.addEventListener('click', () => {
             const j = i + Number(btn.dataset.mv);
@@ -416,6 +462,10 @@ const jsonLd = {
             renderSteps();
           })
         );
+        move.querySelector('[data-dup]').addEventListener('click', () => {
+          steps.splice(i + 1, 0, { ...steps[i] });
+          renderSteps();
+        });
         move.querySelector('[data-rm]').addEventListener('click', () => {
           steps.splice(i, 1);
           renderSteps();
@@ -486,8 +536,9 @@ const jsonLd = {
     }
 
     root.querySelector('[data-wf-save]').addEventListener('click', () => {
-      if (!steps.length) {
-        toast('Add at least one step before saving.', 'error');
+      const issues = validateWorkflowSteps(steps);
+      if (issues.length) {
+        toast(issues[0].message, 'error');
         return;
       }
       const name = nameInput.value.trim() || `Workflow ${getSavedWorkflows().length + 1}`;
@@ -496,6 +547,51 @@ const jsonLd = {
       saveWorkflows(list);
       renderSaved();
       toast(`Saved “${name}”.`, 'success');
+    });
+
+    /* ---------- V4 JSON export / import (strict, never auto-executes) ---------- */
+    const importInput = root.querySelector('[data-wf-import-input]');
+
+    root.querySelector('[data-wf-export]').addEventListener('click', () => {
+      const saved = getSavedWorkflows();
+      if (!saved.length) {
+        toast('Nothing to export yet — save a workflow first.', 'error');
+        return;
+      }
+      const json = exportWorkflowsJSON(saved);
+      downloadBlob(new Blob([json], { type: 'application/json' }), 'quicktools-workflows.json');
+      toast(`Exported ${saved.length} workflow(s).`, 'success');
+    });
+
+    root.querySelector('[data-wf-import]').addEventListener('click', () => importInput.click());
+    importInput.addEventListener('change', () => {
+      const file = importInput.files?.[0];
+      importInput.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const parsed = parseWorkflowsJSON(String(reader.result || ''));
+        if (!parsed.ok) {
+          toast(parsed.error, 'error');
+          return;
+        }
+        const list = getSavedWorkflows();
+        const names = new Set(list.map((w) => w.name));
+        let added = 0;
+        for (const wf of parsed.workflows) {
+          let name = wf.name;
+          let k = 2;
+          while (names.has(name)) name = `${wf.name} (${k++})`;
+          names.add(name);
+          list.unshift({ name, steps: wf.steps.map((s) => ({ ...s })) });
+          added++;
+        }
+        saveWorkflows(list);
+        renderSaved();
+        toast(`Imported ${added} workflow(s) — saved, not run.`, 'success');
+      };
+      reader.onerror = () => toast('Could not read that file.', 'error');
+      reader.readAsText(file);
     });
 
     /* ================= RUNNER ================= */
@@ -674,21 +770,35 @@ const jsonLd = {
       set('[data-sum-saved]', saved >= 0 ? `−${Math.round((saved / Math.max(1, before)) * 100)} %` : '—');
     }
 
+    const stopBtn = root.querySelector('[data-stop]');
+    let stopRequested = false;
+
     runBtn.addEventListener('click', async () => {
-      if (!steps.length) {
-        showNotice('Add at least one step to the pipeline first.');
-        return;
-      }
       if (!files.length) {
         showNotice('Add some images to process.');
         return;
       }
+      // V4 — validate the pipeline BEFORE running; never fail mid-batch on a bad config.
+      const issues = validateWorkflowSteps(steps);
+      if (issues.length) {
+        showNotice(issues[0].message + (issues.length > 1 ? ` (+${issues.length - 1} more)` : ''));
+        toast('Fix the pipeline before running — see the message above.', 'error');
+        return;
+      }
       showNotice('');
       runBtn.disabled = true;
+      stopBtn.hidden = false;
+      stopRequested = false;
       progressBox.hidden = false;
       let doneCount = 0;
+      let stopped = false;
 
       for (let i = 0; i < files.length; i++) {
+        if (stopRequested) {
+          stopped = true;
+          // leave remaining files as pending so they can be run again
+          break;
+        }
         const item = files[i];
         item.status = 'working';
         renderFiles();
@@ -706,16 +816,26 @@ const jsonLd = {
         refreshSummary();
       }
 
-      progressLabel.textContent = `Finished — ${doneCount}/${files.length} file${files.length > 1 ? 's' : ''} processed.`;
+      progressLabel.textContent = stopped
+        ? `Stopped — ${doneCount}/${files.length} file${files.length > 1 ? 's' : ''} processed. The rest can be run again.`
+        : `Finished — ${doneCount}/${files.length} file${files.length > 1 ? 's' : ''} processed.`;
       setTimeout(() => {
         progressBox.hidden = true;
         progressFill.style.width = '0%';
-      }, 1800);
+      }, stopped ? 2600 : 1800);
       runBtn.disabled = false;
-      if (doneCount) {
+      stopBtn.hidden = true;
+      if (stopped) {
+        toast('Workflow stopped.', 'info');
+      } else if (doneCount) {
         zipBtn.hidden = doneCount < 1;
         toast(doneCount === files.length ? 'Workflow complete.' : `Workflow complete with ${files.length - doneCount} error(s).`, doneCount === files.length ? 'success' : 'info');
       }
+    });
+
+    stopBtn.addEventListener('click', () => {
+      stopRequested = true;
+      stopBtn.disabled = true;
     });
 
     zipBtn.addEventListener('click', async () => {
