@@ -1,0 +1,247 @@
+---
+/**
+ * V4.1 — Student Mode: a curated view for students.
+ * Zero duplicated logic: every card links to an existing tool.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
+import Icon from '../components/Icon.astro';
+import { getTool } from '../data/tools.js';
+
+const path = '/student/';
+
+const SECTIONS = [
+  {
+    title: 'Calculate & measure',
+    icon: 'calc',
+    blurb: 'Exercises, lab reports, budgets.',
+    slugs: ['calculator', 'percentage-calculator', 'unit-converter', 'date-calculator'],
+  },
+  {
+    title: 'Write & clean text',
+    icon: 'text',
+    blurb: 'Essays, bibliographies, notes.',
+    slugs: ['word-counter', 'text-cleaner', 'find-and-replace', 'text-diff', 'case-converter', 'remove-duplicate-lines'],
+  },
+  {
+    title: 'Read & fix documents',
+    icon: 'pdf',
+    blurb: 'Lecture slides, handouts, admin PDFs.',
+    slugs: ['pdf-organizer', 'pdf-to-text', 'merge-pdf', 'split-pdf', 'compress-pdf', 'image-to-pdf'],
+  },
+  {
+    title: 'Images for presentations',
+    icon: 'image',
+    blurb: 'Slides, posters, reports.',
+    slugs: ['image-converter', 'image-compressor', 'image-resizer', 'image-editor', 'watermark'],
+  },
+  {
+    title: 'Share & identify',
+    icon: 'qr',
+    blurb: 'Group projects, events, links.',
+    slugs: ['qr-code-generator', 'uuid-generator', 'password-generator', 'timestamp-converter'],
+  },
+];
+
+const sections = SECTIONS.map((s) => ({
+  ...s,
+  tools: s.slugs.map((slug) => getTool(slug)).filter(Boolean),
+}));
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'Student Mode — QuickTools',
+  description: 'The tools students actually need, in one calm page: calculators, text cleanup, PDF fixes and presentation images. Free and private.',
+  url: new URL(path, Astro.site).href,
+};
+---
+
+<BaseLayout
+  title="Student Mode — calculators, text and PDF tools for students"
+  description="One calm page with the tools students use every day: calculators, unit conversion, essay cleanup, PDF fixes, presentation images. Free, local, no account."
+  path={path}
+  jsonLd={jsonLd}
+>
+  <div class="container student-page">
+    <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Student Mode' }]} />
+
+    <header class="student-head">
+      <span class="eyebrow">Student Mode</span>
+      <h1>Everything you need for coursework. Nothing you don't.</h1>
+      <p>
+        A short, curated list of the tools students use every day — all free, all running on your device,
+        no account and no upload. Press <kbd>Ctrl</kbd>+<kbd>K</kbd> anywhere if you need something else.
+      </p>
+    </header>
+
+    {sections.map((sec) => (
+      <section class="student-section" aria-label={sec.title}>
+        <div class="student-section-head">
+          <span class="student-section-icon" aria-hidden="true"><Icon name={sec.icon} size={18} /></span>
+          <div>
+            <h2>{sec.title}</h2>
+            <p>{sec.blurb}</p>
+          </div>
+        </div>
+        <ul class="student-links" role="list">
+          {sec.tools.map((tool) => (
+            <li>
+              <a href={`/tools/${tool.slug}/`} class="student-link">
+                <span class="student-link-icon" aria-hidden="true"><Icon name={tool.icon} size={16} /></span>
+                <span class="student-link-body">
+                  <span class="student-link-name">{tool.name}</span>
+                  <span class="student-link-desc">{tool.shortDesc}</span>
+                </span>
+                <Icon name="arrow-right" size={14} />
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+
+    <p class="student-more">
+      Missing something? Open the palette with <kbd>Ctrl</kbd>+<kbd>K</kbd> and describe what you need —
+      or browse <a href="/tools/">all tools</a>.
+    </p>
+  </div>
+</BaseLayout>
+
+<style>
+  .student-page {
+    padding-top: 26px;
+    padding-bottom: 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    max-width: 860px;
+  }
+
+  .student-head h1 {
+    font-size: clamp(1.8rem, 4.2vw, 2.6rem);
+    margin: 8px 0 12px;
+    max-width: 620px;
+  }
+
+  .student-head p {
+    color: var(--muted);
+    max-width: 620px;
+    line-height: 1.65;
+  }
+
+  kbd {
+    border: 1px solid var(--border-strong);
+    border-bottom-width: 2px;
+    border-radius: 6px;
+    padding: 1px 6px;
+    font-size: 0.78rem;
+    background: var(--panel-strong);
+  }
+
+  .student-section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .student-section-head {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+  }
+
+  .student-section-icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    border-radius: 13px;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  }
+
+  .student-section-head h2 {
+    font-size: 1.12rem;
+  }
+
+  .student-section-head p {
+    color: var(--faint);
+    font-size: 0.84rem;
+    margin-top: 2px;
+  }
+
+  .student-links {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 10px;
+  }
+
+  .student-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 15px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background: var(--panel);
+    color: var(--text);
+    transition: border-color 0.15s, transform 0.15s var(--ease);
+  }
+
+  .student-link:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-1px);
+  }
+
+  .student-link:hover :global(svg:last-child) {
+    color: var(--accent);
+  }
+
+  .student-link-icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    border-radius: 10px;
+    color: var(--muted);
+    background: var(--panel-strong);
+  }
+
+  .student-link-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .student-link-name {
+    font-weight: 600;
+    font-size: 0.92rem;
+  }
+
+  .student-link-desc {
+    font-size: 0.76rem;
+    color: var(--faint);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .student-more {
+    color: var(--muted);
+    font-size: 0.9rem;
+    border-top: 1px solid var(--border);
+    padding-top: 22px;
+  }
+
+  .student-more a {
+    color: var(--accent);
+  }
+</style>

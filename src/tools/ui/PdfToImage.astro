@@ -258,7 +258,7 @@ import Icon from '../../components/Icon.astro';
     let pdfjs = null;
     async function getPdfjs() {
       if (!pdfjs) {
-        const [{ default: lib }, { default: workerUrl }] = await Promise.all([
+        const [lib, { default: workerUrl }] = await Promise.all([
           import('pdfjs-dist'),
           import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
         ]);

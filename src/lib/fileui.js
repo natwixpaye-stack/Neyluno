@@ -10,6 +10,7 @@ import { validateFile, MAX_FILE_BYTES } from './files.js';
 import { formatBytes } from './format.js';
 import { toast, downloadBlob } from './ui.js';
 import { applyPattern, validPattern } from './naming.js';
+import { t } from './i18n.js';
 
 let uid = 0;
 
@@ -207,45 +208,45 @@ export function mountFileTool(root, config = {}) {
     actions.querySelector('[data-cancel]')?.remove();
 
     if (item.status === 'working') {
-      status.textContent = 'Processing…';
+      status.textContent = t('file.processing');
       status.className = 'fi-status';
       const cancel = document.createElement('button');
       cancel.type = 'button';
       cancel.className = 'btn btn-sm btn-ghost';
       cancel.dataset.cancel = '';
-      cancel.textContent = 'Cancel';
+      cancel.textContent = t('file.cancel');
       cancel.addEventListener('click', () => {
         item.cancelled = true;
         cancel.disabled = true;
-        cancel.textContent = 'Stopping…';
+        cancel.textContent = t('file.stopping');
       });
       actions.insertBefore(cancel, actions.querySelector('.icon-btn'));
     } else if (item.status === 'done') {
       el.classList.add('is-done');
-      status.textContent = 'Done';
+      status.textContent = t('file.done');
       status.className = 'fi-status ok';
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'btn btn-sm btn-ghost';
       btn.dataset.download = '';
-      btn.textContent = 'Download';
+      btn.textContent = t('file.download');
       btn.addEventListener('click', () => {
         if (item.result?.blob) {
           downloadBlob(item.result.blob, finalName(item));
-          btn.textContent = 'Downloaded ✓';
-          setTimeout(() => (btn.textContent = 'Download'), 2200);
+          btn.textContent = t('file.downloaded');
+          setTimeout(() => (btn.textContent = t('file.download')), 2200);
         }
       });
       actions.insertBefore(btn, actions.querySelector('.icon-btn'));
     } else if (item.status === 'error' || item.status === 'cancelled') {
       el.classList.add('is-error');
-      status.textContent = item.status === 'cancelled' ? 'Cancelled' : 'Failed';
+      status.textContent = item.status === 'cancelled' ? t('file.cancelled') : t('file.failed');
       status.className = 'fi-status err';
       const retry = document.createElement('button');
       retry.type = 'button';
       retry.className = 'btn btn-sm btn-ghost';
       retry.dataset.retry = '';
-      retry.textContent = 'Retry';
+      retry.textContent = t('file.retry');
       retry.addEventListener('click', () => processItem(item));
       actions.insertBefore(retry, actions.querySelector('.icon-btn'));
     } else {
@@ -323,11 +324,12 @@ export function mountFileTool(root, config = {}) {
     const items = state.items;
     const done = items.filter((i) => i.status === 'done' && i.result?.blob);
     const failed = items.filter((i) => i.status === 'error');
+    const cancelled = items.filter((i) => i.status === 'cancelled');
     const set = (sel, val) => {
       const el = summaryEl.querySelector(sel);
       if (el) el.textContent = val;
     };
-    const show = done.length > 0;
+    const show = done.length > 0 || failed.length > 0 || cancelled.length > 0;
     summaryEl.hidden = !show;
     if (!show) return;
     const before = items.reduce((s, i) => s + i.file.size, 0);
@@ -336,6 +338,11 @@ export function mountFileTool(root, config = {}) {
     set('[data-sum-count]', String(items.length));
     set('[data-sum-done]', String(done.length));
     set('[data-sum-failed]', String(failed.length));
+    const cEl = summaryEl.querySelector('[data-sum-cancelled]');
+    if (cEl) {
+      cEl.textContent = String(cancelled.length);
+      cEl.closest('.stat')?.toggleAttribute('hidden', cancelled.length === 0);
+    }
     set('[data-sum-before]', formatBytes(before));
     set('[data-sum-after]', formatBytes(after));
     set('[data-sum-saved]', saved >= 0 ? `−${Math.round((saved / Math.max(1, before)) * 100)} %` : '—');
@@ -392,7 +399,7 @@ export function mountFileTool(root, config = {}) {
     }
     try {
       zipBtn.disabled = true;
-      zipBtn.textContent = 'Preparing ZIP…';
+      zipBtn.textContent = t('file.zipPrep');
       const { zipSync } = await import('fflate');
       const entries = {};
       const usedNames = new Set();
@@ -407,12 +414,12 @@ export function mountFileTool(root, config = {}) {
       }
       const zipped = zipSync(entries);
       downloadBlob(new Blob([zipped], { type: 'application/zip' }), 'quicktools-export.zip');
-      toast(`${done.length} file(s) downloaded as a ZIP.`, 'success');
+      toast(`${done.length} ${t('file.zipDone')}`, 'success');
     } catch {
-      toast('Creating the ZIP failed — please download the files one by one.', 'error');
+      toast(t('file.zipFail'), 'error');
     } finally {
       zipBtn.disabled = false;
-      zipBtn.textContent = zipBtn.dataset.label || 'Download all (ZIP)';
+      zipBtn.textContent = zipBtn.dataset.label || t('file.zipReady');
     }
   }
 

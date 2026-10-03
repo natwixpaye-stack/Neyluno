@@ -228,6 +228,129 @@ export const guides = [
 </ul>
 `,
   },
+  {
+    slug: 'merge-pdf-files',
+    title: 'How to merge PDF files into one document (and keep the page order right)',
+    description:
+      'Combine several PDFs into a single file directly in your browser. Covers page order, mixing scanned and digital pages, and what to check before sending the result.',
+    keywords: ['merge pdf', 'combine pdf files', 'join pdf into one'],
+    relatedTools: ['merge-pdf', 'pdf-organizer', 'compress-pdf'],
+    updated: '2026-10-03',
+    faq: [
+      { q: 'Are my files uploaded anywhere when I merge PDFs here?', a: 'No. Merging happens entirely in your browser with JavaScript — the files never leave your device. You can verify it: the tool works with Wi-Fi turned off.' },
+      { q: 'Does merging change the order of my pages?', a: 'Only if you choose to. Files are merged in the order you add them; the Merge tool lets you reorder files before running, and the PDF Organizer lets you fine-tune page-level order afterwards.' },
+      { q: 'Can I merge scanned PDFs with regular ones?', a: 'Yes — merging just concatenates pages, it does not care how they were made. Scanned pages stay images, digital pages stay selectable text.' },
+      { q: 'The merged file is huge — what now?', a: 'Merging never compresses. If the result is too large for email, run it through the PDF Compressor; it rebuilds the document and only gives you the compressed version if it is genuinely smaller.' },
+    ],
+    html: `
+<p>Merging PDFs sounds trivial until you actually need to do it: three invoices, a cover letter, two scanned receipts — and suddenly you need one clean document for an application. Here is the reliable path.</p>
+
+<h2>Step 1 — Prepare your files</h2>
+<ul>
+  <li>Keep each source as its own file; <strong>do not rename extensions</strong> or edit files in a text editor.</li>
+  <li>If a scan came in as separate JPG pages, convert each to PDF first (most scanner software has a “Save as PDF” option).</li>
+</ul>
+
+<h2>Step 2 — Add them in the right order</h2>
+<p>Open the <a href="/tools/merge-pdf/">Merge PDF</a> tool and add your files. The order you add them in is the order of the final document, and you can drag to reorder before merging. Cover letters first, then the body documents, then annexes — it is much easier to order now than to split later.</p>
+
+<h2>Step 3 — Merge and verify</h2>
+<p>Click Merge and download the result, then open it and scroll through once: check total page count (it should equal the sum of your sources) and spot-check one page per source file. If something is missing, re-add the files — nothing was modified, your originals are untouched.</p>
+
+<h2>If the result needs cleanup</h2>
+<p>Merging keeps every page exactly as-is. To drop a page, duplicate one, or rotate a sideways scan inside the merged document, use the <a href="/tools/pdf-organizer/">PDF Organizer</a> — it shows every page as a thumbnail before you commit.</p>
+
+<h2>What does NOT work</h2>
+<ul>
+  <li><strong>Renaming files 1.pdf, 2.pdf and zipping them</strong> — a ZIP is not a PDF; the recipient still has N files.</li>
+  <li><strong>Copy-pasting pages in Word</strong> — layouts, fonts and page breaks shift; a PDF merge keeps everything pixel-identical.</li>
+  <li><strong>Expecting merging to reduce size</strong> — it never compresses; use the PDF Compressor for that.</li>
+</ul>
+`,
+  },
+  {
+    slug: 'extract-text-from-pdf',
+    title: 'How to extract text from a PDF (and what to do when there is none)',
+    description:
+      'Get editable text out of a PDF: copy the text layer when it exists, download a .txt, and understand why scanned PDFs return nothing — with honest workarounds.',
+    keywords: ['extract text from pdf', 'copy text pdf not selectable', 'pdf to txt'],
+    relatedTools: ['pdf-to-text', 'pdf-to-image', 'pdf-organizer'],
+    updated: '2026-10-03',
+    faq: [
+      { q: 'Why can I not select the text in my PDF?', a: 'The document is probably a scan: every “page” is a photograph of the original. There is no hidden text layer to read — only pixels. Tools that extract text will correctly tell you so.' },
+      { q: 'Does extracting text keep the formatting?', a: 'Text layers store characters and positions, not paragraphs. You get clean words and line breaks; lists, tables and columns may need light re-tidying after extraction.' },
+      { q: 'Is OCR the solution for scans?', a: 'OCR turns pixels into text. Quality depends heavily on scan resolution and language; for anything important, compare the output against the original. QuickTools does not ship OCR in V4 — this is a deliberate V5 scope decision.' },
+      { q: 'Is my document uploaded anywhere?', a: 'No. Extraction runs locally in your browser; the file never leaves your device.' },
+    ],
+    html: `
+<p>“I just need the text out of this PDF.” Sometimes you can select and copy; sometimes the text refuses to be selected. The difference decides your whole strategy.</p>
+
+<h2>Case 1 — The text is selectable</h2>
+<p>PDFs exported from Word, Google Docs or most software contain a <strong>text layer</strong>: real characters hidden behind the visual page. Extraction is trivial and lossless:</p>
+<ul>
+  <li>Open the <a href="/tools/pdf-to-text/">PDF → Text</a> tool and load your file.</li>
+  <li>Copy the extracted text straight from the results, or download it as a <code>.txt</code> file.</li>
+  <li>Page boundaries are marked so you know where page 2 starts — useful for citations.</li>
+</ul>
+
+<h2>Case 2 — The text is NOT selectable (scanned PDF)</h2>
+<p>If the tool reports that no text layer was found, be glad it told you the truth: the “text” you see is an image. Your options, in honest order:</p>
+<ul>
+  <li><strong>Re-export the original</strong> if you have it — always better than extracting from a scan.</li>
+  <li><strong>Use the PDF → Images tool</strong> to get clean page pictures, then retype the few lines you actually need.</li>
+  <li><strong>OCR</strong> (optical character recognition) converts pixels to text but is a separate, heavier process; QuickTools leaves it for V5 and prefers telling you “no text found” over guessing characters.</li>
+</ul>
+
+<h2>Quick checklist</h2>
+<table>
+  <thead><tr><th>Symptom</th><th>Meaning</th><th>Do this</th></tr></thead>
+  <tbody>
+    <tr><td>Text selects, copies fine</td><td>Text layer present</td><td>PDF → Text tool</td></tr>
+    <tr><td>Nothing selects, whole page highlights as image</td><td>Scan</td><td>Re-export original or OCR later</td></tr>
+    <tr><td>Some pages extract, others not</td><td>Mixed document</td><td>Extract what exists; handle scans separately</td></tr>
+  </tbody>
+</table>
+`,
+  },
+  {
+    slug: 'base64-encoding',
+    title: 'Base64, explained with real use cases (images in CSS, APIs, emails)',
+    description:
+      'What Base64 actually is, when encoding is the right tool (data URIs, API payloads, email attachments) and when it is the wrong one — with size math included.',
+    keywords: ['base64 encode decode', 'image to base64', 'data uri'],
+    relatedTools: ['encoding-lab', 'text-diff', 'qr-generator'],
+    updated: '2026-10-03',
+    faq: [
+      { q: 'Does Base64 compress my data?', a: 'The opposite: Base64 expands data by ~33 % (3 bytes become 4 characters). It makes binary safe to transport as plain text — never smaller.' },
+      { q: 'Is Base64 encryption?', a: 'No. Anyone can decode it instantly. It is an encoding, not a protection. Never treat Base64 as security for tokens or secrets.' },
+      { q: 'When should I inline an image as a data URI?', a: 'For tiny graphics (icons, logos under ~5 KB) where avoiding an extra HTTP request wins. For photos, the 33 % size penalty makes a normal file the better choice.' },
+      { q: 'Why do my APIs use Base64?', a: 'JSON can only carry text. To send a file through a JSON payload, you encode it to Base64 first — the receiver decodes it back to bytes. That is the whole trick.' },
+    ],
+    html: `
+<p>Base64 looks mysterious but does one simple thing: it turns <strong>any bytes into plain text</strong>, using only 64 safe characters (A–Z, a–z, 0–9, <code>+</code> and <code>/</code>). Why bother? Because old protocols, file formats and JSON payloads only transport text reliably.</p>
+
+<h2>The size math (the part everyone forgets)</h2>
+<p>Every 3 bytes of input become 4 characters of output: a 3 MB image becomes a ~4 MB Base64 string. Planning to email a Base64 attachment? You are making the email 33 % heavier, not lighter.</p>
+
+<h2>When Base64 is the RIGHT tool</h2>
+<ul>
+  <li><strong>Data URIs in CSS/HTML</strong> — <code>background: url(data:image/png;base64,…)</code> inlines a small icon and saves a network request.</li>
+  <li><strong>JSON APIs carrying files</strong> — encode the bytes, send the string, decode on the other side.</li>
+  <li><strong>Email attachments</strong> — MIME uses Base64 internally for every attachment you have ever sent.</li>
+  <li><strong>Quick checksums of identity</strong> — paste the same string into two systems and compare.</li>
+</ul>
+
+<h2>When Base64 is the WRONG tool</h2>
+<ul>
+  <li><strong>“Compressing” images or files</strong> — it inflates them; use the Image Compressor instead.</li>
+  <li><strong>Hiding secrets</strong> — decoding takes one click; use real encryption.</li>
+  <li><strong>Storing large binaries in databases “for simplicity”</strong> — size and query costs compound; files belong in files.</li>
+</ul>
+
+<h2>Try it</h2>
+<p>The <a href="/tools/encoding-lab/#base64">Encoding Lab</a> encodes and decodes Base64, URL encoding and more — live as you type, entirely in your browser. Paste a string, get the encoded form; paste a <code>data:</code> URI, see what is inside. Nothing is sent anywhere.</p>
+`,
+  },
 ];
 
 export function getGuide(slug) {

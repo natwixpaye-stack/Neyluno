@@ -61,6 +61,14 @@ import Icon from '../../components/Icon.astro';
     <div class="stat"><div class="stat-value" data-sum-count>—</div><div class="stat-label">Files</div></div>
     <div class="stat"><div class="stat-value" data-sum-done>—</div><div class="stat-label">Done</div></div>
     <div class="stat"><div class="stat-value" data-sum-failed>—</div><div class="stat-label">Failed</div></div>
+    <div class="stat" hidden><div class="stat-value" data-sum-cancelled>—</div><div class="stat-label">Cancelled</div></div>
+  </div>
+
+  <div class="handoff-chip" data-handoff hidden>
+    <Icon name="spark" size={16} />
+    <span>Continue with <strong data-handoff-name></strong> from the previous tool?</span>
+    <button type="button" class="btn btn-sm btn-ghost" data-handoff-use>Use this file</button>
+    <button type="button" class="icon-btn" data-handoff-dismiss aria-label="Dismiss">✕</button>
   </div>
 </div>
 
@@ -81,6 +89,7 @@ import Icon from '../../components/Icon.astro';
   import { mountFileTool } from '../../lib/fileui.js';
   import { decodeImage, renameWithExt } from '../../lib/image.js';
   import { bindRangeFill } from '../../lib/ui.js';
+  import { saveHandoff, mountHandoffChip } from '../../lib/handoff.js';
 
   const root = document.getElementById('tool-watermark');
   if (root) {
@@ -167,6 +176,11 @@ import Icon from '../../components/Icon.astro';
           img.close();
         }
       },
+      onListChange: (items) => {
+        const last = [...items].reverse().find((i) => i.status === 'done' && i.result?.blob);
+        if (last) saveHandoff({ fromTool: 'watermark', name: last.result.name, type: last.result.blob.type, blob: last.result.blob });
+      },
     });
+    mountHandoffChip(root, api, 'image/');
   }
 </script>

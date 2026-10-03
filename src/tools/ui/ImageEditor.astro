@@ -11,6 +11,13 @@ import Icon from '../../components/Icon.astro';
     <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choose an image</span>
   </div>
 
+  <div class="handoff-chip" data-handoff hidden>
+    <Icon name="spark" size={16} />
+    <span>Continue with <strong data-handoff-name></strong> from the previous tool?</span>
+    <button type="button" class="btn btn-sm btn-ghost" data-handoff-use>Use this file</button>
+    <button type="button" class="icon-btn" data-handoff-dismiss aria-label="Dismiss">✕</button>
+  </div>
+
   <div class="ie-work" data-work hidden>
     <div class="ie-stage">
       <canvas data-canvas aria-label="Edited image preview"></canvas>
@@ -29,8 +36,14 @@ import Icon from '../../components/Icon.astro';
         <input type="range" min="20" max="200" value="100" data-f="contrast" />
         <label>Saturation <output data-out="saturate">100 %</output></label>
         <input type="range" min="0" max="200" value="100" data-f="saturate" />
+        <label>Hue <output data-out="hue">0°</output></label>
+        <input type="range" min="0" max="360" value="0" data-f="hue" />
         <label>Grayscale <output data-out="grayscale">0 %</output></label>
         <input type="range" min="0" max="100" value="0" data-f="grayscale" />
+        <label>Sepia <output data-out="sepia">0 %</output></label>
+        <input type="range" min="0" max="100" value="0" data-f="sepia" />
+        <label>Invert <output data-out="invert">0 %</output></label>
+        <input type="range" min="0" max="100" value="0" data-f="invert" />
         <label>Blur <output data-out="blur">0 px</output></label>
         <input type="range" min="0" max="10" value="0" step="0.5" data-f="blur" />
         <p class="opt-hint" data-filter-note hidden>Your browser doesn’t support live filters — transforms still work.</p>
@@ -70,6 +83,7 @@ import Icon from '../../components/Icon.astro';
 <script>
   import { decodeImage } from '../../lib/image.js';
   import { downloadBlob, toast } from '../../lib/ui.js';
+  import { saveHandoff, getHandoff, clearHandoff } from '../../lib/handoff.js';
   import { validateFile } from '../../lib/files.js';
 
   const root = document.getElementById('tool-image-editor');
@@ -88,7 +102,7 @@ import Icon from '../../components/Icon.astro';
     let past = [];
     let future = [];
 
-    const DEFAULTS = { rot: 0, flipH: false, flipV: false, brightness: 100, contrast: 100, saturate: 100, grayscale: 0, blur: 0 };
+    const DEFAULTS = { rot: 0, flipH: false, flipV: false, brightness: 100, contrast: 100, saturate: 100, hue: 0, grayscale: 0, sepia: 0, invert: 0, blur: 0 };
     const filtersSupported = 'filter' in canvas.getContext('2d');
     if (!filtersSupported) root.querySelector('[data-filter-note]').hidden = false;
 
@@ -114,7 +128,7 @@ import Icon from '../../components/Icon.astro';
       ctx.save();
       ctx.clearRect(0, 0, w, h);
       if (filtersSupported) {
-        ctx.filter = `brightness(${state.brightness}%) contrast(${state.contrast}%) saturate(${state.saturate}%) grayscale(${state.grayscale}%) blur(${state.blur}px)`;
+        ctx.filter = `brightness(${state.brightness}%) contrast(${state.contrast}%) saturate(${state.saturate}%) hue-rotate(${state.hue}deg) grayscale(${state.grayscale}%) sepia(${state.sepia}%) invert(${state.invert}%) blur(${state.blur}px)`;
       }
       ctx.translate(w / 2, h / 2);
       ctx.rotate((state.rot * Math.PI) / 180);
@@ -127,7 +141,8 @@ import Icon from '../../components/Icon.astro';
       root.querySelectorAll('[data-f]').forEach((r) => {
         r.addEventListener('input', () => {
           state[r.dataset.f] = Number(r.value);
-          root.querySelector(`[data-out="${r.dataset.f}"]`).textContent = r.dataset.f === 'blur' ? `${r.value} px` : `${r.value} %`;
+          root.querySelector(`[data-out="${r.dataset.f}"]`).textContent =
+            r.dataset.f === 'blur' ? `${r.value} px` : r.dataset.f === 'hue' ? `${r.value}°` : `${r.value} %`;
           draw();
         });
         r.addEventListener('change', snapshot);
@@ -168,6 +183,11 @@ import Icon from '../../components/Icon.astro';
       });
       root.querySelector('[data-download]').addEventListener('click', async () => {
         const format = root.querySelector('[data-format]').value;
+        const keep = (b, ext) => {
+          if (!b) return;
+          downloadBlob(b, outName(ext));
+          saveHandoff({ fromTool: 'image-editor', name: outName(ext), type: b.type, blob: b });
+        };
         if (format === 'image/jpeg') {
           // flatten transparency for JPG
           const tmp = document.createElement('canvas');
@@ -177,9 +197,9 @@ import Icon from '../../components/Icon.astro';
           tctx.fillStyle = '#ffffff';
           tctx.fillRect(0, 0, tmp.width, tmp.height);
           tctx.drawImage(canvas, 0, 0);
-          tmp.toBlob((b) => b && downloadBlob(b, outName('jpg')), format, 0.92);
+          tmp.toBlob((b) => keep(b, 'jpg'), format, 0.92);
         } else {
-          canvas.toBlob((b) => b && downloadBlob(b, outName(format === 'image/png' ? 'png' : 'webp')), format, 0.92);
+          canvas.toBlob((b) => keep(b, format === 'image/png' ? 'png' : 'webp'), format, 0.92);
         }
         toast('Export ready.', 'success');
       });
@@ -248,6 +268,25 @@ import Icon from '../../components/Icon.astro';
       if (input.files[0]) load(input.files[0]);
       input.value = '';
     });
+
+    // V4 handoff — offer the last processed image from a previous tool
+    const chip = root.querySelector('[data-handoff]');
+    if (chip) {
+      getHandoff('image/').then((file) => {
+        if (!file) return;
+        chip.hidden = false;
+        chip.querySelector('[data-handoff-name]').textContent = file.name;
+        chip.querySelector('[data-handoff-use]').addEventListener('click', () => {
+          chip.hidden = true;
+          clearHandoff();
+          load(file);
+        });
+        chip.querySelector('[data-handoff-dismiss]')?.addEventListener('click', () => {
+          chip.hidden = true;
+        });
+      });
+    }
+
     bindUI();
   }
 </script>

@@ -1,0 +1,15 @@
+{
+  "name": "QuickTools",
+  "short_name": "QuickTools",
+  "description": "Free online tools — image, PDF, text, developer and everyday utilities. 100% in your browser, nothing uploaded.",
+  "lang": "en",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#07080d",
+  "theme_color": "#07080d",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/og-cover.png", "sizes": "1424x752", "type": "image/png", "purpose": "any" }
+  ]
+}

@@ -41,6 +41,42 @@ test('flow: calcul moyenne → calculator', () => {
   assert.equal(detectFlow('calculer ma moyenne').cta.slug, 'calculator');
 });
 
+/* ---------- Flow — V4.1 additions ---------- */
+test('flow: calculer une remise de 20% → calculator', () => {
+  assert.equal(detectFlow('calculer une remise de 20%').cta.slug, 'calculator');
+});
+
+test('flow: supprimer la page 3 de mon pdf → pdf-organizer', () => {
+  assert.equal(detectFlow('supprimer la page 3 de mon pdf').cta.slug, 'pdf-organizer');
+});
+
+test('flow: réorganiser les pages pdf → pdf-organizer', () => {
+  assert.equal(detectFlow('je veux réorganiser les pages de ce pdf').cta.slug, 'pdf-organizer');
+});
+
+test('flow: extraire le texte dun pdf → pdf-to-text', () => {
+  assert.equal(detectFlow('extraire le texte de ce pdf').cta.slug, 'pdf-to-text');
+});
+
+test('flow: extraire des pages reste un split, pas du texte', () => {
+  assert.equal(detectFlow('extraire les pages 2-5 de ce pdf').cta.slug, 'split-pdf');
+});
+
+test('flow: convertir mes png en webp → image-converter webp', () => {
+  const f = detectFlow('convertir mes png en webp');
+  assert.equal(f.cta.slug, 'image-converter');
+  assert.equal(f.cta.params.to, 'image/webp');
+});
+
+test('flow: réduire mes photos → optimize workflow', () => {
+  const f = detectFlow('réduire mes photos');
+  assert.equal(f.cta.type, 'workflow');
+});
+
+test('flow: compter les mots → word-counter', () => {
+  assert.equal(detectFlow('compter les mots de ce texte').cta.slug, 'word-counter');
+});
+
 test('flow: nonsense → null', () => {
   assert.equal(detectFlow('zzz qqq'), null);
   assert.equal(detectFlow(''), null);

@@ -60,6 +60,7 @@ import Icon from '../../components/Icon.astro';
   import { formatBytes } from '../../lib/format.js';
   import { downloadBlob, toast } from '../../lib/ui.js';
   import { validateFile } from '../../lib/files.js';
+  import { saveHandoff } from '../../lib/handoff.js';
 
   const root = document.getElementById('tool-image-analyzer');
   if (root) {
@@ -117,6 +118,8 @@ import Icon from '../../components/Icon.astro';
       thumb.src = URL.createObjectURL(file);
       thumb.onload = () => URL.revokeObjectURL(thumb.src);
       result.hidden = false;
+      // V4 handoff — the next tool (compressor, converter…) can pick this file up
+      saveHandoff({ fromTool: 'image-analyzer', name: file.name, type: file.type, blob: file });
     }
 
     root.querySelector('[data-strip]').addEventListener('click', async () => {

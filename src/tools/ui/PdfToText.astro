@@ -1,0 +1,164 @@
+---
+import Icon from '../../components/Icon.astro';
+---
+
+<div class="ftool" id="tool-pdf-to-text">
+  <div data-notice hidden></div>
+
+  <div class="dropzone" data-dropzone>
+    <input type="file" data-file-input hidden />
+    <span class="dz-icon" aria-hidden="true"><Icon name="extract" size={24} /></span>
+    <h3>Drag & drop your PDF here</h3>
+    <p>or click to browse · one PDF · up to 50 MB</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choose a PDF</span>
+  </div>
+
+  <div class="stool-toolbar pt-opts">
+    <label class="pill-check"><input type="checkbox" data-marks checked /><span class="dot"></span>Insert page markers (--- Page N ---)</label>
+  </div>
+
+  <div class="field">
+    <label for="pt-out">Extracted text <span class="muted" data-stats></span></label>
+    <textarea id="pt-out" class="input" data-output readonly placeholder="The text layer of your PDF appears here."></textarea>
+  </div>
+
+  <div class="stool-toolbar">
+    <button type="button" class="btn btn-ghost btn-sm" data-copy>Copy text</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-download>Download .txt</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-reset>Start over</button>
+    <span class="stool-status" data-status role="status"></span>
+  </div>
+
+  <p class="pt-honest">
+    Works with PDFs that contain a text layer (most documents exported from Word, Google Docs, InDesign…).
+    Scanned pages have no text layer — OCR is not available locally yet, so they return empty text.
+  </p>
+</div>
+
+<style>
+  .pt-opts { margin-top: 16px; }
+  .pt-honest { margin-top: 14px; font-size: 0.78rem; color: var(--faint); line-height: 1.55; }
+  #tool-pdf-to-text [data-output] { min-height: 260px; font-family: var(--font-mono, monospace); font-size: 0.82rem; }
+</style>
+
+<script>
+  import { validateFile, MAX_FILE_BYTES } from '../../lib/files.js';
+  import { toast, copyText, downloadBlob } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-pdf-to-text');
+  if (root) {
+    const dz = root.querySelector('[data-dropzone]');
+    const input = root.querySelector('[data-file-input]');
+    const noticeEl = root.querySelector('[data-notice]');
+    const output = root.querySelector('[data-output]');
+    const stats = root.querySelector('[data-stats]');
+    const status = root.querySelector('[data-status]');
+    const marks = root.querySelector('[data-marks]');
+    let fileName = '';
+
+    let pdfjs = null;
+    async function getPdfjs() {
+      if (!pdfjs) {
+        const [lib, { default: workerUrl }] = await Promise.all([
+          import('pdfjs-dist'),
+          import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
+        ]);
+        lib.GlobalWorkerOptions.workerSrc = workerUrl;
+        pdfjs = lib;
+      }
+      return pdfjs;
+    }
+
+    function showNotice(message) {
+      noticeEl.innerHTML = '';
+      if (!message) { noticeEl.hidden = true; return; }
+      noticeEl.hidden = false;
+      const div = document.createElement('div');
+      div.className = 'notice notice-error';
+      div.setAttribute('role', 'alert');
+      div.textContent = message;
+      noticeEl.appendChild(div);
+    }
+
+    async function extract(file) {
+      const check = validateFile(file, { acceptTypes: ['application/pdf'], acceptExts: ['.pdf'], maxBytes: MAX_FILE_BYTES });
+      if (!check.ok) { showNotice(check.error); toast(check.error, 'error'); return; }
+      showNotice('');
+      fileName = file.name;
+      status.className = 'stool-status';
+      status.textContent = 'Extracting text…';
+      output.value = '';
+      stats.textContent = '';
+      try {
+        const lib = await getPdfjs();
+        const doc = await lib.getDocument({ data: await file.arrayBuffer() }).promise;
+        const parts = [];
+        let emptyPages = 0;
+        for (let i = 1; i <= doc.numPages; i++) {
+          status.textContent = `Extracting page ${i} of ${doc.numPages}…`;
+          const page = await doc.getPage(i);
+          const content = await page.getTextContent();
+          let line = '';
+          let lastY = null;
+          for (const item of content.items) {
+            if (typeof item.str !== 'string') continue;
+            const y = item.transform?.[5];
+            if (lastY !== null && y !== undefined && Math.abs(y - lastY) > 2) line += '\n';
+            line += item.str;
+            if (item.hasEOL) line += '\n';
+            if (y !== undefined) lastY = y;
+          }
+          const text = line.replace(/[ \t]+\n/g, '\n').trim();
+          if (!text) emptyPages++;
+          parts.push(marks.checked ? `--- Page ${i} ---\n${text}` : text);
+        }
+        output.value = parts.join('\n\n').trim();
+        const chars = output.value.length;
+        stats.textContent = `· ${doc.numPages} page${doc.numPages > 1 ? 's' : ''} · ${chars.toLocaleString()} characters`;
+        if (chars === 0) {
+          status.className = 'stool-status err';
+          status.textContent = 'No text layer found. Cause: this looks like a scanned document. Action: OCR is planned for a future version — for now, no text can be extracted locally.';
+        } else if (emptyPages > 0) {
+          status.className = 'stool-status ok';
+          status.textContent = `Done — ${emptyPages} page${emptyPages > 1 ? 's' : ''} had no selectable text.`;
+        } else {
+          status.className = 'stool-status ok';
+          status.textContent = 'Done.';
+        }
+      } catch (err) {
+        status.className = 'stool-status err';
+        status.textContent = /password/i.test(String(err?.message || err))
+          ? 'This PDF is password-protected. Action: remove the password, then try again.'
+          : 'Extraction failed. Cause: the file seems corrupted or is not a real PDF. Action: re-export it and try again.';
+      }
+    }
+
+    root.querySelector('[data-copy]').addEventListener('click', async () => {
+      if (!output.value) { toast('Nothing to copy yet.', 'error'); return; }
+      if (await copyText(output.value)) toast('Text copied to clipboard.', 'success');
+      else toast('Copy failed — select the text manually.', 'error');
+    });
+    root.querySelector('[data-download]').addEventListener('click', () => {
+      if (!output.value) { toast('Nothing to download yet.', 'error'); return; }
+      const base = fileName.replace(/\.pdf$/i, '') || 'document';
+      downloadBlob(new Blob([output.value], { type: 'text/plain' }), `${base}.txt`);
+    });
+    root.querySelector('[data-reset]').addEventListener('click', () => {
+      output.value = '';
+      stats.textContent = '';
+      status.textContent = '';
+      showNotice('');
+      dz.hidden = false;
+    });
+    marks.addEventListener('change', () => { /* re-extraction happens on next file */ });
+
+    dz.setAttribute('role', 'button');
+    dz.setAttribute('tabindex', '0');
+    dz.addEventListener('click', () => input.click());
+    dz.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
+    ['dragenter', 'dragover'].forEach((evt) => dz.addEventListener(evt, (e) => { e.preventDefault(); dz.classList.add('is-dragover'); }));
+    ['dragleave', 'drop'].forEach((evt) => dz.addEventListener(evt, (e) => { e.preventDefault(); dz.classList.remove('is-dragover'); }));
+    dz.addEventListener('drop', (e) => { const f = e.dataTransfer?.files?.[0]; if (f) { dz.hidden = true; extract(f); } });
+    input.addEventListener('change', () => { const f = input.files?.[0]; input.value = ''; if (f) { dz.hidden = true; extract(f); } });
+  }
+</script>

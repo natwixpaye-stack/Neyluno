@@ -8,9 +8,13 @@
       <option value="length" selected>Length</option>
       <option value="weight">Weight / Mass</option>
       <option value="temperature">Temperature</option>
-      <option value="data">Data storage</option>
+      <option value="area">Area</option>
       <option value="volume">Volume</option>
       <option value="speed">Speed</option>
+      <option value="time">Time</option>
+      <option value="energy">Energy</option>
+      <option value="pressure">Pressure</option>
+      <option value="data">Data storage</option>
     </select>
   </div>
 
@@ -87,6 +91,10 @@
       volume: { base: 'L', units: { L: 1, mL: 0.001, 'gal (US)': 3.785411784, 'qt (US)': 0.946352946, 'pt (US)': 0.473176473, 'cup (US)': 0.2365882365, 'fl oz (US)': 0.0295735295625 } },
       speed: { base: 'm/s', units: { 'm/s': 1, 'km/h': 1 / 3.6, mph: 0.44704, 'ft/s': 0.3048, knot: 0.514444 } },
       temperature: { base: 'C', units: { '°C': 'C', '°F': 'F', K: 'K' } },
+      area: { base: 'm²', units: { 'm²': 1, 'km²': 1e6, 'cm²': 0.0001, 'ha': 10000, acre: 4046.8564224, 'ft²': 0.09290304, 'in²': 0.00064516 } },
+      energy: { base: 'J', units: { J: 1, kJ: 1000, cal: 4.184, kcal: 4184, Wh: 3600, kWh: 3.6e6, BTU: 1055.05585262 } },
+      pressure: { base: 'Pa', units: { Pa: 1, hPa: 100, kPa: 1000, bar: 100000, atm: 101325, psi: 6894.757293168, mmHg: 133.322387415 } },
+      time: { base: 's', units: { s: 1, min: 60, h: 3600, day: 86400, week: 604800, 'month (avg)': 2629746, 'year (avg)': 31556952 } },
     };
 
     const LABELS = {
@@ -96,6 +104,10 @@
       volume: { L: 'liters (L)', mL: 'milliliters (mL)', 'gal (US)': 'gallons (US)', 'qt (US)': 'quarts (US)', 'pt (US)': 'pints (US)', 'cup (US)': 'cups (US)', 'fl oz (US)': 'fluid ounces (US)' },
       speed: { 'm/s': 'meters/sec (m/s)', 'km/h': 'kilometers/hour', mph: 'miles/hour (mph)', 'ft/s': 'feet/sec', knot: 'knots' },
       temperature: { '°C': 'Celsius (°C)', '°F': 'Fahrenheit (°F)', K: 'Kelvin (K)' },
+      area: { 'm²': 'square meters (m²)', 'km²': 'square kilometers (km²)', 'cm²': 'square centimeters (cm²)', ha: 'hectares (ha)', acre: 'acres', 'ft²': 'square feet (ft²)', 'in²': 'square inches (in²)' },
+      energy: { J: 'joules (J)', kJ: 'kilojoules (kJ)', cal: 'calories (cal)', kcal: 'kilocalories (kcal)', Wh: 'watt-hours (Wh)', kWh: 'kilowatt-hours (kWh)', BTU: 'British thermal units' },
+      pressure: { Pa: 'pascals (Pa)', hPa: 'hectopascals (hPa)', kPa: 'kilopascals (kPa)', bar: 'bars', atm: 'atmospheres (atm)', psi: 'pounds/sq in (psi)', mmHg: 'millimeters Hg' },
+      time: { s: 'seconds (s)', min: 'minutes (min)', h: 'hours (h)', day: 'days', week: 'weeks', 'month (avg)': 'months (avg 30.44 d)', 'year (avg)': 'years (avg 365.25 d)' },
     };
 
     function toBase(cat, unit, value) {

@@ -3,6 +3,10 @@
  * Requires: npm run build && npm run preview (port 4321), then node tests/e2e.mjs
  */
 import { chromium } from 'playwright-core';
+import { tools } from '../src/data/tools.js';
+
+const TOOL_COUNT = tools.length;
+const PDF_COUNT = tools.filter((t) => t.category === 'pdf').length;
 
 const BASE = process.env.BASE_URL || 'http://127.0.0.1:4321';
 const EXEC = process.env.CHROMIUM_EXECUTABLE || null;
@@ -56,15 +60,15 @@ await ok('popular quick actions link to real tools', async () => {
   if (res.status() !== 200) throw new Error(`status ${res.status()}`);
 });
 
-await ok('tools grid renders 41 cards', async () => {
+await ok('tools grid renders every registry card', async () => {
   const n = await page.locator('.tools-grid .tool-card').count();
-  if (n !== 41) throw new Error(`found ${n}`);
+  if (n !== TOOL_COUNT) throw new Error(`found ${n}, registry has ${TOOL_COUNT}`);
 });
 
 await ok('category filter narrows the grid', async () => {
   await page.click('.filter-chip[data-filter="pdf"]');
   const visible = await page.locator('.tools-grid [data-tool-wrap]:not([style*="display: none"])').count();
-  if (visible !== 6) throw new Error(`visible ${visible}`);
+  if (visible !== PDF_COUNT) throw new Error(`visible ${visible}, expected ${PDF_COUNT}`);
   await page.click('.filter-chip[data-filter="all"]');
 });
 
@@ -422,13 +426,13 @@ await ok('wrong format rejected with friendly message', async () => {
 
 /* ================= SEO / ROUTES ================= */
 console.log('Routes & SEO');
-await ok('all 41 tool pages return 200', async () => {
+await ok('all registry tool pages return 200', async () => {
   // collect from /tools/ page instead (home may paginate)
   await page.goto(BASE + '/tools/');
   const links = await page.evaluate(() =>
     [...new Set([...document.querySelectorAll('.tool-card')].map((a) => a.getAttribute('href')))]
   );
-  if (links.length !== 41) throw new Error(`found ${links.length} tool cards`);
+  if (links.length !== TOOL_COUNT) throw new Error(`found ${links.length} tool cards, registry has ${TOOL_COUNT}`);
   for (const href of links) {
     const res = await page.request.get(BASE + href);
     if (res.status() !== 200) throw new Error(`${href} → ${res.status()}`);
@@ -585,6 +589,53 @@ await ok('V4: workflow import rejects foreign JSON', async () => {
   await page.waitForSelector('.toast', { timeout: 6000 });
   const txt = await page.locator('.toast').first().innerText();
   if (!/not exported by QuickTools/.test(txt)) throw new Error(txt);
+});
+
+/* ================= V4.1 ADDITIONS ================= */
+console.log('V4.1');
+
+await ok('V4.1: student mode page lists real tool links', async () => {
+  await page.goto(BASE + '/student/');
+  const links = await page.locator('a[href^="/tools/"]').count();
+  if (links < 10) throw new Error(`only ${links} tool links`);
+});
+
+await ok('V4.1: new guides are published', async () => {
+  for (const slug of ['merge-pdf-files', 'extract-text-from-pdf', 'base64-encoding']) {
+    const res = await page.request.get(BASE + '/guides/' + slug + '/');
+    if (res.status() !== 200) throw new Error(`${slug} → ${res.status()}`);
+  }
+});
+
+await ok('V4.1: PWA manifest + service worker served', async () => {
+  const m = await page.request.get(BASE + '/manifest.webmanifest');
+  if (m.status() !== 200) throw new Error('manifest ' + m.status());
+  const sw = await page.request.get(BASE + '/sw.js');
+  if (sw.status() !== 200) throw new Error('sw.js ' + sw.status());
+});
+
+await ok('V4.1: unit converter offers 10 categories', async () => {
+  await page.goto(BASE + '/tools/unit-converter/');
+  const n = await page.locator('[data-cat] option').count();
+  if (n !== 10) throw new Error(`found ${n} options`);
+});
+
+await ok('V4.1: image editor exposes hue, sepia and invert', async () => {
+  await page.goto(BASE + '/tools/image-editor/');
+  for (const f of ['hue', 'sepia', 'invert']) {
+    const n = await page.locator(`[data-f="${f}"]`).count();
+    if (n !== 1) throw new Error(`missing slider ${f}`);
+  }
+});
+
+await ok('V4.1: settings language switch persists (fr → en)', async () => {
+  await page.goto(BASE + '/settings/');
+  await page.click('[data-lang-opt="fr"]');
+  let lang = await page.evaluate(() => localStorage.getItem('qt-lang'));
+  if (lang !== 'fr') throw new Error('expected fr, got ' + lang);
+  await page.click('[data-lang-opt="en"]');
+  lang = await page.evaluate(() => localStorage.getItem('qt-lang'));
+  if (lang !== 'en') throw new Error('expected en, got ' + lang);
 });
 
 await browser.close();

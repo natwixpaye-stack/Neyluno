@@ -6,7 +6,7 @@ import { site } from '../data/site.js';
 import { tools } from '../data/tools.js';
 
 const path = '/settings/';
-const version = '4.0';
+const version = '4.1';
 ---
 
 <BaseLayout
@@ -40,11 +40,15 @@ const version = '4.0';
       <h2 id="s-lang"><Icon name="globe" size={17} /> Language</h2>
       <div class="settings-row">
         <span class="settings-label">Interface</span>
-        <span class="settings-value">English</span>
+        <div class="seg" role="radiogroup" aria-label="Interface language">
+          <button type="button" class="seg-btn" role="radio" aria-checked="false" data-lang-opt="en">English</button>
+          <button type="button" class="seg-btn" role="radio" aria-checked="false" data-lang-opt="fr">Français</button>
+        </div>
       </div>
       <p class="settings-hint">
-        The interface is English-first. The architecture is dictionary-driven and ready for more languages —
-        French tool detection is already built into Flow.
+        Honest coverage: the French dictionary currently translates what tools render in JavaScript — batch
+        statuses, buttons and palette messages. Written pages stay English-first; French grows with each release.
+        Flow already understands French requests either way.
       </p>
     </section>
 
@@ -88,6 +92,21 @@ const version = '4.0';
         <li><span>Close dialogs and menus</span><span><kbd>Esc</kbd></span></li>
         <li><span>Undo / redo (image editor)</span><span><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Z</kbd> / <kbd>⇧</kbd><kbd>Ctrl</kbd> + <kbd>Z</kbd></span></li>
       </ul>
+    </section>
+
+    <!-- ============ FEEDBACK ============ -->
+    <section class="panel settings-section" aria-labelledby="s-feedback">
+      <h2 id="s-feedback"><Icon name="share" size={17} /> Feedback</h2>
+      <p class="settings-hint">
+        No form, no backend — telling us what to fix or add goes straight to the maintainer’s inbox.
+      </p>
+      <div class="settings-row">
+        <span class="settings-label">Send feedback by email</span>
+        <span style="display:flex; gap:8px; flex-wrap:wrap;">
+          <a class="btn btn-sm" href={`mailto:${site.contactEmail}?subject=QuickTools feedback`}>Open my mail app</a>
+          <button type="button" class="btn btn-sm btn-ghost" data-copy-email>Copy address</button>
+        </span>
+      </div>
     </section>
 
     <!-- ============ ABOUT ============ -->
@@ -226,6 +245,26 @@ const version = '4.0';
   import { getRecents, getFavorites, getSavedWorkflows } from '../lib/local.js';
   import { site } from '../data/site.js';
   import { toast } from '../lib/ui.js';
+  import { getLang, setLang } from '../lib/i18n.js';
+
+  /* ---------- Language ---------- */
+  const langBtns = document.querySelectorAll('[data-lang-opt]');
+  function syncLangUI() {
+    const lang = getLang();
+    langBtns.forEach((b) => {
+      const active = b.dataset.langOpt === lang;
+      b.classList.toggle('is-active', active);
+      b.setAttribute('aria-checked', String(active));
+    });
+  }
+  langBtns.forEach((b) =>
+    b.addEventListener('click', () => {
+      setLang(b.dataset.langOpt);
+      syncLangUI();
+      toast(b.dataset.langOpt === 'fr' ? 'Langue : français (partiel) — appliquée aux outils.' : 'Language: English.', 'success');
+    })
+  );
+  syncLangUI();
 
   /* ---------- Appearance ---------- */
   const themeBtns = document.querySelectorAll('[data-theme-opt]');
@@ -274,11 +313,23 @@ const version = '4.0';
     if (!confirm('Erase everything QuickTools stored in this browser (theme, favorites, recents, workflows)?')) return;
     try {
       Object.values(site.storageKeys).forEach((k) => localStorage.removeItem(k));
+      localStorage.removeItem('qt-lang');
       toast('All local data cleared.', 'success');
     } catch {
       toast('Could not clear — storage unavailable.', 'error');
     }
     refreshCounts();
+  });
+
+  /* ---------- Feedback ---------- */
+  document.querySelector('[data-copy-email]')?.addEventListener('click', async (e) => {
+    try {
+      await navigator.clipboard.writeText(site.contactEmail);
+      toast('Address copied — paste it into any mail app.', 'success');
+    } catch {
+      toast(site.contactEmail, 'info');
+    }
+    e.currentTarget.blur();
   });
 
   refreshCounts();

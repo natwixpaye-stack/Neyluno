@@ -44,6 +44,8 @@ import TextExtractor from '../../tools/ui/TextExtractor.astro';
 import Calculator from '../../tools/ui/Calculator.astro';
 import ColorStudio from '../../tools/ui/ColorStudio.astro';
 import EncodingLab from '../../tools/ui/EncodingLab.astro';
+import PdfOrganizer from '../../tools/ui/PdfOrganizer.astro';
+import PdfToText from '../../tools/ui/PdfToText.astro';
 
 const UI_MAP = {
   'image-compressor': CompressImage,
@@ -87,6 +89,8 @@ const UI_MAP = {
   calculator: Calculator,
   'color-studio': ColorStudio,
   'encoding-lab': EncodingLab,
+  'pdf-organizer': PdfOrganizer,
+  'pdf-to-text': PdfToText,
 };
 
 export function getStaticPaths() {

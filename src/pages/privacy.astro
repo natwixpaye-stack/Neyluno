@@ -27,17 +27,29 @@ import { site } from '../data/site.js';
         request carrying your file.
       </p>
 
-      <h2>2. What stays on your device</h2>
+      <h2>2. What stays on your device — the complete list</h2>
       <p>
-        A few conveniences are stored <em>locally</em> (localStorage / IndexedDB), never on our side:
+        A few conveniences are stored <em>locally</em>, never on our side. This table is exhaustive: if it is
+        not listed here, QuickTools does not store it.
       </p>
-      <ul>
-        <li>your display theme preference (light / dark / system);</li>
-        <li>recently used tools and favorites;</li>
-        <li>saved workflows;</li>
-        <li>a short-lived handoff of the last processed file (10 minutes), so a next tool can continue where you left off.</li>
-      </ul>
-      <p>You can erase all of it at any time by clearing your browser's site data.</p>
+      <table>
+        <thead>
+          <tr><th>What</th><th>Where</th><th>Key</th><th>Lifetime</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Theme preference (light / dark / system)</td><td>localStorage</td><td><code>qt-theme</code></td><td>Until you clear it</td></tr>
+          <tr><td>Interface language (English / French)</td><td>localStorage</td><td><code>qt-lang</code></td><td>Until you clear it</td></tr>
+          <tr><td>Recently used tools (max 8)</td><td>localStorage</td><td><code>qt-recents</code></td><td>Until you clear it</td></tr>
+          <tr><td>Favorites</td><td>localStorage</td><td><code>qt-favorites</code></td><td>Until you clear it</td></tr>
+          <tr><td>Saved workflows (max 20)</td><td>localStorage</td><td><code>qt-workflows</code></td><td>Until you clear it</td></tr>
+          <tr><td>Handoff of your last processed file (one at a time)</td><td>IndexedDB</td><td><code>qt-handoff</code></td><td>10 minutes, then discarded</td></tr>
+        </tbody>
+      </table>
+      <p>
+        No tool remembers file names, contents or paths after you leave. You can erase everything at any
+        time in <a href="/settings/">Settings → Clear all local data</a>, or by clearing this site's data
+        in your browser.
+      </p>
 
       <h2>3. What we collect</h2>
       <p>
@@ -53,7 +65,7 @@ import { site } from '../data/site.js';
       </p>
 
       <h2>5. Contact</h2>
-      <p>Questions about this page? Reach the maintainer at <strong>natwixpaye@gmail.com</strong>.</p>
+      <p>Questions about this page? Reach the maintainer at <strong>{site.contactEmail}</strong>.</p>
     </div>
   </div>
 </BaseLayout>

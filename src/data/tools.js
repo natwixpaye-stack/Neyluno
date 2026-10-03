@@ -584,7 +584,7 @@ export const tools = [
     group: 'Images',
     shortDesc: 'Adjust brightness, contrast, saturation and more — with undo/redo, no install.',
     description:
-      'A focused image editor: brightness, contrast, saturation, grayscale, sepia, blur and invert — plus rotation and mirroring. Undo/redo history, reset, format and quality choice on export. Fully local.',
+      'A focused image editor: brightness, contrast, saturation, hue, grayscale, sepia, blur and invert — plus rotation and mirroring. Undo/redo history, reset, format and quality choice on export. Fully local.',
     keywords: ['edit', 'image', 'adjust', 'brightness', 'contrast', 'saturation', 'filter', 'editor'],
     intents: [
       'edit image', 'adjust image', 'brighten image', 'increase contrast', 'make photo brighter', 'photo too dark',
@@ -798,6 +798,53 @@ export const tools = [
     ],
     seo: `<p>Base64 for data URIs, percent-encoding for URLs, HTML entities for markup, Unicode escapes for JavaScript strings — this <strong>encoding lab</strong> groups all four in one tool with instant switching.</p><p>UTF-8 aware (accents and emoji survive Base64), with honest error messages when input is malformed. Runs entirely in your browser.</p>`,
   },
+  {
+    slug: 'pdf-organizer',
+    name: 'PDF Organizer',
+    icon: 'split',
+    category: 'pdf',
+    group: 'PDF & Documents',
+    shortDesc: 'See every page as a thumbnail: reorder, delete, duplicate, rotate — then export.',
+    description:
+      'The deep PDF page manager: your document renders as visual thumbnails, and you keep exactly the pages you want, in the order you want. Delete pages, duplicate them, rotate individual pages, reorder with arrows — plus a Document info tab to read, edit or strip metadata. Everything stays in your browser.',
+    keywords: ['pdf', 'organize', 'reorder', 'delete pages', 'remove pages', 'duplicate', 'rotate pages', 'thumbnails', 'metadata', 'pages'],
+    intents: [
+      'delete pdf pages', 'remove pages from pdf', 'reorder pdf pages', 'organize pdf', 'duplicate pdf page',
+      'rotate one pdf page', 'pdf thumbnails', 'see pdf pages', 'remove pdf metadata', 'edit pdf metadata', 'pdf info',
+      'supprimer pages pdf', 'réorganiser pdf', 'ordonner pages pdf', 'dupliquer page pdf', 'supprimer métadonnées pdf',
+      'voir pages pdf', 'extraire pages pdf visuel',
+    ],
+    steps: ['Drop your PDF', 'Keep, move, rotate or duplicate pages on the thumbnails', 'Export the reorganized document'],
+    faq: [
+      { q: 'Is my PDF uploaded anywhere?', a: 'No. Thumbnails are rendered locally with PDF.js and the new document is built locally with pdf-lib. Nothing leaves your device.' },
+      { q: 'Does it work on password-protected PDFs?', a: 'No — browsers cannot decrypt PDFs locally. Remove the password in your usual PDF reader first, then use this tool.' },
+      { q: 'What happens to pages I deselect?', a: 'They are simply not copied into the exported file. The original PDF is never modified.' },
+      { q: 'Can I edit the metadata?', a: 'Yes — in the Document info tab you can change title, author and subject, or strip all metadata at export time.' },
+    ],
+    seo: `<p>Most PDF editors hide page management behind tiny page numbers. This <strong>PDF organizer</strong> shows every page as a real <strong>thumbnail</strong>, so you can <strong>delete, duplicate, rotate and reorder</strong> pages visually — then export the new document in one click.</p><p>It also reads and edits <strong>document metadata</strong> (title, author, subject) and can strip it entirely for privacy. Everything runs in your browser with PDF.js and pdf-lib: no upload, no account, no watermark.</p>`,
+  },
+  {
+    slug: 'pdf-to-text',
+    name: 'PDF to Text',
+    icon: 'extract',
+    category: 'pdf',
+    group: 'PDF & Documents',
+    shortDesc: 'Extract the text layer of any PDF — copy it or download a .txt file.',
+    description:
+      'Pull the selectable text out of a PDF, page by page, with optional page markers. Honest by design: scanned pages without a text layer return empty results — OCR is not done locally, and this tool will never pretend otherwise.',
+    keywords: ['pdf', 'text', 'extract', 'txt', 'copy text', 'convert', 'document'],
+    intents: [
+      'extract text from pdf', 'pdf to text', 'pdf to txt', 'get text from pdf', 'copy text from pdf', 'read pdf text',
+      'extraire texte pdf', 'pdf en texte', 'récupérer texte pdf', 'convertir pdf en txt', 'copier texte pdf',
+    ],
+    steps: ['Drop your PDF', 'Read the extracted text', 'Copy it or download a .txt'],
+    faq: [
+      { q: 'Why is the result empty for my PDF?', a: 'Your PDF probably contains scans (images of pages) instead of a real text layer. Extracting text from images requires OCR, which is not available locally yet.' },
+      { q: 'Are line breaks preserved?', a: 'As much as the PDF allows: text is reconstructed from the page layout, so most paragraphs and line breaks survive. Complex multi-column layouts may need a quick cleanup in Text Cleaner.' },
+      { q: 'Is the PDF uploaded?', a: 'No — extraction runs entirely in your browser with PDF.js.' },
+    ],
+    seo: `<p>Need the words, not the file? This <strong>PDF to text</strong> converter extracts the full <strong>text layer</strong> of your document page by page — ready to copy, clean up, or download as a plain <strong>.txt</strong> file.</p><p>It works on any PDF with selectable text (exports from Word, Docs, InDesign…) and stays honest about scanned documents: without a text layer there is nothing to extract, and no fake result is invented. Processing is 100% local.</p>`,
+  },
 ];
 
 export function getTool(slug) {
@@ -929,5 +976,72 @@ export const nextSteps = {
   'encoding-lab': [
     { slug: 'json-formatter', label: 'Format JSON' },
     { slug: 'uuid-generator', label: 'Generate a UUID' },
+  ],
+  'pdf-organizer': [
+    { slug: 'merge-pdf', label: 'Merge with other PDFs' },
+    { slug: 'compress-pdf', label: 'Compress it' },
+    { slug: 'pdf-to-image', label: 'Pages to images' },
+  ],
+  'pdf-to-text': [
+    { slug: 'text-cleaner', label: 'Clean the text' },
+    { slug: 'find-and-replace', label: 'Find & replace' },
+  ],
+  'word-counter': [
+    { slug: 'case-converter', label: 'Change the case' },
+    { slug: 'text-cleaner', label: 'Clean the text' },
+  ],
+  'case-converter': [
+    { slug: 'word-counter', label: 'Count words' },
+    { slug: 'sort-lines', label: 'Sort lines' },
+  ],
+  'sort-lines': [
+    { slug: 'remove-duplicate-lines', label: 'Remove duplicates' },
+    { slug: 'text-cleaner', label: 'Clean the text' },
+  ],
+  'remove-duplicate-lines': [
+    { slug: 'sort-lines', label: 'Sort lines' },
+    { slug: 'text-cleaner', label: 'Clean the text' },
+  ],
+  'json-formatter': [
+    { slug: 'encoding-lab', label: 'Encode to Base64' },
+    { slug: 'uuid-generator', label: 'Generate a UUID' },
+  ],
+  'base64-encode-decode': [
+    { slug: 'encoding-lab', label: 'Open the Encoding Lab' },
+  ],
+  'url-encode-decode': [
+    { slug: 'encoding-lab', label: 'Open the Encoding Lab' },
+  ],
+  'uuid-generator': [
+    { slug: 'password-generator', label: 'Generate a password' },
+    { slug: 'timestamp-converter', label: 'Convert a timestamp' },
+  ],
+  'timestamp-converter': [
+    { slug: 'date-calculator', label: 'Date math' },
+    { slug: 'uuid-generator', label: 'Generate a UUID' },
+  ],
+  'regex-tester': [
+    { slug: 'find-and-replace', label: 'Find & replace' },
+    { slug: 'json-formatter', label: 'Format JSON' },
+  ],
+  'percentage-calculator': [
+    { slug: 'calculator', label: 'Open the full calculator' },
+    { slug: 'unit-converter', label: 'Convert units' },
+  ],
+  'unit-converter': [
+    { slug: 'calculator', label: 'Calculate' },
+    { slug: 'date-calculator', label: 'Date math' },
+  ],
+  'date-calculator': [
+    { slug: 'timestamp-converter', label: 'Timestamps' },
+    { slug: 'calculator', label: 'Calculate' },
+  ],
+  'qr-code-generator': [
+    { slug: 'password-generator', label: 'Generate a password' },
+    { slug: 'favicon-generator', label: 'Make a favicon' },
+  ],
+  'password-generator': [
+    { slug: 'uuid-generator', label: 'Generate a UUID' },
+    { slug: 'qr-code-generator', label: 'Create a QR code' },
   ],
 };

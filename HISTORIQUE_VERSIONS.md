@@ -146,21 +146,58 @@ Commits : `f934453`, `8cd27a0` · Rapport : `AUDIT_REPORT_V3.md`
 
 ---
 
-## À venir (non commencé)
+## V4.1 — Finalisation & verrouillage du cahier des charges V4 (2026-10)
 
+Brief 63 sections : fermer tous les écarts du cahier des charges V4, corriger les incohérences, puis **V4 LOCKED** (les grosses nouveautés passent en V5).
+
+### Nouveautés
+- **PDF Studio complet** : `pdf-organizer` (miniatures pdf.js, sélection, réorganisation, rotation, duplication, suppression, lecture/édition/suppression des métadonnées) + `pdf-to-text` (extraction honnête, détection des scans) → 43 outils.
+- **Mode Étudiant** (`/student/`) : parcours curaté vers les outils existants, zéro logique dupliquée (§17).
+- **Éditeur d'image complet (§9)** : ajout hue, sepia, invert (+ rotation/flip/undo/redo/reset déjà présents).
+- **Convertisseur d'unités : 10 catégories** (+ surface, énergie, pression, temps).
+- **Calculatrice enrichie** : coefficient multiplicateur, moyenne pondérée, consommation carburant & coût de trajet.
+- **i18n (fondation)** : dictionnaires `translations.js` + runtime `i18n.js`, sélecteur dans Settings, appliqué aux chaînes JS (statuts batch, palette). Couverture partielle assumée et étiquetée telle quelle (§27).
+- **PWA** : `manifest.webmanifest` + service worker (app shell, navigations network-first, assets hachés immuables ; jamais de fichiers utilisateurs en cache) (§26).
+- **3 guides utiles** : fusionner des PDF, extraire le texte d'un PDF, Base64 (taille, usages, pièges) → 8 guides.
+- **Centre de vie privée** : table de stockage exhaustive (quoi / où / clé / durée) ; `site.contactEmail` centralisé.
+- **Feedback sans backend** : panneau Settings (mailto + copie de l'adresse).
+
+### Améliorations
+- **Handoff (§19)** branché sur Watermark, Image Editor (export → chip) et Image Analyzer (analyse → chip).
+- **Batch (§20)** : compteur « Cancelled » dans le résumé ; résumé visible même avec uniquement des erreurs/annulations.
+- **Flow (§22)** : intents remise/TVA → calculatrice ; supprimer/réorganiser des pages → organisateur ; extraire le texte → pdf-to-text (désambiguïsé d'« extraire des pages » → split).
+- **Bug V3 latent corrigé** : PdfToImage ne fonctionnait jamais (import namespace pdfjs) — vérifié rendu 3 pages par sonde CDP.
+- Tests e2e : compteurs pilotés par le registre (`TOOL_COUNT`, `PDF_COUNT`) — plus de dérive à chaque nouvel outil.
+
+### Vérifications
+- Build final : **83 pages**, propre. · Unitaires **138/138** · E2E **61/61** (55 V4 + 6 nouveaux V4.1) · 0 erreur console sur les routes auditées.
+- Rapport : `AUDIT_REPORT_V4_1.md` (avant/après, non-ajoutés avec raisons, liste V5, limites déclarées).
+
+### Non ajouté volontairement (fiabilité > features)
+- Mot de passe PDF (pdf-lib ne chiffre pas fiablement côté client), OCR lourd, miniatures PDF dans le builder de workflows, Timer/Pomodoro/Lorem (→ tête de liste V5), formateurs CSV/code, filigrane-image, traduction complète du site.
+
+**→ V4 est VERROUILLÉE. Toute nouvelle fonctionnalité majeure va en V5.**
+
+---
+
+## À venir (V5, non commencé)
+
+- **Utilities §16 restant** : Timer, Chronomètre, Pomodoro, Lorem Ipsum (tête de liste).
+- Traduction FR complète du site (fondation dictionnaires livrée en V4.1, à étendre page par page).
+- Filigrane-image ; OCR PDF si une solution locale fiable apparaît ; chiffrement PDF si chemin crypto local fiable.
+- Formateurs CSV/code, pages de référence HTTP/MIME ; analytics agrégés opt-in (déclarés dans Privacy avant).
 - **Motion design promotionnel** : page animée + capture vidéo (voix off anglaise optionnelle) — décidé en principe, à spécifier au retour.
-- Localisation FR complète (fondation i18n par dictionnaires prête, §77) ; filigrane-image ; OCR PDF si une solution locale fiable apparaît.
 
 ---
 
 ## Récapitulatif en un coup d'œil
 
-| | V1 | V2 | V3 | V4 |
-|---|---|---|---|---|
-| Langue | Français | Anglais (global) | Anglais (copy peaufinée) | Anglais (Flow FR+EN) |
-| Outils | 10 | 30 | 30 (fiabilisés) | 41 (consolidés) |
-| Différenciateur | — | Workflows + recherche par intention | Finition & robustesse | Studios + Flow + profondeur |
-| Unitaires | 73/73 | 99/99 | 99/99 | 124/124 |
-| E2E | 99/99 | 43/43 | 45/45 | 55/55 |
-| Pages | 23 | 65 | 65 | 77 |
-| Coût | 0 € | 0 € | 0 € | 0 € |
+| | V1 | V2 | V3 | V4 | V4.1 (verrouillée) |
+|---|---|---|---|---|---|
+| Langue | Français | Anglais (global) | Anglais (copy peaufinée) | Anglais (Flow FR+EN) | Anglais + fondation i18n FR |
+| Outils | 10 | 30 | 30 (fiabilisés) | 41 (consolidés) | 43 |
+| Différenciateur | — | Workflows + recherche par intention | Finition & robustesse | Studios + Flow + profondeur | PDF Studio complet + PWA + guides |
+| Unitaires | 73/73 | 99/99 | 99/99 | 124/124 | 138/138 |
+| E2E | 99/99 | 43/43 | 45/45 | 55/55 | 61/61 |
+| Pages | 23 | 65 | 65 | 77 | 83 |
+| Coût | 0 € | 0 € | 0 € | 0 € | 0 € |

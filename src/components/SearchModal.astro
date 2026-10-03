@@ -179,6 +179,7 @@ import Icon from './Icon.astro';
   import { searchTools } from '../lib/search.js';
   import { ICON_PATHS } from '../lib/icons.js';
   import { detectFlow, describeFlowPlan } from '../lib/flow.js';
+  import { t } from '../lib/i18n.js';
 
   /** Turn a Flow plan into a real, safe destination URL (never executes anything). */
   function flowHref(flowPlan) {
@@ -209,7 +210,7 @@ import Icon from './Icon.astro';
     if (flowPlan) {
       const h = document.createElement('div');
       h.className = 'sm-group sm-group-flow';
-      h.textContent = 'Flow — understood from your sentence';
+      h.textContent = t('search.flowGroup');
       resultsEl.appendChild(h);
       const btn = document.createElement('a');
       btn.className = 'sm-flow-item';
@@ -230,7 +231,7 @@ import Icon from './Icon.astro';
     }
 
     if (!list.length && !flowPlan) {
-      resultsEl.innerHTML = `<div class="sm-empty">No tool found for “${escapeHtml(query)}”.<br>Try “compress”, “convert”, “pdf”, “qr”…</div>`;
+      resultsEl.innerHTML = `<div class="sm-empty">${t('search.emptyBefore')} “${escapeHtml(query)}”.<br>${t('search.emptyAfter')}</div>`;
       return;
     }
     if (!list.length) {

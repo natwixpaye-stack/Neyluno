@@ -26,8 +26,13 @@ const LEX = {
   diff: /\b(diff|compare|comparer|difference between)\b/,
   count_: /\b(count|compter|how many)\b/,
   calc: /\b(calculat|compute|moyenne|average|percentage|pourcentage|tva|règle de trois)\b/,
+  discount: /\b(discount|remise|solde|promo|réduction|reduction|vat|intérêts composés|interets composes|compound)\b/,
   password: /\b(password|mot de passe)\b/,
   qr: /\b(qr)\b/,
+  pages: /\bpages?\b/,
+  extract_: /\b(extract|extraire|récupérer|recuperer|pull out)\b/,
+  textWord: /\b(texte?|text)\b/,
+  organize: /\b(organize|organise|reorder|réorganiser|ordonner|supprimer|enlever|retirer|delete|remove)\b/,
 };
 
 function has(rx, q) {
@@ -50,11 +55,18 @@ export function detectFlow(query) {
     if (has(LEX.merge, q)) {
       return plan('pdf-merge', 'Merge your PDFs into one', 'One document out, pages in order.', { type: 'tool', slug: 'merge-pdf' }, 3);
     }
+    // text extraction must be detected BEFORE the generic split rule ("extract" overlaps)
+    if (has(LEX.extract_, q) && has(LEX.textWord, q)) {
+      return plan('pdf-text', 'Extract the text of your PDF', 'Copy it or download a .txt — no OCR, honest results.', { type: 'tool', slug: 'pdf-to-text' }, 3);
+    }
     if (has(LEX.split, q)) {
       return plan('pdf-split', 'Split or extract PDF pages', 'Keep only the pages you need.', { type: 'tool', slug: 'split-pdf' }, 3);
     }
     if (has(LEX.rotate, q)) {
       return plan('pdf-rotate', 'Rotate PDF pages', 'Fix scanned pages in one pass.', { type: 'tool', slug: 'rotate-pdf' }, 3);
+    }
+    if ((has(LEX.organize, q) || has(LEX.dedupe, q)) && has(LEX.pages, q)) {
+      return plan('pdf-organize', 'Reorganize your PDF pages', 'Thumbnails: delete, duplicate, rotate, reorder.', { type: 'tool', slug: 'pdf-organizer' }, 3);
     }
     if (has(LEX.tooBig, q) || has(LEX.email, q)) {
       return plan(
@@ -115,8 +127,11 @@ export function detectFlow(query) {
   }
 
   // ---- Calculators
-  if (has(LEX.calc, q)) {
-    return plan('calc', 'Open the calculator', 'Basic, scientific, percentage, finance and everyday modes.', { type: 'tool', slug: 'calculator' }, 2);
+  if (has(LEX.calc, q) || has(LEX.discount, q)) {
+    const detail = has(LEX.discount, q)
+      ? 'Percentage mode: “% of”, change, VAT, discounts and compound interest.'
+      : 'Basic, scientific, percentage, finance and everyday modes.';
+    return plan('calc', 'Open the calculator', detail, { type: 'tool', slug: 'calculator' }, 2);
   }
   if (has(LEX.password, q)) {
     return plan('pass', 'Generate a strong password', 'Real randomness, on your device.', { type: 'tool', slug: 'password-generator' }, 2);

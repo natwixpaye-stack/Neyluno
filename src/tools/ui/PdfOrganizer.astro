@@ -1,0 +1,428 @@
+---
+import Icon from '../../components/Icon.astro';
+---
+
+<div class="ftool" id="tool-pdf-organizer">
+  <div data-notice hidden></div>
+
+  <div class="dropzone" data-dropzone>
+    <input type="file" data-file-input hidden />
+    <span class="dz-icon" aria-hidden="true"><Icon name="pdf" size={24} /></span>
+    <h3>Drag & drop your PDF here</h3>
+    <p>or click to browse · one PDF · up to 50 MB</p>
+    <span class="btn btn-primary btn-sm dz-cta" aria-hidden="true">Choose a PDF</span>
+  </div>
+
+  <div class="po-progress" data-progress hidden role="status"></div>
+
+  <div class="po-workspace" data-workspace hidden>
+    <div class="po-docbar">
+      <span class="po-docname" data-docname></span>
+      <span class="po-docmeta" data-docmeta></span>
+      <span class="po-docbar-btns">
+        <button type="button" class="btn btn-ghost btn-sm" data-reset>Start over</button>
+      </span>
+    </div>
+
+    <div class="seg po-tabs" role="tablist" aria-label="PDF Organizer sections">
+      <button type="button" class="seg-btn is-active" role="tab" aria-selected="true" data-tab="pages">Pages</button>
+      <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tab="info">Document info</button>
+    </div>
+
+    <!-- ==================== PAGES ==================== -->
+    <div class="po-panel" data-panel="pages">
+      <div class="po-toolbar">
+        <span class="po-count" data-count aria-live="polite"></span>
+        <span class="po-toolbar-btns">
+          <button type="button" class="btn btn-ghost btn-sm" data-select-all>Select all</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-select-none>Deselect all</button>
+        </span>
+      </div>
+      <p class="po-hint">The exported PDF keeps the pages in the order shown below — only selected pages are included. Rotate ⟲, duplicate ⧉, delete ✕, reorder ←→.</p>
+      <ul class="po-grid" data-grid role="list" aria-label="PDF pages"></ul>
+      <p class="po-trunc" data-trunc hidden></p>
+      <div class="po-export">
+        <button type="button" class="btn btn-accent" data-download>Download the reorganized PDF</button>
+      </div>
+    </div>
+
+    <!-- ==================== INFO ==================== -->
+    <div class="po-panel" data-panel="info" hidden>
+      <dl class="po-info" data-info></dl>
+      <div class="po-meta-edit">
+        <h3>Edit metadata</h3>
+        <div class="field"><label for="po-m-title">Title</label><input id="po-m-title" class="input" data-m-title /></div>
+        <div class="field"><label for="po-m-author">Author</label><input id="po-m-author" class="input" data-m-author /></div>
+        <div class="field"><label for="po-m-subject">Subject</label><input id="po-m-subject" class="input" data-m-subject /></div>
+        <label class="pill-check"><input type="checkbox" data-m-strip /><span class="dot"></span>Strip all metadata on export (title, author, software, dates)</label>
+        <p class="po-hint">Metadata is rewritten locally at export time. Password protection is not supported in the browser — see the FAQ.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .po-progress { margin-top: 16px; color: var(--muted); font-size: 0.88rem; }
+  .po-workspace { margin-top: 18px; display: flex; flex-direction: column; gap: 16px; }
+  .po-docbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); }
+  .po-docname { font-weight: 700; font-size: 0.92rem; word-break: break-all; }
+  .po-docmeta { color: var(--faint); font-size: 0.82rem; flex: 1; }
+  .po-docbar-btns { display: flex; gap: 8px; }
+  .po-tabs { align-self: flex-start; }
+  .po-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .po-count { font-size: 0.88rem; font-weight: 600; color: var(--muted); }
+  .po-toolbar-btns { display: flex; gap: 8px; }
+  .po-hint { font-size: 0.78rem; color: var(--faint); line-height: 1.5; }
+  .po-grid { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 12px; }
+  .po-card { border: 1px solid var(--border); border-radius: 12px; background: var(--panel); padding: 10px; display: flex; flex-direction: column; gap: 8px; position: relative; transition: border-color 0.15s, opacity 0.15s; }
+  .po-card.is-out { opacity: 0.45; }
+  .po-card.is-out .po-thumb { filter: grayscale(1); }
+  .po-thumb { width: 100%; border-radius: 8px; border: 1px solid var(--border); background: #fff; }
+  .po-num { position: absolute; top: 14px; left: 14px; background: color-mix(in srgb, var(--bg) 82%, transparent); border: 1px solid var(--border); border-radius: 7px; font-size: 0.68rem; font-weight: 700; padding: 2px 7px; color: var(--muted); }
+  .po-actions { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; }
+  .po-actions .icon-btn { width: 32px; height: 32px; border-radius: 8px; font-size: 0.82rem; }
+  .po-sel { display: flex; align-items: center; gap: 7px; font-size: 0.76rem; color: var(--muted); justify-content: center; cursor: pointer; }
+  .po-trunc { font-size: 0.8rem; color: var(--muted); background: var(--panel); border: 1px dashed var(--border-strong); border-radius: 10px; padding: 10px 14px; }
+  .po-export { margin-top: 6px; display: flex; justify-content: flex-end; }
+  .po-info { display: grid; grid-template-columns: minmax(110px, auto) 1fr; gap: 6px 18px; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); font-size: 0.86rem; margin-bottom: 16px; }
+  .po-info dt { color: var(--faint); font-weight: 600; }
+  .po-info dd { color: var(--text); word-break: break-word; }
+  .po-meta-edit { display: flex; flex-direction: column; gap: 12px; }
+  .po-meta-edit h3 { font-size: 0.95rem; }
+  .po-meta-edit .field { max-width: 460px; }
+  .po-meta-edit label[for] { display: block; font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+  @media (max-width: 560px) { .po-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); } }
+</style>
+
+<script>
+  import { validateFile, MAX_FILE_BYTES } from '../../lib/files.js';
+  import { formatBytes } from '../../lib/format.js';
+  import { toast, downloadBlob } from '../../lib/ui.js';
+
+  const root = document.getElementById('tool-pdf-organizer');
+  if (root) {
+    const dz = root.querySelector('[data-dropzone]');
+    const input = root.querySelector('[data-file-input]');
+    const noticeEl = root.querySelector('[data-notice]');
+    const progress = root.querySelector('[data-progress]');
+    const workspace = root.querySelector('[data-workspace]');
+    const grid = root.querySelector('[data-grid]');
+    const countEl = root.querySelector('[data-count]');
+    const trunc = root.querySelector('[data-trunc]');
+    const THUMB_CAP = 300; // render thumbnails for the first N pages; the model keeps every page
+
+    let file = null;
+    let srcBytes = null;
+    let pdfDoc = null; // pdf.js document
+    let model = []; // {src: 0-based page index, rot: 0|90|180|270, selected: true}
+    let meta = {};
+
+    function showNotice(message, type = 'error') {
+      noticeEl.innerHTML = '';
+      if (!message) { noticeEl.hidden = true; return; }
+      noticeEl.hidden = false;
+      const div = document.createElement('div');
+      div.className = `notice notice-${type}`;
+      div.setAttribute('role', type === 'error' ? 'alert' : 'status');
+      div.textContent = message;
+      noticeEl.appendChild(div);
+    }
+
+    /* ---------- pdf.js lazy loading ---------- */
+    let pdfjs = null;
+    async function getPdfjs() {
+      if (!pdfjs) {
+        const [lib, { default: workerUrl }] = await Promise.all([
+          import('pdfjs-dist'),
+          import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
+        ]);
+        lib.GlobalWorkerOptions.workerSrc = workerUrl;
+        pdfjs = lib;
+      }
+      return pdfjs;
+    }
+
+    /* ---------- Loading a file ---------- */
+    async function loadFile(f) {
+      const check = validateFile(f, { acceptTypes: ['application/pdf'], acceptExts: ['.pdf'], maxBytes: MAX_FILE_BYTES });
+      if (!check.ok) { showNotice(check.error); toast(check.error, 'error'); return; }
+      showNotice('');
+      reset(false);
+      file = f;
+      dz.hidden = true;
+      progress.hidden = false;
+      progress.textContent = 'Reading the PDF…';
+      try {
+        srcBytes = await f.arrayBuffer();
+        const lib = await getPdfjs();
+        pdfDoc = await lib.getDocument({ data: srcBytes.slice(0) }).promise;
+        model = Array.from({ length: pdfDoc.numPages }, (_, i) => ({ src: i, rot: 0, selected: true }));
+        await renderThumbs();
+        renderInfo();
+        workspace.hidden = false;
+        document.querySelector('[data-docname]')?.replaceChildren(f.name);
+        const meta2 = document.querySelector('[data-docmeta]');
+        if (meta2) meta2.textContent = `${pdfDoc.numPages} pages · ${formatBytes(f.size)}`;
+      } catch (err) {
+        console.error('[pdf-organizer]', err);
+        progress.hidden = true;
+        dz.hidden = false;
+        const msg = /password/i.test(String(err?.message || err))
+          ? 'This PDF is password-protected. Cause: browsers cannot decrypt it locally yet. Action: remove the password with your PDF reader, then try again.'
+          : 'This file could not be read as a PDF. Cause: the file is corrupted or not a real PDF. Action: re-export it, or try another file.';
+        showNotice(msg);
+        toast('Could not open that PDF.', 'error');
+      }
+    }
+
+    /* ---------- Thumbnails ---------- */
+    async function renderThumbs() {
+      grid.innerHTML = '';
+      const n = Math.min(model.length, THUMB_CAP);
+      trunc.hidden = model.length <= THUMB_CAP;
+      if (!trunc.hidden) trunc.textContent = `Showing the first ${THUMB_CAP} of ${model.length} pages — every page is still included and can be selected, reordered or deleted.`;
+      for (let i = 0; i < model.length; i++) {
+        const entry = model[i];
+        const li = document.createElement('li');
+        li.className = 'po-card';
+        li.dataset.idx = String(i);
+        li.innerHTML = `
+          <span class="po-num"></span>
+          <div class="po-thumb-wrap"><canvas class="po-thumb" aria-hidden="true"></canvas></div>
+          <label class="po-sel"><input type="checkbox" checked data-sel /> <span data-sel-label>Include</span></label>
+          <div class="po-actions">
+            <button type="button" class="icon-btn" data-act="left" aria-label="Move left" title="Move left">←</button>
+            <button type="button" class="icon-btn" data-act="rot" aria-label="Rotate 90°" title="Rotate 90°">⟲</button>
+            <button type="button" class="icon-btn" data-act="dup" aria-label="Duplicate page" title="Duplicate">⧉</button>
+            <button type="button" class="icon-btn" data-act="del" aria-label="Delete page" title="Delete">✕</button>
+            <button type="button" class="icon-btn" data-act="right" aria-label="Move right" title="Move right">→</button>
+          </div>`;
+        grid.appendChild(li);
+        entry.el = li;
+        entry._canvas = li.querySelector('.po-thumb');
+        wireCard(li, i);
+      }
+      // render canvas thumbs sequentially to stay memory-friendly
+      for (let i = 0; i < n; i++) {
+        progress.textContent = `Rendering thumbnails… ${i + 1}/${n}`;
+        try { await paintThumb(i); } catch { /* one bad page must not kill the grid */ }
+      }
+      progress.hidden = true;
+      updateCount();
+    }
+
+    /** Canvas cloneNode() does not copy pixels — redraw into a fresh canvas. */
+    function cloneCanvas(src) {
+      if (!src) return null;
+      const c = document.createElement('canvas');
+      c.width = src.width;
+      c.height = src.height;
+      c.className = src.className;
+      c.getContext('2d').drawImage(src, 0, 0);
+      return c;
+    }
+
+    async function paintThumb(idx) {
+      const entry = model[idx];
+      if (!entry?.el) return;
+      const page = await pdfDoc.getPage(entry.src + 1);
+      const base = page.getViewport({ scale: 1 });
+      const scale = 220 / base.width;
+      const vp = page.getViewport({ scale });
+      const canvas = entry._canvas;
+      canvas.width = Math.floor(vp.width);
+      canvas.height = Math.floor(vp.height);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: ctx, viewport: vp, canvas }).promise;
+      canvas.style.transform = `rotate(${entry.rot}deg)`;
+      entry.el.querySelector('.po-num').textContent = String(idx + 1);
+    }
+
+    function wireCard(li, idx) {
+      li.querySelector('[data-sel]').addEventListener('change', (e) => {
+        model[idx].selected = e.target.checked;
+        li.classList.toggle('is-out', !e.target.checked);
+        updateCount();
+      });
+      li.querySelectorAll('[data-act]').forEach((btn) =>
+        btn.addEventListener('click', () => {
+          const act = btn.dataset.act;
+          if (act === 'rot') {
+            model[idx].rot = (model[idx].rot + 90) % 360;
+            const canvas = li.querySelector('.po-thumb');
+            canvas.style.transform = `rotate(${model[idx].rot}deg)`;
+            // square canvas box so rotated previews don't overflow
+            canvas.style.maxHeight = '210px';
+            canvas.style.objectFit = 'contain';
+          } else if (act === 'dup') {
+            const orig = model[idx];
+            model.splice(idx + 1, 0, { src: orig.src, rot: orig.rot, selected: true, _canvas: cloneCanvas(orig._canvas) });
+            rebuildDom();
+          } else if (act === 'del') {
+            if (model.length <= 1) { toast('A PDF must keep at least one page.', 'error'); return; }
+            model.splice(idx, 1);
+            rebuildDom();
+          } else if (act === 'left' && idx > 0) {
+            [model[idx - 1], model[idx]] = [model[idx], model[idx - 1]];
+            rebuildDom();
+          } else if (act === 'right' && idx < model.length - 1) {
+            [model[idx + 1], model[idx]] = [model[idx], model[idx + 1]];
+            rebuildDom();
+          }
+        })
+      );
+    }
+
+    /** Re-render the grid structure from the model, reusing painted canvases. */
+    function rebuildDom() {
+      grid.innerHTML = '';
+      model.forEach((entry, i) => {
+        const li = document.createElement('li');
+        li.className = 'po-card' + (entry.selected ? '' : ' is-out');
+        li.innerHTML = `
+          <span class="po-num">${i + 1}</span>
+          <div class="po-thumb-wrap"></div>
+          <label class="po-sel"><input type="checkbox" ${entry.selected ? 'checked' : ''} data-sel /> <span>Include</span></label>
+          <div class="po-actions">
+            <button type="button" class="icon-btn" data-act="left" aria-label="Move left" title="Move left">←</button>
+            <button type="button" class="icon-btn" data-act="rot" aria-label="Rotate 90°" title="Rotate 90°">⟲</button>
+            <button type="button" class="icon-btn" data-act="dup" aria-label="Duplicate page" title="Duplicate">⧉</button>
+            <button type="button" class="icon-btn" data-act="del" aria-label="Delete page" title="Delete">✕</button>
+            <button type="button" class="icon-btn" data-act="right" aria-label="Move right" title="Move right">→</button>
+          </div>`;
+        const wrap = li.querySelector('.po-thumb-wrap');
+        if (entry._canvas) {
+          entry._canvas.style.transform = `rotate(${entry.rot}deg)`;
+          entry._canvas.style.maxHeight = '210px';
+          wrap.appendChild(entry._canvas);
+        }
+        grid.appendChild(li);
+        entry.el = li;
+        wireCard(li, i);
+      });
+      updateCount();
+    }
+
+    function updateCount() {
+      const sel = model.filter((m) => m.selected).length;
+      countEl.textContent = `${sel} of ${model.length} page${model.length > 1 ? 's' : ''} will be exported`;
+    }
+
+    /* ---------- Document info ---------- */
+    async function renderInfo() {
+      meta = (await pdfDoc.getMetadata().catch(() => ({})))?.info || {};
+      const dl = root.querySelector('[data-info]');
+      const rows = [
+        ['Pages', String(pdfDoc.numPages)],
+        ['Size', formatBytes(file.size)],
+        ['Title', meta.Title || '—'],
+        ['Author', meta.Author || '—'],
+        ['Subject', meta.Subject || '—'],
+        ['Creator', meta.Creator || '—'],
+        ['Producer', meta.Producer || '—'],
+        ['Created', meta.CreationDate ? String(meta.CreationDate) : '—'],
+        ['Modified', meta.ModDate ? String(meta.ModDate) : '—'],
+        ['Keywords', meta.Keywords || '—'],
+        ['PDF version', meta.PDFFormatVersion || '—'],
+      ];
+      dl.innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd></dd>`).join('');
+      [...dl.querySelectorAll('dd')].forEach((dd, i) => (dd.textContent = rows[i][1]));
+      root.querySelector('[data-m-title]').value = meta.Title || '';
+      root.querySelector('[data-m-author]').value = meta.Author || '';
+      root.querySelector('[data-m-subject]').value = meta.Subject || '';
+    }
+
+    /* ---------- Tabs ---------- */
+    root.querySelectorAll('[data-tab]').forEach((tab) =>
+      tab.addEventListener('click', () => {
+        root.querySelectorAll('[data-tab]').forEach((t) => {
+          t.classList.toggle('is-active', t === tab);
+          t.setAttribute('aria-selected', String(t === tab));
+        });
+        root.querySelector('[data-panel="pages"]').hidden = tab.dataset.tab !== 'pages';
+        root.querySelector('[data-panel="info"]').hidden = tab.dataset.tab !== 'info';
+      })
+    );
+
+    root.querySelector('[data-select-all]').addEventListener('click', () => {
+      model.forEach((m) => (m.selected = true));
+      rebuildDom();
+    });
+    root.querySelector('[data-select-none]').addEventListener('click', () => {
+      model.forEach((m) => (m.selected = false));
+      rebuildDom();
+    });
+
+    /* ---------- Export ---------- */
+    root.querySelector('[data-download]').addEventListener('click', async () => {
+      const selected = model.filter((m) => m.selected);
+      if (!selected.length) { toast('Select at least one page to export.', 'error'); return; }
+      const btn = root.querySelector('[data-download]');
+      btn.disabled = true;
+      const label = btn.textContent;
+      btn.textContent = 'Building the PDF…';
+      try {
+        const { PDFDocument, degrees } = await import('pdf-lib');
+        const src = await PDFDocument.load(srcBytes, { updateMetadata: false });
+        const out = await PDFDocument.create();
+        const copied = await out.copyPages(src, selected.map((m) => m.src));
+        copied.forEach((page, i) => {
+          const extra = selected[i].rot;
+          if (extra) {
+            const cur = page.getRotation().angle;
+            page.setRotation(degrees(((cur + extra) % 360 + 360) % 360));
+          }
+          out.addPage(page);
+        });
+
+        const strip = root.querySelector('[data-m-strip]').checked;
+        if (strip) {
+          out.setTitle(''); out.setAuthor(''); out.setSubject('');
+          out.setKeywords([]); out.setProducer(''); out.setCreator('');
+        } else {
+          const t = root.querySelector('[data-m-title]').value.trim();
+          const a = root.querySelector('[data-m-author]').value.trim();
+          const s = root.querySelector('[data-m-subject]').value.trim();
+          if (t) out.setTitle(t);
+          if (a) out.setAuthor(a);
+          if (s) out.setSubject(s);
+        }
+
+        const bytes = await out.save();
+        const base = file.name.replace(/\.pdf$/i, '');
+        downloadBlob(new Blob([bytes], { type: 'application/pdf' }), `${base}-organized.pdf`);
+        toast(`Exported ${selected.length} page${selected.length > 1 ? 's' : ''}.`, 'success');
+      } catch (err) {
+        toast('Export failed — ' + (err?.message || 'unexpected error'), 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = label;
+      }
+    });
+
+    /* ---------- Reset ---------- */
+    function reset(clearFile = true) {
+      if (clearFile) {
+        file = null; srcBytes = null; pdfDoc = null; model = [];
+        workspace.hidden = true;
+        dz.hidden = false;
+      }
+      grid.innerHTML = '';
+      showNotice('');
+      progress.hidden = true;
+    }
+    root.querySelector('[data-reset]').addEventListener('click', () => reset(true));
+
+    /* ---------- Dropzone wiring ---------- */
+    dz.setAttribute('role', 'button');
+    dz.setAttribute('tabindex', '0');
+    dz.addEventListener('click', () => input.click());
+    dz.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
+    ['dragenter', 'dragover'].forEach((evt) => dz.addEventListener(evt, (e) => { e.preventDefault(); dz.classList.add('is-dragover'); }));
+    ['dragleave', 'drop'].forEach((evt) => dz.addEventListener(evt, (e) => { e.preventDefault(); dz.classList.remove('is-dragover'); }));
+    dz.addEventListener('drop', (e) => { const f = e.dataTransfer?.files?.[0]; if (f) loadFile(f); });
+    input.addEventListener('change', () => { const f = input.files?.[0]; input.value = ''; if (f) loadFile(f); });
+  }
+</script>

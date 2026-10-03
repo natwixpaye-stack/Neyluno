@@ -36,8 +36,9 @@
       <span class="calc-op">to</span>
       <div class="field"><label for="p2b">&nbsp;</label><input id="p2b" class="input" data-p2b type="number" value="100" /></div>
       <div class="field"><label>Change</label><output class="calc-out" data-o2>+25 %</output></div>
+      <div class="field"><label>Multiplier</label><output class="calc-out" data-o2m>×1.25</output></div>
     </div>
-    <p class="opt-hint">Formula: (final − initial) ÷ initial × 100</p>
+    <p class="opt-hint">Change: (final − initial) ÷ initial × 100 · Multiplier: final ÷ initial (×0.8 means a 20 % decrease)</p>
   </div>
 
   <!-- ============ FINANCE ============ -->
@@ -83,6 +84,18 @@
       <div class="field"><label for="d-km">Distance km</label><input id="d-km" class="input" data-d-km type="number" value="120" /></div>
       <div class="field"><label for="d-h">Time h</label><input id="d-h" class="input" data-d-h type="number" value="1.5" step="0.1" /></div>
       <div class="field"><label>Speed</label><output class="calc-out" data-d-speed>80 km/h</output></div>
+    </div>
+    <div class="calc-row">
+      <div class="field calc-grow"><label for="d-wavg">Weighted average — values (comma-separated)</label><input id="d-wavg" class="input" data-d-wavg value="12, 16, 14" /></div>
+      <div class="field calc-grow"><label for="d-ww">Weights (same order)</label><input id="d-ww" class="input" data-d-ww value="1, 2, 1" /></div>
+      <div class="field"><label>Weighted avg</label><output class="calc-out" data-d-wavgout>14</output></div>
+    </div>
+    <div class="calc-row">
+      <div class="field"><label for="d-fkm">Distance km</label><input id="d-fkm" class="input" data-d-fkm type="number" value="450" /></div>
+      <div class="field"><label for="d-fl">Fuel used L</label><input id="d-fl" class="input" data-d-fl type="number" value="32" /></div>
+      <div class="field"><label for="d-fprice">Price / L</label><input id="d-fprice" class="input" data-d-fprice type="number" value="1.8" step="0.01" /></div>
+      <div class="field"><label>Consumption</label><output class="calc-out" data-d-cons>7.11 L/100</output></div>
+      <div class="field"><label>Trip cost</label><output class="calc-out" data-d-cost>57.60</output></div>
     </div>
   </div>
 </div>
@@ -203,6 +216,8 @@
       const b = num(root.querySelector('[data-p2b]'));
       const ch = a === 0 ? NaN : ((b - a) / a) * 100;
       root.querySelector('[data-o2]').textContent = Number.isFinite(ch) ? `${ch >= 0 ? '+' : ''}${fmt(ch)} %` : '—';
+      const mult = a === 0 ? NaN : b / a;
+      root.querySelector('[data-o2m]').textContent = Number.isFinite(mult) ? `×${fmt(mult)}` : '—';
     };
     root.querySelectorAll('[data-panel="pct"] input').forEach((i) => i.addEventListener('input', pctRun));
     pctRun();
@@ -248,6 +263,33 @@
       const km = num(root.querySelector('[data-d-km]'));
       const h = num(root.querySelector('[data-d-h]'));
       root.querySelector('[data-d-speed]').textContent = h > 0 ? `${fmt(km / h)} km/h` : '—';
+
+      // Weighted average — values and weights parsed as parallel lists
+      const split = (sel) =>
+        root
+          .querySelector(sel)
+          .value.split(/[,;\s]+/)
+          .map(Number)
+          .filter(Number.isFinite);
+      const vals = split('[data-d-wavg]');
+      const wts = split('[data-d-ww]');
+      let wavg = NaN;
+      if (vals.length && vals.length === wts.length) {
+        const wsum = wts.reduce((s, w) => s + w, 0);
+        if (wsum > 0) wavg = vals.reduce((s, v, i) => s + v * wts[i], 0) / wsum;
+      }
+      root.querySelector('[data-d-wavgout]').textContent = Number.isFinite(wavg)
+        ? fmt(wavg)
+        : vals.length !== wts.length
+          ? 'lists ≠'
+          : '—';
+
+      // Fuel consumption + trip cost
+      const fkm = num(root.querySelector('[data-d-fkm]'));
+      const fl = num(root.querySelector('[data-d-fl]'));
+      const fprice = num(root.querySelector('[data-d-fprice]'));
+      root.querySelector('[data-d-cons]').textContent = fkm > 0 && fl >= 0 ? `${fmt((fl / fkm) * 100)} L/100` : '—';
+      root.querySelector('[data-d-cost]').textContent = fl >= 0 && fprice >= 0 ? fmt(fl * fprice) : '—';
     };
     root.querySelectorAll('[data-panel="day"] input').forEach((i) => i.addEventListener('input', dayRun));
     dayRun();
