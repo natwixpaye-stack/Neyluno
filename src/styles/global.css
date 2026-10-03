@@ -928,6 +928,18 @@ input[type='range']::-moz-range-thumb {
   transform: none;
 }
 
+/* Hero entrance — a slightly deeper rise with a soft focus pull,
+   so the fold feels alive without any heavy effect. */
+.js .hero .reveal {
+  transform: translateY(26px);
+  filter: blur(8px);
+  transition: opacity 0.85s var(--ease), transform 0.85s var(--ease), filter 0.85s var(--ease);
+}
+
+.js .hero .reveal.in {
+  filter: blur(0);
+}
+
 @media print {
   .js .reveal {
     opacity: 1;
@@ -961,6 +973,10 @@ input[type='range']::-moz-range-thumb {
   .js .reveal {
     opacity: 1;
     transform: none;
+  }
+
+  .js .hero .reveal {
+    filter: none;
   }
 }
 

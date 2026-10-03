@@ -39,9 +39,11 @@ const guides = [
 <BaseLayout title="Free online tools — images, PDF, text" description={site.shortDescription} path={path} jsonLd={jsonLd}>
   <!-- ================= HERO ================= -->
   <section class="hero">
-    <div class="hero-orb hero-orb-a" aria-hidden="true"></div>
-    <div class="hero-orb hero-orb-b" aria-hidden="true"></div>
-    <div class="hero-grid" aria-hidden="true"></div>
+    <div class="hero-depth" data-hero-depth aria-hidden="true">
+      <div class="hero-orb hero-orb-a"></div>
+      <div class="hero-orb hero-orb-b"></div>
+      <div class="hero-grid"></div>
+    </div>
 
     <div class="container hero-content">
       <span class="badge hero-badge reveal"><span class="dot"></span>100% local · free · no account</span>
@@ -239,6 +241,15 @@ const guides = [
     background-size: 56px 56px;
     mask-image: radial-gradient(ellipse 75% 60% at 50% 38%, black 20%, transparent 72%);
     opacity: 0.5;
+  }
+
+  /* Parallax layer: the orbs keep their own float animation,
+     the wrapper carries the pointer drift (transform-only, GPU-friendly). */
+  .hero-depth {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    will-change: transform;
   }
 
   .hero-orb {
@@ -806,4 +817,34 @@ const guides = [
     recRow.hidden = false;
   }
   if (favs.length || recents.length) personal.hidden = false;
+
+  /* ---------- Motion V4.2: pointer parallax on the hero depth layer ---------- */
+  (function () {
+    const layer = document.querySelector('[data-hero-depth]');
+    if (!layer) return;
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const fine = matchMedia('(pointer: fine)').matches;
+    if (reduced || !fine) return;
+    let raf = 0;
+    let tx = 0, ty = 0, cx = 0, cy = 0;
+    addEventListener(
+      'pointermove',
+      (e) => {
+        tx = e.clientX / innerWidth - 0.5;
+        ty = e.clientY / innerHeight - 0.5;
+        if (!raf) raf = requestAnimationFrame(step);
+      },
+      { passive: true }
+    );
+    function step() {
+      raf = requestAnimationFrame(step);
+      cx += (tx * 16 - cx) * 0.06;
+      cy += (ty * 10 - cy) * 0.06;
+      layer.style.transform = `translate3d(${cx.toFixed(2)}px, ${cy.toFixed(2)}px, 0)`;
+      if (Math.abs(cx - tx * 16) < 0.05 && Math.abs(cy - ty * 10) < 0.05 && !tx && !ty) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    }
+  })();
 </script>

@@ -37,6 +37,32 @@ const cat = getCategory(tool.category);
     gap: 10px;
     padding: compact ? 20px : 26px;
     min-height: 100%;
+    position: relative;
+    transition: transform 0.28s var(--ease), box-shadow 0.28s var(--ease), border-color 0.28s var(--ease);
+    will-change: transform;
+  }
+
+  .tool-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-lift);
+  }
+
+  /* accent underline sweep — the card's own hue */
+  .tool-card::after {
+    content: '';
+    position: absolute;
+    left: 26px;
+    bottom: 0;
+    height: 2px;
+    width: 0;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--hue) 85%, transparent);
+    transition: width 0.32s var(--ease);
+  }
+
+  .tool-card:hover::after {
+    width: 42px;
   }
 
   .tc-top {

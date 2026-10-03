@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>QuickTools — Promo Scene</title>
+<style>
+  /* ---------- Brand tokens (from QuickTools design system) ---------- */
+  :root {
+    --bg: #07080d;
+    --panel: rgba(255,255,255,.035);
+    --panel-strong: rgba(255,255,255,.06);
+    --border: rgba(255,255,255,.09);
+    --border-strong: rgba(255,255,255,.16);
+    --text: #f2f4f8;
+    --muted: #a6adc0;
+    --faint: #707791;
+    --accent: #ffb454;
+    --accent-2: #ff6e59;
+    --grad: linear-gradient(100deg, #ffb454, #ff6e59);
+    --green: #4ade9e;
+    --blue: #5cc8ff;
+    --violet: #c4a3ff;
+    --font: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+    --u: 1vmin; /* master scale unit */
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); }
+  body { font-family: var(--font); color: var(--text); -webkit-font-smoothing: antialiased; }
+
+  /* ---------- Stage & ambient background ---------- */
+  #stage { position: fixed; inset: 0; }
+  .orb { position: absolute; border-radius: 50%; filter: blur(calc(9 * var(--u))); opacity: 0; will-change: transform, opacity; }
+  #orbA { width: 58vmin; height: 58vmin; left: -14vmin; top: -18vmin; background: radial-gradient(circle, rgba(255,180,84,.16), transparent 62%); }
+  #orbB { width: 66vmin; height: 66vmin; right: -18vmin; bottom: -22vmin; background: radial-gradient(circle, rgba(255,110,89,.13), transparent 62%); }
+  #grid {
+    position: absolute; inset: 0; opacity: 0;
+    background-image: linear-gradient(rgba(255,255,255,.028) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px);
+    background-size: calc(7.2 * var(--u)) calc(7.2 * var(--u));
+    mask-image: radial-gradient(ellipse 82% 70% at 50% 46%, #000 30%, transparent 78%);
+  }
+  #vignette { position: absolute; inset: 0; background: radial-gradient(ellipse 120% 100% at 50% 45%, transparent 55%, rgba(0,0,0,.5) 100%); }
+
+  /* ---------- Scenes ---------- */
+  .scene { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; }
+
+  /* Generic card */
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: calc(2.2 * var(--u));
+    backdrop-filter: blur(6px);
+  }
+
+  /* ---- Scene A: beats ---- */
+  #sceneA .beat { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(3.2 * var(--u)); opacity: 0; }
+  .ghost { position: absolute; border-radius: calc(1.6 * var(--u)); background: var(--panel); border: 1px solid var(--border); opacity: 0; }
+  .ghost .bar { height: calc(1.1 * var(--u)); border-radius: 99px; background: rgba(255,255,255,.14); margin: calc(1.4 * var(--u)) auto 0; }
+  .kicker { font-size: calc(2.2 * var(--u)); letter-spacing: .34em; text-transform: uppercase; color: var(--faint); font-weight: 500; }
+
+  .pdf-card { width: calc(26 * var(--u)); padding: calc(2.6 * var(--u)); display: flex; flex-direction: column; gap: calc(1.6 * var(--u)); will-change: transform; }
+  .pdf-card .doc { height: calc(16 * var(--u)); border-radius: calc(1.2 * var(--u)); background: linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,.03)); border: 1px solid var(--border-strong); position: relative; overflow: hidden; }
+  .pdf-card .doc::after { content: ''; position: absolute; left: 12%; right: 12%; top: 14%; height: 8%; background: rgba(255,255,255,.16); border-radius: 99px; box-shadow: 0 calc(2.4 * var(--u)) 0 rgba(255,255,255,.1), 0 calc(4.8 * var(--u)) 0 rgba(255,255,255,.1), 0 calc(7.2 * var(--u)) 0 rgba(255,255,255,.08); }
+  .pdf-tag { position: absolute; top: calc(1.6 * var(--u)); right: calc(1.6 * var(--u)); font-size: calc(1.7 * var(--u)); font-weight: 700; color: var(--accent-2); letter-spacing: .06em; }
+  .size-line { display: flex; align-items: baseline; justify-content: center; gap: calc(1.4 * var(--u)); font-size: calc(3.4 * var(--u)); font-weight: 700; }
+  .size-line .arrow { color: var(--faint); font-size: calc(2.4 * var(--u)); }
+  .size-line .after { color: var(--green); }
+
+  .img-tile { width: calc(30 * var(--u)); height: calc(19 * var(--u)); border-radius: calc(1.8 * var(--u)); border: 1px solid var(--border-strong); position: relative; overflow: hidden;
+    background: linear-gradient(120deg, #2b3a55 0%, #46618c 34%, #8c6d4f 62%, #3a2f45 100%); will-change: filter; }
+  .img-tile .sweep { position: absolute; top: -12%; bottom: -12%; width: 26%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.22), transparent); transform: translateX(-160%) skewX(-12deg); }
+  .filter-chips { display: flex; gap: calc(1.2 * var(--u)); }
+  .filter-chips span { font-size: calc(1.7 * var(--u)); padding: calc(.8 * var(--u)) calc(1.5 * var(--u)); border-radius: 99px; border: 1px solid var(--border); color: var(--muted); background: var(--panel); opacity: 0; }
+  .filter-chips span.on { color: #14100a; background: var(--grad); border-color: transparent; font-weight: 600; }
+
+  .conv { display: flex; align-items: center; gap: calc(2.6 * var(--u)); font-size: calc(5.2 * var(--u)); font-weight: 700; }
+  .conv .unit { color: var(--faint); font-size: calc(2.6 * var(--u)); margin-left: calc(.8 * var(--u)); font-weight: 500; }
+  .conv .eq { width: calc(5.4 * var(--u)); height: calc(5.4 * var(--u)); border-radius: 50%; border: 1px solid var(--border-strong); display: grid; place-items: center; color: var(--accent); font-size: calc(2.6 * var(--u)); background: var(--panel); }
+
+  .calc { font-size: calc(4.4 * var(--u)); font-weight: 600; letter-spacing: .01em; display: flex; gap: calc(1.6 * var(--u)); align-items: baseline; }
+  .calc .expr { color: var(--muted); }
+  .calc .res { color: var(--text); font-weight: 800; background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; opacity: 0; }
+
+  /* ---- Scene B: convergence ---- */
+  #sceneB { flex-direction: column; gap: calc(3.4 * var(--u)); }
+  #converge { position: absolute; inset: 0; }
+  #converge .tile { position: absolute; left: 50%; top: 50%; width: calc(7.4 * var(--u)); height: calc(7.4 * var(--u)); border-radius: calc(1.6 * var(--u)); border: 1px solid var(--border); background: var(--panel-strong); display: grid; place-items: center; font-size: calc(2 * var(--u)); font-weight: 700; opacity: 0; will-change: transform, opacity; }
+  .hub { width: min(calc(52 * var(--u)), 82vw); padding: calc(3.4 * var(--u)) calc(3.8 * var(--u)); display: flex; flex-direction: column; gap: calc(2.6 * var(--u)); opacity: 0; will-change: transform, opacity; }
+  .hub .title { font-size: calc(2.6 * var(--u)); font-weight: 700; display: flex; align-items: center; gap: calc(1.2 * var(--u)); }
+  .hub .title .mark { width: calc(3.2 * var(--u)); height: calc(3.2 * var(--u)); border-radius: calc(.9 * var(--u)); background: var(--grad); display: inline-block; }
+  .steps { display: flex; align-items: center; justify-content: space-between; gap: calc(1.2 * var(--u)); }
+  .step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: calc(1.1 * var(--u)); opacity: 0; }
+  .step .dot { width: calc(4.6 * var(--u)); height: calc(4.6 * var(--u)); border-radius: 50%; border: 1px solid var(--border-strong); display: grid; place-items: center; background: var(--panel); font-size: calc(2 * var(--u)); }
+  .step.done .dot { background: var(--grad); border-color: transparent; color: #14100a; }
+  .step span { font-size: calc(1.9 * var(--u)); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
+  .steps .link { flex: 0 0 calc(3.4 * var(--u)); height: 1px; background: var(--border-strong); transform: scaleX(0); transform-origin: left; }
+
+  .caption { font-size: calc(2.4 * var(--u)); color: var(--muted); opacity: 0; text-align: center; }
+  .caption strong { color: var(--text); }
+
+  /* ---- Scene C: Flow ---- */
+  #sceneC { flex-direction: column; gap: calc(3.2 * var(--u)); }
+  .searchbar { width: min(calc(64 * var(--u)), 86vw); padding: calc(2.4 * var(--u)) calc(2.8 * var(--u)); display: flex; align-items: center; gap: calc(1.6 * var(--u)); font-size: calc(2.6 * var(--u)); border-radius: calc(1.8 * var(--u)); }
+  .searchbar .lens { width: calc(2.6 * var(--u)); height: calc(2.6 * var(--u)); border-radius: 50%; border: calc(.28 * var(--u)) solid var(--faint); flex: none; }
+  .searchbar .typed { white-space: nowrap; overflow: hidden; font-weight: 500; }
+  .searchbar .caret { width: calc(.28 * var(--u)); height: calc(2.6 * var(--u)); background: var(--accent); flex: none; }
+  .flowplan { display: flex; align-items: center; gap: calc(1.6 * var(--u)); padding: calc(1.8 * var(--u)) calc(2.4 * var(--u)); border-radius: calc(1.4 * var(--u)); opacity: 0; }
+  .flowplan .bolt { width: calc(3.4 * var(--u)); height: calc(3.4 * var(--u)); border-radius: calc(1 * var(--u)); background: var(--grad); display: grid; place-items: center; font-size: calc(1.9 * var(--u)); color: #14100a; font-weight: 800; }
+  .flowplan .txt { font-size: calc(2.1 * var(--u)); color: var(--muted); }
+  .flowplan .tool { font-weight: 700; color: var(--text); }
+  .flowplan .check { color: var(--green); font-weight: 800; }
+  .travel { position: absolute; width: calc(5.4 * var(--u)); height: calc(6.6 * var(--u)); border-radius: calc(.9 * var(--u)); border: 1px solid var(--border-strong); background: var(--panel-strong); display: grid; place-items: center; font-size: calc(1.5 * var(--u)); font-weight: 700; color: var(--accent-2); opacity: 0; will-change: transform, opacity; }
+  .result { display: flex; align-items: center; gap: calc(1.2 * var(--u)); font-size: calc(2.2 * var(--u)); padding: calc(1.4 * var(--u)) calc(2.2 * var(--u)); border-radius: 99px; border: 1px solid rgba(74,222,158,.4); color: var(--green); background: rgba(74,222,158,.08); font-weight: 600; opacity: 0; }
+
+  /* ---- Scene D: 43 tools ---- */
+  #sceneD { flex-direction: column; gap: calc(2.6 * var(--u)); }
+  .big43 { font-size: calc(17 * var(--u)); font-weight: 800; line-height: 1; letter-spacing: -.02em; background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; opacity: 0; }
+  .big43-label { font-size: calc(2.4 * var(--u)); letter-spacing: .5em; text-transform: uppercase; color: var(--muted); font-weight: 600; opacity: 0; padding-left: .5em; }
+  #orbit { position: absolute; inset: 0; }
+  #orbit .chip { position: absolute; left: 50%; top: 50%; padding: calc(1 * var(--u)) calc(1.8 * var(--u)); border-radius: 99px; border: 1px solid var(--border); background: var(--panel-strong); font-size: calc(1.8 * var(--u)); font-weight: 700; letter-spacing: .12em; opacity: 0; will-change: transform, opacity; }
+
+  /* ---- Scene E: logo reveal + CTA ---- */
+  #sceneE { flex-direction: column; gap: calc(2.8 * var(--u)); }
+  .logo-row { display: flex; align-items: center; gap: calc(2.2 * var(--u)); opacity: 0; }
+  .logo-mark { width: calc(6.4 * var(--u)); height: calc(6.4 * var(--u)); border-radius: calc(1.7 * var(--u)); background: var(--grad); position: relative; overflow: hidden; }
+  .logo-mark::after { content: ''; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.55) 48%, transparent 62%); transform: translateX(-130%); }
+  .logo-word { font-size: calc(7.6 * var(--u)); font-weight: 800; letter-spacing: -.015em; position: relative; overflow: hidden; }
+  .logo-word::after { content: ''; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.28) 48%, transparent 62%); transform: translateX(-130%); }
+  .tag-43 { font-size: calc(2.5 * var(--u)); color: var(--muted); font-weight: 500; opacity: 0; }
+  .slogan { font-size: calc(3.4 * var(--u)); font-weight: 700; text-align: center; line-height: 1.45; opacity: 0; }
+  .slogan .gold { background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .cta { margin-top: calc(1.4 * var(--u)); padding: calc(1.7 * var(--u)) calc(3.6 * var(--u)); border-radius: 99px; background: #f5f6f8; color: #0b0c12; font-weight: 700; font-size: calc(2.3 * var(--u)); opacity: 0; will-change: transform; box-shadow: 0 calc(1.6 * var(--u)) calc(4.4 * var(--u)) rgba(245,246,248,.16); }
+  .url { font-size: calc(1.9 * var(--u)); color: var(--faint); letter-spacing: .12em; opacity: 0; }
+
+  /* Portrait / square adjustments */
+  @media (max-aspect-ratio: 13/10) {
+    .hub { width: 84vw; }
+    .searchbar { width: 88vw; font-size: calc(2.2 * var(--u)); }
+    .conv { font-size: calc(4.2 * var(--u)); }
+    .big43 { font-size: calc(15 * var(--u)); }
+    .logo-word { font-size: calc(6.4 * var(--u)); }
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="grid"></div>
+  <div class="orb" id="orbA"></div>
+  <div class="orb" id="orbB"></div>
+
+  <!-- SCENE A — the jobs -->
+  <div class="scene" id="sceneA">
+    <div id="ghosts"></div>
+    <div class="beat" id="beatCompress">
+      <div class="kicker" data-i18n="kPdf"></div>
+      <div class="card pdf-card" id="pdfCard">
+        <div class="doc"><span class="pdf-tag">PDF</span></div>
+        <div class="size-line"><span id="sizeFrom">2.4 MB</span><span class="arrow">→</span><span class="after" id="sizeTo">480 KB</span></div>
+      </div>
+    </div>
+    <div class="beat" id="beatEdit">
+      <div class="kicker" data-i18n="kImg"></div>
+      <div class="img-tile" id="imgTile"><div class="sweep" id="sweep"></div></div>
+      <div class="filter-chips" id="fchips">
+        <span>Brightness</span><span>Contrast</span><span>Hue</span><span>Sepia</span><span>Invert</span><span>Blur</span>
+      </div>
+    </div>
+    <div class="beat" id="beatConvert">
+      <div class="kicker" data-i18n="kConv"></div>
+      <div class="conv"><span><span id="convFrom">10</span><span class="unit">km</span></span><span class="eq">⇄</span><span><span id="convTo">0.00</span><span class="unit">mi</span></span></div>
+    </div>
+    <div class="beat" id="beatCalc">
+      <div class="kicker" data-i18n="kCalc"></div>
+      <div class="calc"><span class="expr">(120 + 80) × 1.2</span><span class="res" id="calcRes">= 240</span></div>
+    </div>
+  </div>
+
+  <!-- SCENE B — one place -->
+  <div class="scene" id="sceneB">
+    <div id="converge"></div>
+    <div class="card hub" id="hub">
+      <div class="title"><span class="mark"></span><span>QuickTools</span></div>
+      <div class="steps" id="steps">
+        <div class="step" id="st1"><div class="dot">↑</div><span data-i18n="sUpload"></span></div>
+        <div class="link" id="lk1"></div>
+        <div class="step" id="st2"><div class="dot">✓</div><span data-i18n="sChoose"></span></div>
+        <div class="link" id="lk2"></div>
+        <div class="step" id="st3"><div class="dot">↓</div><span data-i18n="sDone"></span></div>
+      </div>
+    </div>
+    <div class="caption" id="capB"></div>
+  </div>
+
+  <!-- SCENE C — Flow -->
+  <div class="scene" id="sceneC">
+    <div class="card searchbar" id="searchbar">
+      <span class="lens"></span>
+      <span class="typed" id="typed"></span>
+      <span class="caret" id="caret"></span>
+    </div>
+    <div class="card flowplan" id="flowplan">
+      <span class="bolt">⚡</span>
+      <span class="txt" data-i18n="flowUnderstood"></span>
+      <span class="tool" id="flowTool">PDF → Text</span>
+      <span class="check">✓</span>
+    </div>
+    <div class="travel" id="travel">PDF</div>
+    <div class="result" id="flowResult"><span>text.txt</span><span>✓</span></div>
+    <div class="caption" id="capC"></div>
+  </div>
+
+  <!-- SCENE D — 43 tools -->
+  <div class="scene" id="sceneD">
+    <div id="orbit"></div>
+    <div class="big43" id="big43">0</div>
+    <div class="big43-label" data-i18n="toolsLabel"></div>
+    <div class="caption" id="capD"></div>
+  </div>
+
+  <!-- SCENE E — logo reveal -->
+  <div class="scene" id="sceneE">
+    <div class="logo-row" id="logoRow">
+      <span class="logo-mark" id="logoMark"></span>
+      <span class="logo-word">QuickTools</span>
+    </div>
+    <div class="tag-43" data-i18n="tag43"></div>
+    <div class="slogan" id="slogan"></div>
+    <div class="cta" id="cta" data-i18n="cta"></div>
+    <div class="url">quicktools · 100% local · free</div>
+  </div>
+
+  <div id="vignette"></div>
+</div>
+
+<script>
+/* ============================================================
+   Deterministic timeline engine — seek(tMs) renders one frame.
+   ============================================================ */
+const q = new URLSearchParams(location.search);
+const LANG = q.get('lang') === 'fr' ? 'fr' : 'en';
+
+const TEXT = {
+  en: {
+    kPdf: 'Compress a PDF', kImg: 'Edit an image', kConv: 'Convert anything', kCalc: 'Calculate instantly',
+    sUpload: 'Upload', sChoose: 'Choose', sDone: 'Done',
+    capB: '<strong>One place.</strong> Simple tools. No unnecessary complexity.',
+    flowQuery: 'I want to extract the text from this PDF',
+    flowUnderstood: 'Flow understood →',
+    flowTool: 'PDF → Text',
+    capC: '<strong>You don’t need to know which tool you need.</strong><br>Just tell QuickTools what you want to do.',
+    toolsLabel: 'tools',
+    capD: '<strong>Everything you need.</strong> One place.',
+    tag43: '43 tools. One simple place.',
+    slogan: 'Huge under the hood.<br><span class="gold">Minimal on screen.</span>',
+    cta: 'Try QuickTools',
+    chips: ['PDF', 'IMAGE', 'TEXT', 'CALC', 'CONVERT', 'UTILITIES', 'STUDENT'],
+  },
+  fr: {
+    kPdf: 'Compresser un PDF', kImg: 'Modifier une image', kConv: 'Tout convertir', kCalc: 'Calculer instantanément',
+    sUpload: 'Déposez', sChoose: 'Choisissez', sDone: 'Terminé',
+    capB: '<strong>Un seul endroit.</strong> Des outils simples. Aucune complexité inutile.',
+    flowQuery: 'Je veux extraire le texte de ce PDF',
+    flowUnderstood: 'Flow a compris →',
+    flowTool: 'PDF → Texte',
+    capC: '<strong>Pas besoin de savoir quel outil utiliser.</strong><br>Dites simplement ce que vous voulez faire.',
+    toolsLabel: 'outils',
+    capD: '<strong>Tout ce qu’il vous faut.</strong> Au même endroit.',
+    tag43: '43 outils. Une seule interface.',
+    slogan: 'Énorme en profondeur.<br><span class="gold">Minimal à l’écran.</span>',
+    cta: 'Essayer QuickTools',
+    chips: ['PDF', 'IMAGE', 'TEXTE', 'CALCUL', 'CONVERSION', 'UTILITAIRES', 'ÉTUDIANT'],
+  },
+}[LANG];
+
+/* Timeline — injected by the renderer; fallback = EN master */
+window.__TL = window.__TL || { a0:1200, a1:11070, b0:11970, b1:18160, c0:19060, c1:25330, d0:26230, d1:29630, e0:30530, e1:34630, total:38500 };
+const TL = window.__TL;
+
+/* ---------- i18n apply ---------- */
+document.querySelectorAll('[data-i18n]').forEach((el) => { el.innerHTML = TEXT[el.dataset.i18n] || ''; });
+document.getElementById('capB').innerHTML = TEXT.capB;
+document.getElementById('capC').innerHTML = TEXT.capC;
+document.getElementById('capD').innerHTML = TEXT.capD;
+document.getElementById('slogan').innerHTML = TEXT.slogan;
+document.getElementById('flowTool').textContent = TEXT.flowTool;
+
+/* ---------- Easings ---------- */
+const clamp01 = (x) => Math.min(1, Math.max(0, x));
+const lin = (t, a, b) => clamp01((t - a) / (b - a));
+const outCubic = (x) => 1 - Math.pow(1 - x, 3);
+const outExpo = (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * x));
+const inOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+const seg = (t, a, b) => lin(t, a, b);
+
+/* ---------- Static scaffolding ---------- */
+const $ = (id) => document.getElementById(id);
+const scenes = { A: $('sceneA'), B: $('sceneB'), C: $('sceneC'), D: $('sceneD'), E: $('sceneE') };
+
+/* Ghost windows for beat 0 */
+const ghosts = [];
+{
+  const host = $('ghosts');
+  const rng = mulberry(7);
+  for (let i = 0; i < 6; i++) {
+    const g = document.createElement('div');
+    g.className = 'ghost';
+    const w = 9 + rng() * 9;
+    g.style.width = `calc(${w} * var(--u))`;
+    g.style.height = `calc(${w * 0.62} * var(--u))`;
+    g.innerHTML = '<div class="bar" style="width:60%"></div><div class="bar" style="width:40%"></div>';
+    host.appendChild(g);
+    ghosts.push({ el: g, x: (rng() - 0.5) * 76, y: (rng() - 0.5) * 54, r: (rng() - 0.5) * 14, d: rng() * 0.4 });
+  }
+}
+function mulberry(a) { return function () { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+/* Convergence tiles */
+const tiles = [];
+{
+  const host = $('converge');
+  const rng = mulberry(21);
+  const colors = ['PDF', 'IMG', 'TXT', '{}', '⇄', 'fx', '%', 'QR', 'Aa', '123', 'ZIP', '∆'];
+  for (let i = 0; i < 12; i++) {
+    const tEl = document.createElement('div');
+    tEl.className = 'tile';
+    tEl.textContent = colors[i];
+    host.appendChild(tEl);
+    const ang = (i / 12) * Math.PI * 2;
+    tiles.push({ el: tEl, ang, dist: 30 + rng() * 14, spin: (rng() - 0.5) * 30 });
+  }
+}
+
+/* Orbit chips for scene D */
+const chips = [];
+{
+  const host = $('orbit');
+  TEXT.chips.forEach((label, i) => {
+    const c = document.createElement('div');
+    c.className = 'chip';
+    c.textContent = label;
+    host.appendChild(c);
+    chips.push({ el: c, ang: (i / TEXT.chips.length) * Math.PI * 2 - Math.PI / 2 });
+  });
+}
+
+/* ---------- Scene renderers (pure functions of t) ---------- */
+function renderA(t) {
+  const d = TL.a1 - TL.a0;           // segment duration
+  const lt = t - TL.a0;              // local ms
+  const beats = [$('beatCompress'), $('beatEdit'), $('beatConvert'), $('beatCalc')];
+
+  /* beat 0: ghost chaos (first ~22% of segment) */
+  const chaosEnd = d * 0.22;
+  const ghostIn = seg(lt, 0, d * 0.1);
+  const ghostOut = seg(lt, chaosEnd * 0.62, chaosEnd);
+  ghosts.forEach((g) => {
+    const drift = outCubic(seg(lt, 0, chaosEnd));
+    g.el.style.opacity = (outCubic(ghostIn) * (1 - ghostOut) * 0.9).toFixed(3);
+    g.el.style.transform = `translate(calc(-50% + ${g.x * drift}vmin), calc(-50% + ${g.y * drift}vmin)) rotate(${g.r * drift}deg) scale(${0.7 + 0.3 * drift})`;
+    g.el.style.left = '50%'; g.el.style.top = '50%';
+  });
+
+  /* beats 1..4 share the remaining 78% */
+  const bStart = chaosEnd, span = (d - bStart) / 4;
+  beats.forEach((beatEl, i) => {
+    const s = bStart + i * span, e = s + span;
+    const inP = outExpo(seg(lt, s, s + 260));
+    const outP = seg(lt, e - 200, e);
+    beatEl.style.opacity = (inP * (1 - outP)).toFixed(3);
+    beatEl.style.transform = `translateY(${(1 - inP) * 4.5}vmin) translateY(${outP * -3.5}vmin)`;
+  });
+
+  /* compress beat details */
+  {
+    const s = bStart, p = seg(lt, s + 320, s + span * 0.86);
+    const eased = inOut(p);
+    $('pdfCard').style.transform = `scale(${1 - eased * 0.12})`;
+    $('sizeTo').style.opacity = eased.toFixed(2);
+    $('sizeFrom').style.opacity = (1 - eased * 0.5).toFixed(2);
+  }
+  /* edit beat details */
+  {
+    const s = bStart + span;
+    const sweepP = seg(lt, s + 180, s + span * 0.8);
+    $('sweep').style.transform = `translateX(${-160 + inOut(sweepP) * 420}%) skewX(-12deg)`;
+    const filt = inOut(sweepP);
+    $('imgTile').style.filter = `hue-rotate(${filt * 70}deg) saturate(${1 + filt * 0.5}) brightness(${1 + filt * 0.12})`;
+    const chipEls = $('fchips').children;
+    for (let i = 0; i < chipEls.length; i++) {
+      const cp = seg(lt, s + 220 + i * 130, s + 340 + i * 130);
+      chipEls[i].style.opacity = cp.toFixed(2);
+      chipEls[i].classList.toggle('on', i === Math.min(chipEls.length - 1, Math.floor(seg(lt, s + 300, s + span * 0.9) * chipEls.length)));
+    }
+  }
+  /* convert beat details */
+  {
+    const s = bStart + 2 * span;
+    const p = inOut(seg(lt, s + 240, s + span * 0.8));
+    $('convTo').textContent = (6.21 * p).toFixed(2);
+    $('convTo').style.color = p > 0.98 ? 'var(--accent)' : 'var(--text)';
+  }
+  /* calc beat details */
+  {
+    const s = bStart + 3 * span;
+    const p = outExpo(seg(lt, s + 320, s + 620));
+    const res = $('calcRes');
+    res.style.opacity = p.toFixed(2);
+    res.style.transform = `scale(${0.82 + 0.18 * p})`;
+  }
+}
+
+function renderB(t) {
+  const s = TL.b0, dur = TL.b1 - TL.b0;
+  const lt = t - s;
+  const gridP = seg(lt, 0, 700);
+  $('grid').style.opacity = (gridP * 1).toFixed(2);
+
+  /* tiles converge to the hub centre */
+  const flyP = inOut(seg(lt, 150, dur * 0.52));
+  tiles.forEach((tile, i) => {
+    const from = { x: Math.cos(tile.ang) * tile.dist, y: Math.sin(tile.ang) * tile.dist * 0.62 };
+    const appear = seg(lt, i * 45, i * 45 + 320);
+    const shrink = seg(lt, dur * 0.46, dur * 0.58);
+    const sc = 1 - shrink;
+    tile.el.style.opacity = (appear * sc).toFixed(2);
+    tile.el.style.transform = `translate(-50%, -50%) translate(${from.x * (1 - flyP)}vmin, ${from.y * (1 - flyP)}vmin) rotate(${tile.spin * (1 - flyP)}deg) scale(${0.7 + 0.3 * (1 - flyP)}) scale(${Math.max(sc, 0.001)})`;
+  });
+
+  const hubIn = outExpo(seg(lt, dur * 0.42, dur * 0.62));
+  const hub = $('hub');
+  hub.style.opacity = hubIn.toFixed(2);
+  hub.style.transform = `translateY(${(1 - hubIn) * 3.4}vmin) scale(${0.94 + 0.06 * hubIn})`;
+
+  /* steps light up: upload → choose → done */
+  const stepsP = seg(lt, dur * 0.58, dur * 0.94);
+  [['st1', 0.06], ['st2', 0.42], ['st3', 0.78]].forEach(([id, at]) => {
+    const el = $(id);
+    el.style.opacity = seg(stepsP, at - 0.1, at + 0.08).toFixed(2);
+    el.classList.toggle('done', stepsP >= at + 0.1);
+  });
+  $('lk1').style.transform = `scaleX(${seg(stepsP, 0.2, 0.42).toFixed(3)})`;
+  $('lk2').style.transform = `scaleX(${seg(stepsP, 0.56, 0.78).toFixed(3)})`;
+
+  const capP = seg(lt, dur * 0.72, dur * 0.92);
+  $('capB').style.opacity = capP.toFixed(2);
+  $('capB').style.transform = `translateY(${(1 - capP) * 1.6}vmin)`;
+}
+
+function renderC(t) {
+  const s = TL.c0, dur = TL.c1 - TL.c0;
+  const lt = t - s;
+
+  const barIn = outExpo(seg(lt, 0, 420));
+  $('searchbar').style.opacity = barIn.toFixed(2);
+  $('searchbar').style.transform = `translateY(${(1 - barIn) * 3}vmin)`;
+
+  /* typewriter */
+  const typeP = seg(lt, 420, dur * 0.36);
+  const full = TEXT.flowQuery;
+  $('typed').textContent = full.slice(0, Math.floor(typeP * full.length));
+  $('caret').style.opacity = (typeP < 1 || (Math.floor(t / 400) % 2 === 0)) ? '1' : '0';
+
+  /* plan appears */
+  const planP = outExpo(seg(lt, dur * 0.42, dur * 0.52));
+  const plan = $('flowplan');
+  plan.style.opacity = planP.toFixed(2);
+  plan.style.transform = `translateY(${(1 - planP) * 2.2}vmin) scale(${0.96 + 0.04 * planP})`;
+
+  /* file travels from bar → plan → result */
+  const tr = $('travel');
+  const p1 = inOut(seg(lt, dur * 0.54, dur * 0.72));
+  const p2 = inOut(seg(lt, dur * 0.74, dur * 0.88));
+  const from = { x: 0, y: -8 }, mid = { x: 0, y: 0 }, to = { x: 0, y: 8 };
+  let x = from.x + (mid.x - from.x) * p1 + (to.x - mid.x) * p2;
+  let y = from.y + (mid.y - from.y) * p1 + (to.y - mid.y) * p2;
+  const trOp = seg(lt, dur * 0.53, dur * 0.56) * (1 - seg(lt, dur * 0.86, dur * 0.9));
+  tr.style.opacity = trOp.toFixed(2);
+  tr.style.left = '50%'; tr.style.top = '50%';
+  tr.style.transform = `translate(-50%, -50%) translate(calc(${x}vmin), calc(${y}vmin)) scale(${1 - p2 * 0.4})`;
+
+  const resP = outExpo(seg(lt, dur * 0.84, dur * 0.94));
+  $('flowResult').style.opacity = resP.toFixed(2);
+  $('flowResult').style.transform = `scale(${0.9 + 0.1 * resP})`;
+
+  const capP = seg(lt, dur * 0.8, dur * 0.96);
+  $('capC').style.opacity = capP.toFixed(2);
+}
+
+function renderD(t) {
+  const s = TL.d0, dur = TL.d1 - TL.d0;
+  const lt = t - s;
+
+  /* count-up */
+  const countP = outExpo(seg(lt, 80, dur * 0.62));
+  const num = Math.round(countP * 43);
+  const big = $('big43');
+  big.textContent = num;
+  big.style.opacity = seg(lt, 0, 240).toFixed(2);
+  big.style.transform = `scale(${0.9 + 0.1 * countP})`;
+  document.querySelector('.big43-label').style.opacity = seg(lt, 260, 620).toFixed(2);
+
+  /* chips bloom out, then pull back in at the end */
+  const bloom = outCubic(seg(lt, 160, dur * 0.5));
+  const retract = inOut(seg(lt, dur * 0.68, dur * 0.98));
+  chips.forEach((c, i) => {
+    const r = 24 * bloom * (1 - retract * 0.92);
+    const x = Math.cos(c.ang) * r * 1.5;
+    const y = Math.sin(c.ang) * r * 0.72;
+    c.el.style.opacity = (bloom * (1 - retract)).toFixed(2);
+    c.el.style.transform = `translate(-50%, -50%) translate(calc(${x}vmin), calc(${y}vmin)) scale(${0.8 + 0.2 * bloom})`;
+  });
+
+  const capP = seg(lt, dur * 0.55, dur * 0.85);
+  $('capD').style.opacity = capP.toFixed(2);
+}
+
+function renderE(t) {
+  const s = TL.e0;
+  const lt = t - s;
+
+  const rowP = outExpo(seg(lt, 60, 620));
+  $('logoRow').style.opacity = rowP.toFixed(2);
+  $('logoRow').style.transform = `translateY(${(1 - rowP) * 2.4}vmin) scale(${0.96 + 0.04 * rowP})`;
+
+  /* light sweep across mark + wordmark */
+  const sweepP = seg(lt, 480, 1500);
+  const sx = -130 + inOut(sweepP) * 300;
+  $('logoMark').style.setProperty('--sx', sx);
+  document.querySelector('.logo-mark').style.cssText += '';
+  document.querySelector('.logo-mark::after');
+  document.styleSheets[0]; // no-op keep
+  setPseudoSweep(sweepP);
+
+  document.querySelector('.tag-43').style.opacity = seg(lt, 700, 1050).toFixed(2);
+
+  const slogP = outCubic(seg(lt, 1150, 1750));
+  const slog = $('slogan');
+  slog.style.opacity = slogP.toFixed(2);
+  slog.style.transform = `translateY(${(1 - slogP) * 2}vmin)`;
+
+  /* CTA with soft breathing */
+  const ctaP = outExpo(seg(lt, 1850, 2350));
+  const breathe = 1 + Math.sin((t - s - 2350) / 900) * 0.012 * ctaP;
+  const cta = $('cta');
+  cta.style.opacity = ctaP.toFixed(2);
+  cta.style.transform = `scale(${(0.94 + 0.06 * ctaP) * (ctaP >= 1 ? breathe : 1)})`;
+
+  document.querySelector('.url').style.opacity = seg(lt, 2300, 2800).toFixed(2);
+}
+
+/* Sweep on ::after pseudo-elements via CSS variable */
+const sweepStyle = document.createElement('style');
+document.head.appendChild(sweepStyle);
+function setPseudoSweep(p) {
+  const x = -130 + inOut(p) * 300;
+  sweepStyle.textContent = `.logo-mark::after, .logo-word::after { transform: translateX(${x}%); }`;
+}
+
+/* ---------- Master seek ---------- */
+function sceneWindow(t, s, e, fade = 220) {
+  const inP = seg(t, s - 40, s + fade);
+  const outP = seg(t, e - fade * 0.6, e + fade * 0.8);
+  return inP * (1 - outP);
+}
+
+window.seek = function seek(tMs) {
+  const t = tMs;
+  const orbOp = seg(t, 0, 900) * 0.95;
+  $('orbA').style.opacity = orbOp.toFixed(2);
+  $('orbB').style.opacity = orbOp.toFixed(2);
+  const drift = t / 1000;
+  $('orbA').style.transform = `translate(${Math.sin(drift * 0.16) * 2.4}vmin, ${Math.cos(drift * 0.13) * 2}vmin)`;
+  $('orbB').style.transform = `translate(${Math.cos(drift * 0.11) * 2.8}vmin, ${Math.sin(drift * 0.15) * 2.2}vmin)`;
+
+  const show = (name, op, dy) => {
+    scenes[name].style.opacity = op.toFixed(3);
+    scenes[name].style.transform = `translateY(${dy.toFixed(2)}vmin)`;
+  };
+
+  const opA = sceneWindow(t, TL.a0, TL.a1);
+  const opB = sceneWindow(t, TL.b0, TL.b1);
+  const opC = sceneWindow(t, TL.c0, TL.c1);
+  const opD = sceneWindow(t, TL.d0, TL.d1);
+  const opE = sceneWindow(t, TL.e0, TL.total + 1000, 260);
+
+  show('A', opA, (1 - opA) * 1.2);
+  show('B', opB, (1 - opB) * 1.2);
+  show('C', opC, (1 - opC) * 1.2);
+  show('D', opD, (1 - opD) * 1.2);
+  show('E', opE, (1 - opE) * 1.2);
+
+  if (t >= TL.a0 && t <= TL.a1 + 200) renderA(Math.min(t, TL.a1));
+  if (t >= TL.b0 && t <= TL.b1 + 200) renderB(Math.min(t, TL.b1));
+  if (t >= TL.c0 && t <= TL.c1 + 200) renderC(Math.min(t, TL.c1));
+  if (t >= TL.d0 && t <= TL.d1 + 200) renderD(Math.min(t, TL.d1));
+  if (t >= TL.e0) renderE(t);
+
+  /* grid fades back out after scene B */
+  if (t > TL.b1) $('grid').style.opacity = (1 - seg(t, TL.b1, TL.c0)).toFixed(2);
+};
+
+window.seek(0);
+</script>
+</body>
+</html>
