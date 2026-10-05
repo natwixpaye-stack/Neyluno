@@ -177,7 +177,7 @@ import Icon from '../../components/Icon.astro';
 
         const pdfBytes = await doc.save();
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-        downloadBlob(blob, 'quicktools-images.pdf');
+        downloadBlob(blob, 'neyluno-images.pdf');
         toast(`PDF created with ${items.length} page${items.length > 1 ? 's' : ''}.`, 'success');
       } catch (err) {
         toast(err?.message || 'Creating the PDF failed. Check your files.', 'error', 6000);

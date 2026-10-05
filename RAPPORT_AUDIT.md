@@ -1,4 +1,4 @@
-# QuickTools — Rapport d'audit final (V1)
+# Neyluno — Rapport d'audit final (V1)
 
 Date : 27 septembre 2026 · Build de production vérifié (`npm run build`), serveur preview testé.
 
@@ -85,7 +85,7 @@ Trois niveaux de vérification, tous rejouables :
 
 ## Bugs connus / limites honnêtes
 
-1. **Domaine placeholder** : `quicktools.example.com` est utilisé dans `astro.config.mjs`,
+1. **Domaine placeholder** : `neyluno.example.com` est utilisé dans `astro.config.mjs`,
    `robots.txt` et le sitemap. À remplacer par le domaine réel avant production (README, §Configuration).
 2. **Pages légales à compléter** : `/confidentialite/` et `/mentions-legales/` contiennent des
    sections `[à compléter]` (éditeur, hébergeur) — obligatoire avant mise en ligne (LCEN/RGPD).
@@ -99,7 +99,7 @@ Trois niveaux de vérification, tous rejouables :
    Firefox/Safari partagent les mêmes APIs web, mais un passage manuel rapide est recommandé.
 6. **PDF chiffrés** : `ignoreEncryption` permet certains PDF protégés, mais les PDF verrouillés
    par mot de passe sont détectés et refusés avec un message clair (comportement voulu).
-7. Le ZIP « Tout télécharger » porte un nom fixe (`quicktools-export.zip`).
+7. Le ZIP « Tout télécharger » porte un nom fixe (`neyluno-export.zip`).
 
 Aucun bug bloquant connu. Les points 1 et 2 sont des actions de mise en production, pas des défauts
 de code.

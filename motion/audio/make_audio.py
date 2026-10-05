@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""QuickTools promo — generative music bed + UI sound design (numpy).
+"""Neyluno promo — generative music bed + UI sound design (numpy).
 Layers kept separate: voice (generated elsewhere) / music / sfx.
 Usage: python3 make_audio.py <en|fr>   (reads timeline-<lang>.json)
 Outputs: music-<lang>.wav, sfx-<lang>.wav, mix-<lang>.wav (voice+music+sfx)

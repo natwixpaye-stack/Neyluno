@@ -1,6 +1,6 @@
-# QuickTools — Motion Design & Brand Showcase
+# Neyluno — Motion Design & Brand Showcase
 
-Direction artistique animée de QuickTools (V4.2). Motto : **« Énorme en profondeur. Minimal à l'écran. »**
+Direction artistique animée de Neyluno (V4.2). Motto : **« Énorme en profondeur. Minimal à l'écran. »**
 Règle d'or : **90 % clarté / 10 % spectacle.** Chaque animation doit aider à comprendre, naviguer ou ressentir le premium — sinon elle n'existe pas.
 
 ---
@@ -24,10 +24,10 @@ Rendu : `motion/render.mjs` (Playwright frame-à-frame, 30 fps, H.264) — la sy
 |---|---|---|
 | 0–1.2 s | — | Noir → orbes de profondeur, grid |
 | 1.2–11.1 s | « Every day… calculate something » | Fenêtres fantômes → beats **Compress / Edit / Convert / Calculate** (2.4 MB→480 KB, sweep de filtres hue/sepia, 10 km→6.21 mi, (120+80)×1.2=240) |
-| 12.0–18.2 s | « QuickTools brings them together » | 12 tuiles convergent → carte **Upload → Choose → Done** |
+| 12.0–18.2 s | « Neyluno brings them together » | 12 tuiles convergent → carte **Upload → Choose → Done** |
 | 19.1–25.3 s | « And with Flow… » | Barre de recherche, phrase tapée « I want to extract the text from this PDF », plan **Flow → PDF → Text ✓**, fichier qui voyage, `text.txt ✓` |
 | 26.2–29.6 s | « Forty-three tools » | Compte **1→43** + 7 chips catégories qui fleurissent puis se recentrent |
-| 30.5–38.5 s | « QuickTools. Huge under the hood… » | Logo reveal (sweep de lumière), slogan, CTA « Try QuickTools » |
+| 30.5–38.5 s | « Neyluno. Huge under the hood… » | Logo reveal (sweep de lumière), slogan, CTA « Try Neyluno » |
 
 La version FR utilise la même timeline recalculée depuis les durées réelles des clips (`motion/timeline-fr.json`).
 
@@ -43,8 +43,8 @@ Sorties séparées : `audio/music-<lang>.wav`, `audio/sfx-<lang>.wav`, mix final
 
 | Fichier | Usage |
 |---|---|
-| `quicktools-promo-en-16x9.mp4` | YouTube / présentation / hero |
-| `quicktools-promo-fr-16x9.mp4` | Idem, voix française |
+| `neyluno-promo-en-16x9.mp4` | YouTube / présentation / hero |
+| `neyluno-promo-fr-16x9.mp4` | Idem, voix française |
 | `…-en-9x16.mp4` / `…-fr-9x16.mp4` | TikTok / Shorts / Reels |
 | `…-en-1x1.mp4` / `…-fr-1x1.mp4` | Réseaux sociaux (feed) |
 
@@ -69,9 +69,9 @@ Aucune clé API côté front : les fichiers audio sont des **assets statiques**.
 
 ### Scripts (source de vérité)
 
-**EN** : Every day, we use dozens of tools just to get simple things done. Compress a PDF. Edit an image. Convert a file. Calculate something. / QuickTools brings them together. One place. Simple tools. No unnecessary complexity. / And with Flow, you don't even need to know which tool you need. Just tell QuickTools what you want to do. / Forty-three tools. One simple interface. / QuickTools. Huge under the hood. Minimal on screen.
+**EN** : Every day, we use dozens of tools just to get simple things done. Compress a PDF. Edit an image. Convert a file. Calculate something. / Neyluno brings them together. One place. Simple tools. No unnecessary complexity. / And with Flow, you don't even need to know which tool you need. Just tell Neyluno what you want to do. / Forty-three tools. One simple interface. / Neyluno. Huge under the hood. Minimal on screen.
 
-**FR** : Chaque jour, on utilise des dizaines d'outils pour faire des choses finalement très simples. Compresser un PDF. Modifier une image. Convertir un fichier. Faire un calcul. / QuickTools rassemble tout au même endroit. Des outils simples. Une interface claire. Aucune complexité inutile. / Et avec Flow, vous n'avez même pas besoin de savoir quel outil utiliser. Dites simplement ce que vous voulez faire. / Quarante-trois outils. Une seule interface. / QuickTools. Énorme en profondeur. Minimal à l'écran.
+**FR** : Chaque jour, on utilise des dizaines d'outils pour faire des choses finalement très simples. Compresser un PDF. Modifier une image. Convertir un fichier. Faire un calcul. / Neyluno rassemble tout au même endroit. Des outils simples. Une interface claire. Aucune complexité inutile. / Et avec Flow, vous n'avez même pas besoin de savoir quel outil utiliser. Dites simplement ce que vous voulez faire. / Quarante-trois outils. Une seule interface. / Neyluno. Énorme en profondeur. Minimal à l'écran.
 
 ## 6. Non fait volontairement
 

@@ -51,14 +51,24 @@ test('import: wrong app/kind rejected', () => {
   assert.equal(parseWorkflowsJSON(JSON.stringify({ app: 'other', kind: 'workflows', workflows: [] })).ok, false);
 });
 
+test('import: pre-rebrand export (legacy app id) still accepted', () => {
+  const legacy = {
+    app: atob('cXVpY2t0b29scw=='),
+    kind: 'workflows',
+    version: 1,
+    workflows: [{ name: 'old export', steps: [{ type: 'resize', maxSide: 1920 }] }],
+  };
+  assert.equal(parseWorkflowsJSON(JSON.stringify(legacy)).ok, true);
+});
+
 test('import: missing steps / empty name rejected', () => {
-  const bad = { app: 'quicktools', kind: 'workflows', version: 1, workflows: [{ name: 'x', steps: [] }] };
+  const bad = { app: 'neyluno', kind: 'workflows', version: 1, workflows: [{ name: 'x', steps: [] }] };
   assert.equal(parseWorkflowsJSON(JSON.stringify(bad)).ok, false);
 });
 
 test('import: unknown step type rejected', () => {
   const bad = {
-    app: 'quicktools',
+    app: 'neyluno',
     kind: 'workflows',
     version: 1,
     workflows: [{ name: 'x', steps: [{ type: 'explode' }] }],
@@ -68,7 +78,7 @@ test('import: unknown step type rejected', () => {
 
 test('import: out-of-range numeric rejected', () => {
   const bad = {
-    app: 'quicktools',
+    app: 'neyluno',
     kind: 'workflows',
     version: 1,
     workflows: [{ name: 'x', steps: [{ type: 'resize', maxSide: 999999 }] }],

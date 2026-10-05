@@ -133,7 +133,7 @@ import Icon from '../../components/Icon.astro';
           pages.forEach((p) => out.addPage(p));
         }
         const bytes = await out.save();
-        downloadBlob(new Blob([bytes], { type: 'application/pdf' }), 'quicktools-merged.pdf');
+        downloadBlob(new Blob([bytes], { type: 'application/pdf' }), 'neyluno-merged.pdf');
         toast(`Merged ${items.length} PDFs into one document.`, 'success');
         api.showNotice('');
       } catch (err) {

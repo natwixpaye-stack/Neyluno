@@ -339,7 +339,7 @@ import Icon from '../../components/Icon.astro';
         const { zipSync } = await import('fflate');
         const entries = {};
         for (const p of pages) entries[p.name] = new Uint8Array(await p.blob.arrayBuffer());
-        downloadBlob(new Blob([zipSync(entries)], { type: 'application/zip' }), 'quicktools-pages.zip');
+        downloadBlob(new Blob([zipSync(entries)], { type: 'application/zip' }), 'neyluno-pages.zip');
       } catch {
         toast('Creating the ZIP failed — download the pages one by one.', 'error');
       } finally {

@@ -1,5 +1,5 @@
 /**
- * QuickTools promo renderer — deterministic frame capture.
+ * Neyluno promo renderer — deterministic frame capture.
  * Usage: node motion/render.mjs <en|fr> <16x9|9x16|1x1>
  * Loads motion/scenes/promo.html, injects the audio-derived timeline,
  * seeks frame by frame, screenshots, encodes H.264 (no audio — mixed later).
@@ -58,7 +58,7 @@ for (let i = 0; i < frames; i++) {
 }
 await browser.close();
 
-const out = path.join(__dirname, 'out', `quicktools-promo-${lang}-${aspect}-video.mp4`);
+const out = path.join(__dirname, 'out', `neyluno-promo-${lang}-${aspect}-video.mp4`);
 fs.mkdirSync(path.dirname(out), { recursive: true });
 execSync(
   `ffmpeg -y -framerate ${FPS} -i "${framesDir}/f_%05d.png" -c:v libx264 -pix_fmt yuv420p -crf 17 -preset slow -movflags +faststart "${out}"`,

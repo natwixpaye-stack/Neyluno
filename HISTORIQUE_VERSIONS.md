@@ -1,7 +1,7 @@
-# QuickTools — Historique complet des versions
+# Neyluno — Historique complet des versions
 
-Site en production : **https://quicktools-4tco.onrender.com**
-Dépôt GitHub : `natwixpaye-stack/Quicktools` · Hébergement : Render (statique gratuit, 0 €)
+Site en production : **https://neyluno-4tco.onrender.com**
+Dépôt GitHub : `natwixpaye-stack/Neyluno` · Hébergement : Render (statique gratuit, 0 €)
 Stack : Astro 5 (SSG) + JavaScript vanilla — tout le traitement des fichiers se fait dans le navigateur.
 
 ---
@@ -28,7 +28,7 @@ Stack : Astro 5 (SSG) + JavaScript vanilla — tout le traitement des fichiers s
 - **SEO complet** : titles/descriptions uniques, canonical, sitemap.xml, robots.txt, Open Graph + image de couverture, JSON-LD (SoftwareApplication, FAQ, Breadcrumb).
 - **Accessibilité** : skip-link, focus visible, aria, `prefers-reduced-motion`.
 - **Tests** : 73/73 unitaires · 99/99 e2e navigateur · linkcheck 0 lien cassé.
-- **Déploiement** : GitHub → Render (auto-déploiement à chaque push), domaine `quicktools-4tco.onrender.com`.
+- **Déploiement** : GitHub → Render (auto-déploiement à chaque push), domaine `neyluno-4tco.onrender.com`.
 
 Commits : `ef03584`, `d938c5e` · Rapport : `RAPPORT_AUDIT.md`
 

@@ -1,5 +1,5 @@
 /**
- * QuickTools Flow — rule-based intent → plan engine (no AI, no server).
+ * Neyluno Flow — rule-based intent → plan engine (no AI, no server).
  * Understands short natural sentences in English and French, detects file types,
  * problems and quantities, and proposes either a tool or a workflow plan.
  * Pure functions, fully testable. Architecture ready for a future AI layer.

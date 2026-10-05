@@ -413,7 +413,7 @@ export function mountFileTool(root, config = {}) {
         entries[name] = new Uint8Array(await item.result.blob.arrayBuffer());
       }
       const zipped = zipSync(entries);
-      downloadBlob(new Blob([zipped], { type: 'application/zip' }), 'quicktools-export.zip');
+      downloadBlob(new Blob([zipped], { type: 'application/zip' }), 'neyluno-export.zip');
       toast(`${done.length} ${t('file.zipDone')}`, 'success');
     } catch {
       toast(t('file.zipFail'), 'error');

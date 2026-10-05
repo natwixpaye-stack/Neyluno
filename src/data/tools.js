@@ -1,5 +1,5 @@
 /**
- * TOOLS REGISTRY — QuickTools V2
+ * TOOLS REGISTRY — Neyluno V2
  * Add a tool: entry here + UI component in src/tools/ui/ + register in src/pages/tools/[slug].astro.
  * Navigation, search, categories, sitemap and internal links follow automatically.
  * `intents` are task phrases matched by the intent-based search engine.
@@ -629,7 +629,7 @@ export const tools = [
     group: 'Images',
     shortDesc: 'Instant facts about any image: dimensions, format, weight, transparency — plus what to do next.',
     description:
-      'Drop an image and get the full picture: exact dimensions, megapixels, aspect ratio, file weight, format and whether it uses transparency. The analyzer then suggests the right QuickTools action (compress, convert, resize).',
+      'Drop an image and get the full picture: exact dimensions, megapixels, aspect ratio, file weight, format and whether it uses transparency. The analyzer then suggests the right Neyluno action (compress, convert, resize).',
     keywords: ['analyze', 'image', 'metadata', 'dimensions', 'size', 'check', 'properties', 'inspect'],
     intents: [
       'analyze image', 'image info', 'image properties', 'check image size', 'image dimensions', 'is image transparent',
@@ -641,7 +641,7 @@ export const tools = [
       { q: 'What are megapixels for?', a: 'Megapixels (width × height ÷ 1,000,000) indicate the true detail level of a photo — more useful than file size for judging quality.' },
       { q: 'Which formats can I analyze?', a: 'Any format your browser can open: JPG, PNG, WebP, GIF, BMP, AVIF and more.' },
     ],
-    seo: `<p>Before optimizing or uploading an image, know exactly what you have. This <strong>image analyzer</strong> reports <strong>dimensions, megapixels, aspect ratio, file weight and format</strong>, and detects transparency by sampling pixels.</p><p>It then points you to the right next step — compress a heavy file, convert a format, or resize oversized dimensions — all without leaving QuickTools.</p>`,
+    seo: `<p>Before optimizing or uploading an image, know exactly what you have. This <strong>image analyzer</strong> reports <strong>dimensions, megapixels, aspect ratio, file weight and format</strong>, and detects transparency by sampling pixels.</p><p>It then points you to the right next step — compress a heavy file, convert a format, or resize oversized dimensions — all without leaving Neyluno.</p>`,
   },
   {
     slug: 'text-cleaner',

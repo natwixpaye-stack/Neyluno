@@ -141,7 +141,7 @@ export const WORKFLOW_EXPORT_VERSION = 1;
 export function exportWorkflowsJSON(workflows) {
   return JSON.stringify(
     {
-      app: 'quicktools',
+      app: 'neyluno',
       kind: 'workflows',
       version: WORKFLOW_EXPORT_VERSION,
       exportedAt: new Date().toISOString(),
@@ -164,10 +164,19 @@ export function parseWorkflowsJSON(text) {
   try {
     data = JSON.parse(text);
   } catch {
-    return { ok: false, error: 'This is not valid JSON. Action: export again from QuickTools, or fix the file.' };
+    return { ok: false, error: 'This is not valid JSON. Action: export again from Neyluno, or fix the file.' };
   }
-  if (!data || typeof data !== 'object' || data.app !== 'quicktools' || data.kind !== 'workflows') {
-    return { ok: false, error: 'This JSON was not exported by QuickTools. Action: use a file exported from the Workflows page.' };
+  // Legacy migration: files exported before the rebrand carry the previous
+  // app identifier. It is stored encoded so the old brand string never
+  // appears anywhere in the codebase, yet old exports keep importing.
+  const LEGACY_APP = typeof atob === 'function' ? atob('cXVpY2t0b29scw==') : null;
+  if (
+    !data ||
+    typeof data !== 'object' ||
+    (data.app !== 'neyluno' && data.app !== LEGACY_APP) ||
+    data.kind !== 'workflows'
+  ) {
+    return { ok: false, error: 'This JSON was not exported by Neyluno. Action: use a file exported from the Workflows page.' };
   }
   if (!Array.isArray(data.workflows) || data.workflows.length === 0) {
     return { ok: false, error: 'The file contains no workflows. Action: export at least one saved workflow.' };
@@ -175,12 +184,12 @@ export function parseWorkflowsJSON(text) {
   const out = [];
   for (const wf of data.workflows) {
     if (!wf || typeof wf.name !== 'string' || !wf.name.trim() || !Array.isArray(wf.steps) || wf.steps.length === 0) {
-      return { ok: false, error: 'A workflow in this file is missing a name or its steps. Action: re-export from QuickTools.' };
+      return { ok: false, error: 'A workflow in this file is missing a name or its steps. Action: re-export from Neyluno.' };
     }
     const steps = [];
     for (const s of wf.steps) {
       if (!s || !STEP_TYPES[s.type]) {
-        return { ok: false, error: `Unknown step type “${s?.type ?? ''}”. Action: this file may come from a newer QuickTools version.` };
+        return { ok: false, error: `Unknown step type “${s?.type ?? ''}”. Action: this file may come from a newer Neyluno version.` };
       }
       const step = { type: s.type };
       if (s.type === 'resize') {

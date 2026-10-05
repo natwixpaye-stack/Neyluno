@@ -5,7 +5,7 @@
 # via PATCH serviceDetails since the service is API-managed).
 services:
   - type: web
-    name: quicktools
+    name: neyluno
     runtime: static
     buildCommand: npm install && npm run build
     staticPublishPath: dist

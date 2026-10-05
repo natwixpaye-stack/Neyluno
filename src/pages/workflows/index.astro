@@ -7,7 +7,7 @@ const path = '/workflows/';
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
-  name: 'Image Workflows — QuickTools',
+  name: 'Image Workflows — Neyluno',
   applicationCategory: 'UtilityApplication',
   operatingSystem: 'Web',
   description: 'Chain image operations — resize, compress, convert — into reusable workflows and run them over entire batches, locally.',
@@ -559,7 +559,7 @@ const jsonLd = {
         return;
       }
       const json = exportWorkflowsJSON(saved);
-      downloadBlob(new Blob([json], { type: 'application/json' }), 'quicktools-workflows.json');
+      downloadBlob(new Blob([json], { type: 'application/json' }), 'neyluno-workflows.json');
       toast(`Exported ${saved.length} workflow(s).`, 'success');
     });
 
@@ -857,7 +857,7 @@ const jsonLd = {
           used.add(name);
           entries[name] = new Uint8Array(await item.result.blob.arrayBuffer());
         }
-        downloadBlob(new Blob([zipSync(entries)], { type: 'application/zip' }), 'quicktools-workflow.zip');
+        downloadBlob(new Blob([zipSync(entries)], { type: 'application/zip' }), 'neyluno-workflow.zip');
         toast(`${done.length} file(s) downloaded as a ZIP.`, 'success');
       } catch {
         toast('Creating the ZIP failed — download the files one by one.', 'error');

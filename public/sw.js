@@ -1,4 +1,4 @@
-/* QuickTools service worker — app-shell caching only.
+/* Neyluno service worker — app-shell caching only.
  * Rules:
  *  - GET + same-origin only.
  *  - /_astro/* hashed assets: cache-first (immutable).

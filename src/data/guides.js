@@ -279,7 +279,7 @@ export const guides = [
     faq: [
       { q: 'Why can I not select the text in my PDF?', a: 'The document is probably a scan: every “page” is a photograph of the original. There is no hidden text layer to read — only pixels. Tools that extract text will correctly tell you so.' },
       { q: 'Does extracting text keep the formatting?', a: 'Text layers store characters and positions, not paragraphs. You get clean words and line breaks; lists, tables and columns may need light re-tidying after extraction.' },
-      { q: 'Is OCR the solution for scans?', a: 'OCR turns pixels into text. Quality depends heavily on scan resolution and language; for anything important, compare the output against the original. QuickTools does not ship OCR in V4 — this is a deliberate V5 scope decision.' },
+      { q: 'Is OCR the solution for scans?', a: 'OCR turns pixels into text. Quality depends heavily on scan resolution and language; for anything important, compare the output against the original. Neyluno does not ship OCR in V4 — this is a deliberate V5 scope decision.' },
       { q: 'Is my document uploaded anywhere?', a: 'No. Extraction runs locally in your browser; the file never leaves your device.' },
     ],
     html: `
@@ -298,7 +298,7 @@ export const guides = [
 <ul>
   <li><strong>Re-export the original</strong> if you have it — always better than extracting from a scan.</li>
   <li><strong>Use the PDF → Images tool</strong> to get clean page pictures, then retype the few lines you actually need.</li>
-  <li><strong>OCR</strong> (optical character recognition) converts pixels to text but is a separate, heavier process; QuickTools leaves it for V5 and prefers telling you “no text found” over guessing characters.</li>
+  <li><strong>OCR</strong> (optical character recognition) converts pixels to text but is a separate, heavier process; Neyluno leaves it for V5 and prefers telling you “no text found” over guessing characters.</li>
 </ul>
 
 <h2>Quick checklist</h2>

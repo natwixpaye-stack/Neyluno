@@ -76,7 +76,7 @@ const version = '4.1';
       </div>
 
       <div class="settings-row settings-danger">
-        <span class="settings-label">Erase everything QuickTools stored in this browser</span>
+        <span class="settings-label">Erase everything Neyluno stored in this browser</span>
         <button type="button" class="btn btn-sm" data-clear-all style="border-color: color-mix(in srgb, #e5484d 50%, transparent); color: #e5484d;">
           Clear all local data
         </button>
@@ -103,7 +103,7 @@ const version = '4.1';
       <div class="settings-row">
         <span class="settings-label">Send feedback by email</span>
         <span style="display:flex; gap:8px; flex-wrap:wrap;">
-          <a class="btn btn-sm" href={`mailto:${site.contactEmail}?subject=QuickTools feedback`}>Open my mail app</a>
+          <a class="btn btn-sm" href={`mailto:${site.contactEmail}?subject=Neyluno feedback`}>Open my mail app</a>
           <button type="button" class="btn btn-sm btn-ghost" data-copy-email>Copy address</button>
         </span>
       </div>
@@ -310,7 +310,7 @@ const version = '4.1';
   document.querySelector('[data-clear-wf]').addEventListener('click', () => clearKey(site.storageKeys.workflows, 'Saved workflows'));
 
   document.querySelector('[data-clear-all]').addEventListener('click', () => {
-    if (!confirm('Erase everything QuickTools stored in this browser (theme, favorites, recents, workflows)?')) return;
+    if (!confirm('Erase everything Neyluno stored in this browser (theme, favorites, recents, workflows)?')) return;
     try {
       Object.values(site.storageKeys).forEach((k) => localStorage.removeItem(k));
       localStorage.removeItem('qt-lang');

@@ -1,5 +1,5 @@
 /**
- * End-to-end tests (Playwright) — QuickTools V2.
+ * End-to-end tests (Playwright) — Neyluno V2.
  * Requires: npm run build && npm run preview (port 4321), then node tests/e2e.mjs
  */
 import { chromium } from 'playwright-core';
@@ -36,7 +36,7 @@ const context = await browser.newContext({ viewport: { width: 1280, height: 900 
 const page = await context.newPage();
 page.setDefaultTimeout(15000);
 
-console.log('\n=== QuickTools V2 e2e ===\n');
+console.log('\n=== Neyluno V2 e2e ===\n');
 
 /* ================= HOME ================= */
 console.log('Home');
@@ -588,7 +588,7 @@ await ok('V4: workflow import rejects foreign JSON', async () => {
   });
   await page.waitForSelector('.toast', { timeout: 6000 });
   const txt = await page.locator('.toast').first().innerText();
-  if (!/not exported by QuickTools/.test(txt)) throw new Error(txt);
+  if (!/not exported by Neyluno/.test(txt)) throw new Error(txt);
 });
 
 /* ================= V4.1 ADDITIONS ================= */

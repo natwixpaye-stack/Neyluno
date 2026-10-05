@@ -1,15 +1,15 @@
 /**
- * CENTRAL SITE CONFIGURATION — QuickTools V2 (global, English-first)
+ * CENTRAL SITE CONFIGURATION — Neyluno V2 (global, English-first)
  * Name, tagline and global settings are changed here only.
  */
 export const site = {
-  name: 'QuickTools',
+  name: 'Neyluno',
   tagline: 'The fastest place to get small digital tasks done.',
   shortDescription:
     'Free online tools for images, PDFs, text and files. No sign-up, no uploads — everything runs privately in your browser.',
   locale: 'en',
   // Public contact address (used by Privacy, Settings feedback — no form backend by design).
-  contactEmail: 'natwixpaye@gmail.com',
+  contactEmail: 'Noah.mailpro@yahoo.com',
   // Default theme when the visitor has no stored preference and no OS preference:
   defaultTheme: 'dark',
 

@@ -1,4 +1,4 @@
-# QuickTools
+# Neyluno
 
 > Des outils simples, rapides et privés, directement dans ton navigateur.
 
@@ -49,7 +49,7 @@ catégories, activation publicitaire (`ads.enabled`), activation analytics (`ana
 
 Le registre des outils est dans **`src/data/tools.js`** (slug, textes, FAQ, SEO, mots-clés).
 
-> ⚠️ Avant mise en production : remplacer `https://quicktools.example.com` par le vrai domaine
+> ⚠️ Avant mise en production : remplacer `https://neyluno.example.com` par le vrai domaine
 > dans `astro.config.mjs` (canonical, Open Graph, sitemap) et `public/robots.txt`.
 
 ## Ajouter un outil (5 minutes)
