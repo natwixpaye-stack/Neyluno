@@ -4,7 +4,7 @@
  */
 export const site = {
   name: 'Neyluno',
-  tagline: 'The fastest place to get small digital tasks done.',
+  tagline: 'Digital tools, made simple.',
   shortDescription:
     'Free online tools for images, PDFs, text and files. No sign-up, no uploads — everything runs privately in your browser.',
   locale: 'en',
